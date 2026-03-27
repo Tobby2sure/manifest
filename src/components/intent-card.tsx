@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
 import {
   CheckCircle,
   Clock,
@@ -89,10 +90,10 @@ export function IntentCard({
 
   const expiresAt = new Date(intent.expires_at);
   const now = new Date();
-  const timeRemaining =
-    expiresAt > now
-      ? formatDistanceToNow(expiresAt, { addSuffix: false })
-      : "Expired";
+  const isExpired = expiresAt <= now;
+  const timeRemaining = isExpired
+    ? "Expired"
+    : formatDistanceToNow(expiresAt, { addSuffix: false });
 
   const postedAgo = formatDistanceToNow(new Date(intent.created_at), {
     addSuffix: true,
@@ -160,20 +161,22 @@ export function IntentCard({
   };
 
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-[#0e0e14] p-4 transition-colors hover:border-white/[0.12]">
+    <div className={`rounded-xl border border-white/[0.08] bg-[#0e0e14] p-4 transition-colors hover:border-white/[0.12] ${isExpired ? "opacity-60" : ""}`}>
       {/* Author row */}
       <div className="flex items-center gap-3 mb-3">
-        <Avatar size="default">
-          {author.avatar_url ? (
-            <AvatarImage src={author.avatar_url} alt={author.display_name ?? ""} />
-          ) : null}
-          <AvatarFallback>{initials}</AvatarFallback>
-        </Avatar>
+        <Link href={`/profile/${author.id}`}>
+          <Avatar size="default">
+            {author.avatar_url ? (
+              <AvatarImage src={author.avatar_url} alt={author.display_name ?? ""} />
+            ) : null}
+            <AvatarFallback>{initials}</AvatarFallback>
+          </Avatar>
+        </Link>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-medium text-white/90 truncate">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <Link href={`/profile/${author.id}`} className="text-sm font-medium text-white/90 truncate hover:text-emerald-400 transition-colors">
               {author.display_name ?? "Anonymous"}
-            </span>
+            </Link>
             {author.twitter_verified && (
               <CheckCircle className="size-3.5 text-emerald-400 shrink-0" />
             )}
@@ -184,11 +187,18 @@ export function IntentCard({
               </span>
             )}
           </div>
-          {author.twitter_handle && (
-            <span className="text-xs text-zinc-400">
-              @{author.twitter_handle}
-            </span>
-          )}
+          <div className="flex items-center gap-1.5">
+            {author.twitter_handle && (
+              <span className="text-xs text-zinc-400">
+                @{author.twitter_handle}
+              </span>
+            )}
+            {intent.org_id && (
+              <span className="text-xs text-zinc-500">
+                · <Link href={`/org/${intent.org_id}`} className="hover:text-zinc-300 transition-colors">Org</Link>
+              </span>
+            )}
+          </div>
         </div>
         {/* Lifecycle badge */}
         {intent.lifecycle_status !== "active" && (
@@ -206,9 +216,14 @@ export function IntentCard({
           {typeConfig.label}
         </span>
         <span className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium ${PRIORITY_STYLES[intent.priority]}`}>
-          {intent.priority === "Urgent" && <Zap className="size-3 mr-1" />}
+          {intent.priority === "Urgent" && <span className="relative mr-1"><span className="absolute inset-0 size-2 rounded-full bg-red-400 animate-ping" /><span className="relative size-2 rounded-full bg-red-400 inline-block" /></span>}
           {intent.priority}
         </span>
+        {isExpired && (
+          <span className="inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium bg-zinc-500/20 text-zinc-400">
+            Expired
+          </span>
+        )}
       </div>
 
       {/* Content */}
@@ -257,7 +272,7 @@ export function IntentCard({
           <button
             onClick={handleInterest}
             disabled={!currentUserId || isPending}
-            className={`flex items-center gap-1 rounded-lg px-2 py-1 text-xs transition-colors ${
+            className={`flex items-center gap-1 rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs transition-colors ${
               interested
                 ? "text-red-400 hover:text-red-300"
                 : "text-zinc-500 hover:text-zinc-300"
@@ -271,7 +286,7 @@ export function IntentCard({
           <button
             onClick={handleSave}
             disabled={!currentUserId || isPending}
-            className={`flex items-center gap-1 rounded-lg px-2 py-1 text-xs transition-colors ${
+            className={`flex items-center gap-1 rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs transition-colors ${
               saved
                 ? "text-amber-400 hover:text-amber-300"
                 : "text-zinc-500 hover:text-zinc-300"
@@ -288,7 +303,7 @@ export function IntentCard({
           {/* Share */}
           <button
             onClick={handleShare}
-            className="flex items-center rounded-lg px-2 py-1 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+            className="flex items-center rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
           >
             <Share2 className="size-3.5" />
           </button>

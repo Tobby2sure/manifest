@@ -1,0 +1,25 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#080810"/>
+  <!-- Subtle grid -->
+  <defs>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+    </pattern>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(16,185,129,0.15)"/>
+      <stop offset="100%" stop-color="rgba(16,185,129,0)"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <ellipse cx="600" cy="315" rx="400" ry="200" fill="url(#glow)"/>
+  <!-- Brand -->
+  <text x="600" y="280" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="bold" fill="white" text-anchor="middle">
+    <tspan fill="#10b981">M</tspan>anifest
+  </text>
+  <text x="600" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="28" fill="#a1a1aa" text-anchor="middle">
+    Web3 Intent Board
+  </text>
+  <text x="600" y="390" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#71717a" text-anchor="middle">
+    Declare what you're building toward
+  </text>
+</svg>

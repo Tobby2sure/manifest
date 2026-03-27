@@ -1,7 +1,16 @@
+import type { Metadata } from "next";
 import { getProfile } from "@/app/actions/profiles";
 import { getIntentsByAuthor } from "@/app/actions/intents";
 import { ProfileClient } from "./profile-client";
 import { notFound } from "next/navigation";
+
+export async function generateMetadata({ params }: { params: Promise<{ userId: string }> }): Promise<Metadata> {
+  const { userId } = await params;
+  const profile = await getProfile(userId);
+  return {
+    title: profile?.display_name ?? 'Profile',
+  };
+}
 
 export default async function ProfilePage({
   params,

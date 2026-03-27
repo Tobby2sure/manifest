@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getIntents } from "@/app/actions/intents";
+import { FeedSkeleton } from "@/components/skeletons";
 import type {
   IntentType,
   Ecosystem,
@@ -21,6 +23,8 @@ interface FeedPageProps {
   }>;
 }
 
+export const metadata: Metadata = { title: 'Explore Intents' };
+
 export default async function FeedPage({ searchParams }: FeedPageProps) {
   const params = await searchParams;
 
@@ -40,18 +44,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-[#080810]">
       <div className="mx-auto max-w-5xl px-4 py-6">
-        <Suspense
-          fallback={
-            <div className="grid gap-4 sm:grid-cols-2">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-64 animate-pulse rounded-xl bg-[#0e0e14] border border-white/[0.08]"
-                />
-              ))}
-            </div>
-          }
-        >
+        <Suspense fallback={<FeedSkeleton />}>
           <FeedClient
             intents={intents}
             total={total}

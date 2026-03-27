@@ -157,7 +157,7 @@ export function PostIntentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-[#0e0e14] border-white/[0.08]">
+      <DialogContent className="sm:max-w-lg bg-[#0e0e14] border-white/[0.08] max-h-[90vh] overflow-y-auto fixed inset-x-0 bottom-0 sm:inset-auto sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 rounded-t-2xl sm:rounded-xl w-full">
         <DialogHeader>
           <DialogTitle>Post an Intent</DialogTitle>
           <DialogDescription>

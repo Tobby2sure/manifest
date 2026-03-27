@@ -19,6 +19,7 @@ import {
 } from "@/app/actions/notifications";
 import type { Notification, NotificationType } from "@/lib/types/database";
 import { formatDistanceToNow } from "date-fns";
+import { NotificationListSkeleton } from "@/components/skeletons";
 
 const NOTIF_ICONS: Record<NotificationType, typeof MessageSquare> = {
   connection_request: MessageSquare,
@@ -94,14 +95,7 @@ export default function NotificationsPage() {
     return (
       <main className="min-h-[calc(100vh-4rem)] bg-[#080810]">
         <div className="mx-auto max-w-2xl px-4 py-8">
-          <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-16 animate-pulse rounded-xl bg-[#0e0e14] border border-white/[0.08]"
-              />
-            ))}
-          </div>
+          <NotificationListSkeleton />
         </div>
       </main>
     );

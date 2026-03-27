@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useUser } from "@/lib/hooks/use-user";
-import { Plus, User, LogOut, Settings, Bell } from "lucide-react";
+import { Plus, User, LogOut, Settings, Bell, Menu, X } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { PostIntentDialog } from "@/components/post-intent-dialog";
 import { getUnreadCount } from "@/app/actions/notifications";
@@ -74,13 +74,13 @@ function NavbarWithAuth() {
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
           {/* Left: Brand */}
           <Link
-            href="/feed"
+            href="/"
             className="text-lg font-bold tracking-tight text-white/90"
           >
             <span className="text-emerald-400">M</span>anifest
           </Link>
 
-          {/* Center: Feed link */}
+          {/* Center: Feed link (desktop only) */}
           <Link
             href="/feed"
             className="hidden sm:block text-sm text-zinc-400 hover:text-white transition-colors"
@@ -89,7 +89,7 @@ function NavbarWithAuth() {
           </Link>
 
           {/* Right: Auth */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             {!ready ? null : !authenticated ? (
               <Button
                 onClick={login}
@@ -106,17 +106,17 @@ function NavbarWithAuth() {
                     size="sm"
                     className="bg-emerald-600 hover:bg-emerald-500 text-white border-0"
                   >
-                    <Plus className="size-3.5 mr-1" />
-                    Post Intent
+                    <Plus className="size-3.5 sm:mr-1" />
+                    <span className="hidden sm:inline">Post Intent</span>
                   </Button>
                 )}
 
                 {/* Notification bell */}
                 <Link href="/notifications" className="relative">
-                  <button className="rounded-lg p-2 text-zinc-400 hover:text-white hover:bg-white/5 transition-colors">
+                  <button className="rounded-lg p-2 text-zinc-400 hover:text-white hover:bg-white/5 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
                     <Bell className="size-4" />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center size-4 rounded-full bg-red-500 text-[10px] font-bold text-white">
+                      <span className="absolute top-0.5 right-0.5 flex items-center justify-center size-4 rounded-full bg-red-500 text-[10px] font-bold text-white">
                         {unreadCount > 9 ? "9+" : unreadCount}
                       </span>
                     )}
@@ -157,6 +157,15 @@ function NavbarWithAuth() {
                         <DropdownMenuSeparator />
                       </>
                     )}
+                    {/* Mobile-only feed link */}
+                    <DropdownMenuItem
+                      className="sm:hidden"
+                      render={
+                        <Link href="/feed">
+                          Feed
+                        </Link>
+                      }
+                    />
                     <DropdownMenuItem
                       render={
                         <Link
@@ -173,7 +182,7 @@ function NavbarWithAuth() {
                     />
                     <DropdownMenuItem
                       render={
-                        <Link href="/onboarding">
+                        <Link href="/settings">
                           <Settings className="size-4 mr-2" />
                           Settings
                         </Link>

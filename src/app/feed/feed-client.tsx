@@ -187,7 +187,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
   return (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white/90">Intent Feed</h1>
           <p className="text-sm text-zinc-400 mt-1">
@@ -197,21 +197,21 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
         {canPost && (
           <Button
             onClick={() => setPostDialogOpen(true)}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white border-0"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 w-full sm:w-auto"
           >
             <Plus className="size-4 mr-1.5" />
             Post Intent
           </Button>
         )}
         {isAuthenticated && !profile?.twitter_verified && (
-          <Button variant="outline" disabled className="text-zinc-400">
+          <Button variant="outline" disabled className="text-zinc-400 w-full sm:w-auto">
             Verify X to Post
           </Button>
         )}
         {!isAuthenticated && (
           <Button
             onClick={login}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white border-0"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 w-full sm:w-auto"
           >
             Sign In to Post
           </Button>
@@ -219,8 +219,8 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
       </div>
 
       {/* Search + Sort bar */}
-      <div className="flex items-center gap-2 mb-4">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-4">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-400" />
           <input
             type="text"
@@ -259,8 +259,8 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
         </Button>
       </div>
 
-      {/* Type filter pills */}
-      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+      {/* Type filter pills — sticky on scroll */}
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide sticky top-14 z-30 bg-[#080810] pt-2 -mx-4 px-4">
         <button
           onClick={() => updateFilter("type", null)}
           className={`shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${

@@ -77,8 +77,8 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
   return (
     <div>
       {/* Profile header */}
-      <div className="flex items-start gap-5 mb-8">
-        <Avatar size="lg" className="size-20">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 mb-8">
+        <Avatar size="lg" className="size-20 shrink-0">
           {profile.avatar_url ? (
             <AvatarImage
               src={profile.avatar_url}
@@ -90,8 +90,8 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
           </AvatarFallback>
         </Avatar>
 
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
+        <div className="flex-1 text-center sm:text-left">
+          <div className="flex items-center justify-center sm:justify-start gap-2">
             <h1 className="text-2xl font-bold text-white/90">
               {profile.display_name ?? "Anonymous"}
             </h1>
@@ -109,7 +109,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
               {profile.bio}
             </p>
           )}
-          <div className="flex items-center gap-2 mt-3 flex-wrap">
+          <div className="flex items-center justify-center sm:justify-start gap-2 mt-3 flex-wrap">
             <Badge variant="outline" className="text-xs">
               {profile.account_type === "organization"
                 ? "Organization"
@@ -126,11 +126,16 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
               </span>
             )}
           </div>
+          {profile.wallet_address && (
+            <p className="text-xs text-zinc-500 mt-2 font-mono truncate max-w-xs">
+              {profile.wallet_address}
+            </p>
+          )}
         </div>
 
         {isOwn && (
-          <Link href="/onboarding">
-            <Button variant="outline" size="sm">
+          <Link href="/settings" className="shrink-0">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto">
               <Edit className="size-3.5 mr-1.5" />
               Edit Profile
             </Button>
@@ -139,7 +144,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 mb-6 border-b border-white/[0.06]">
+      <div className="flex items-center gap-1 mb-6 border-b border-white/[0.06] overflow-x-auto scrollbar-hide">
         {tabs
           .filter((t) => t.show)
           .map((tab) => (
