@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Providers } from "@/components/providers";
 import { Toaster } from "sonner";
+import { AppShell } from "@/components/app-shell";
 
 export const metadata: Metadata = {
   title: "Manifest",
@@ -14,11 +14,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark h-full antialiased" suppressHydrationWarning>
-      <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
-        <Providers>
+    <html lang="en" suppressHydrationWarning>
+      <body className="min-h-full flex flex-col bg-[#080810] text-white font-sans antialiased">
+        <AppShell>
           {children}
-        </Providers>
+        </AppShell>
         <Toaster theme="dark" />
       </body>
     </html>
