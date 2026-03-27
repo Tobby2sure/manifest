@@ -1,60 +1,45 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React from 'react';
+import { PrivyProvider } from '@privy-io/react-auth';
+import { privyConfig } from '@/lib/privy/config';
 import { Navbar } from '@/components/navbar';
 
-// Lazy load Privy to catch init errors
-export default function PrivyProviderClient({ children }: { children: React.ReactNode }) {
-  const [PrivyComponent, setPrivyComponent] = useState<React.ComponentType<{ appId: string; config: object; children: React.ReactNode }> | null>(null);
-  const [privyConfig, setPrivyConfig] = useState<object | null>(null);
-  const [privyError, setPrivyError] = useState(false);
+interface State { hasError: boolean; }
 
+class PrivyErrorBoundary extends React.Component<{ children: React.ReactNode }, State> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error: Error) { console.warn('[Privy] Provider error caught:', error.message); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <>
+          <Navbar />
+          {this.props.children}
+        </>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function PrivyProviderClient({ children }: { children: React.ReactNode }) {
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? '';
 
-  useEffect(() => {
-    if (!appId) return;
-    import('@privy-io/react-auth').then(({ PrivyProvider }) => {
-      import('@/lib/privy/config').then(({ privyConfig: cfg }) => {
-        setPrivyComponent(() => PrivyProvider);
-        setPrivyConfig(cfg);
-      });
-    }).catch(() => setPrivyError(true));
-  }, [appId]);
-
-  if (!appId || privyError) {
-    return (
-      <>
-        <Navbar />
-        {children}
-      </>
-    );
+  if (!appId) {
+    return <><Navbar />{children}</>;
   }
 
-  if (!PrivyComponent || !privyConfig) {
-    return (
-      <>
+  return (
+    <PrivyErrorBoundary>
+      <PrivyProvider appId={appId} config={privyConfig}>
         <Navbar />
         {children}
-      </>
-    );
-  }
-
-  const SafePrivy = PrivyComponent as React.ComponentType<{ appId: string; config: object; children: React.ReactNode }>;
-
-  try {
-    return (
-      <SafePrivy appId={appId} config={privyConfig}>
-        <Navbar />
-        {children}
-      </SafePrivy>
-    );
-  } catch {
-    setPrivyError(true);
-    return (
-      <>
-        <Navbar />
-        {children}
-      </>
-    );
-  }
+      </PrivyProvider>
+    </PrivyErrorBoundary>
+  );
 }
