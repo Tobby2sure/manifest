@@ -167,6 +167,7 @@ function NavbarWithAuth() {
           open={postDialogOpen}
           onOpenChange={setPostDialogOpen}
           userId={profile.id}
+          twitterVerified={profile.twitter_verified}
         />
       )}
     </>

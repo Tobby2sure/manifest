@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { PrivyClient } from "@privy-io/server-auth";
 import type { Profile, AccountType } from "@/lib/types/database";
 
 export async function getProfile(userId: string): Promise<Profile | null> {
@@ -54,6 +55,14 @@ export async function upsertProfile(input: {
     throw new Error(error.message);
   }
 
+  // Always try to sync twitter status from Privy
+  try {
+    const synced = await syncTwitterFromPrivy(input.id);
+    if (synced) return synced;
+  } catch {
+    // Non-fatal — continue with upserted data
+  }
+
   return data as Profile;
 }
 
@@ -96,4 +105,34 @@ export async function isTwitterVerified(userId: string): Promise<boolean> {
 
   if (error || !data) return false;
   return (data as { twitter_verified: boolean }).twitter_verified;
+}
+
+export async function syncTwitterFromPrivy(
+  privyUserId: string
+): Promise<Profile | null> {
+  const privyClient = new PrivyClient(
+    process.env.NEXT_PUBLIC_PRIVY_APP_ID!,
+    process.env.PRIVY_APP_SECRET!
+  );
+
+  const user = await privyClient.getUser(privyUserId);
+  const twitterAccount = user.twitter;
+
+  if (!twitterAccount) return null;
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({
+      twitter_handle: twitterAccount.username ?? null,
+      twitter_id: twitterAccount.subject ?? null,
+      twitter_verified: true,
+    })
+    .eq("id", privyUserId)
+    .select()
+    .single();
+
+  if (error) return null;
+  return data as Profile;
 }

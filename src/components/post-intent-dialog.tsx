@@ -23,25 +23,8 @@ import type {
   Sector,
   IntentPriority,
 } from "@/lib/types/database";
-
-const INTENT_TEMPLATES: Record<IntentType, string> = {
-  partnership:
-    "We're [org/your name], building [what]. We're looking for a partner who [does what]. Ideal collaboration would involve [specific ask].",
-  investment:
-    "We're raising [stage] for [project]. We've built [traction signal]. Looking for [investor type]. Check size: [range or open].",
-  integration:
-    "We need a [type] integration for [use case]. Our stack: [tech]. Ideal partner already has [capability]. Timeline: [days].",
-  hiring:
-    "We're hiring a [role] to work on [project/area]. Requirements: [key skills]. Compensation: [range]. Location: [remote/onsite].",
-  "co-marketing":
-    "We're looking for a co-marketing partner to [campaign type]. Our audience: [size/type]. Ideal partner has [audience/reach].",
-  grant:
-    "We're [offering/seeking] a grant for [purpose]. Amount: [range]. Requirements: [criteria]. Timeline: [deadline].",
-  "ecosystem-support":
-    "We're [offering/seeking] ecosystem support for [purpose]. Resources available: [what]. Looking for: [specific need].",
-  "beta-testers":
-    "We're looking for beta testers for [product]. Target users: [description]. What you'll test: [features]. Timeline: [duration].",
-};
+import { INTENT_TEMPLATES } from "@/lib/intent-templates";
+import { AlertCircle } from "lucide-react";
 
 const PRIORITIES: IntentPriority[] = ["Open", "Active", "Urgent"];
 
@@ -49,12 +32,14 @@ interface PostIntentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userId: string;
+  twitterVerified?: boolean;
 }
 
 export function PostIntentDialog({
   open,
   onOpenChange,
   userId,
+  twitterVerified = false,
 }: PostIntentDialogProps) {
   const [intentType, setIntentType] = useState<IntentType>("partnership");
   const [content, setContent] = useState("");
@@ -64,6 +49,7 @@ export function PostIntentDialog({
   const [duration, setDuration] = useState(30);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [useTemplate, setUseTemplate] = useState(false);
 
   const intentTypes = Object.entries(INTENT_TYPE_CONFIG) as [
     IntentType,
@@ -78,10 +64,22 @@ export function PostIntentDialog({
     (typeof SECTOR_CONFIG)[Sector],
   ][];
 
+  const currentTemplate = INTENT_TEMPLATES[intentType];
+
   function handleTypeChange(type: IntentType) {
     setIntentType(type);
-    if (!content || Object.values(INTENT_TEMPLATES).includes(content)) {
-      setContent(INTENT_TEMPLATES[type]);
+    if (useTemplate) {
+      setContent(INTENT_TEMPLATES[type].template);
+    }
+  }
+
+  function handleToggleTemplate() {
+    const next = !useTemplate;
+    setUseTemplate(next);
+    if (next) {
+      setContent(currentTemplate.template);
+    } else if (content === currentTemplate.template) {
+      setContent("");
     }
   }
 
@@ -114,11 +112,47 @@ export function PostIntentDialog({
       setSector("");
       setPriority("Open");
       setDuration(30);
+      setUseTemplate(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create intent");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  // X verification gate
+  if (!twitterVerified) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md bg-[#0e0e14] border-white/[0.08]">
+          <DialogHeader>
+            <DialogTitle>Connect X to Post</DialogTitle>
+            <DialogDescription>
+              You need to verify your X (Twitter) account before posting
+              intents.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 mt-2">
+            <AlertCircle className="size-5 text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm text-zinc-300">
+                X verification ensures trust in the Manifest network. Connect
+                your X account in settings to start posting.
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={() => {
+              onOpenChange(false);
+              window.location.href = "/onboarding/verify-x";
+            }}
+            className="w-full mt-2 bg-emerald-600 hover:bg-emerald-500 text-white border-0"
+          >
+            Connect X to Post
+          </Button>
+        </DialogContent>
+      </Dialog>
+    );
   }
 
   return (
@@ -127,7 +161,8 @@ export function PostIntentDialog({
         <DialogHeader>
           <DialogTitle>Post an Intent</DialogTitle>
           <DialogDescription>
-            Declare what you&apos;re looking for. Others will discover and connect.
+            Declare what you&apos;re looking for. Others will discover and
+            connect.
           </DialogDescription>
         </DialogHeader>
 
@@ -152,26 +187,54 @@ export function PostIntentDialog({
             </div>
           </div>
 
-          {/* Template hint */}
-          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] p-3">
-            <p className="text-xs text-zinc-500 italic">
-              Template: {INTENT_TEMPLATES[intentType]}
-            </p>
+          {/* Using template toggle */}
+          <div className="flex items-center justify-between">
+            <Label className="text-zinc-300" htmlFor="content">
+              Content{" "}
+              <span
+                className={`text-xs ${
+                  content.length < 50
+                    ? "text-red-400"
+                    : content.length > 450
+                      ? "text-amber-400"
+                      : "text-zinc-500"
+                }`}
+              >
+                ({content.length}/500, min 50)
+              </span>
+            </Label>
+            <button
+              onClick={handleToggleTemplate}
+              className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+                useTemplate
+                  ? "bg-emerald-500/20 text-emerald-400"
+                  : "bg-white/5 text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              {useTemplate ? "Using template" : "Use template"}
+            </button>
           </div>
 
           {/* Content */}
-          <div>
-            <Label className="text-zinc-300" htmlFor="content">
-              Content ({content.length}/500)
-            </Label>
-            <Textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Describe your intent..."
-              className="mt-1.5 min-h-24 bg-white/5 border-white/10"
-              maxLength={500}
-            />
+          <Textarea
+            id="content"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder={currentTemplate.placeholder}
+            className="min-h-24 bg-white/5 border-white/10"
+            maxLength={500}
+          />
+
+          {/* Hint chips */}
+          <div className="flex flex-wrap gap-1.5">
+            {currentTemplate.hints.map((hint) => (
+              <span
+                key={hint}
+                className="inline-flex items-center rounded-full bg-white/[0.04] border border-white/[0.06] px-2.5 py-0.5 text-xs text-zinc-500"
+              >
+                {hint}
+              </span>
+            ))}
           </div>
 
           {/* Ecosystem + Sector */}
@@ -183,7 +246,9 @@ export function PostIntentDialog({
               <select
                 id="ecosystem"
                 value={ecosystem}
-                onChange={(e) => setEcosystem(e.target.value as Ecosystem | "")}
+                onChange={(e) =>
+                  setEcosystem(e.target.value as Ecosystem | "")
+                }
                 className="mt-1.5 w-full h-8 rounded-lg border border-white/10 bg-white/5 px-2.5 text-sm text-white/90 outline-none focus:border-emerald-500"
               >
                 <option value="">Select...</option>
@@ -258,9 +323,7 @@ export function PostIntentDialog({
             </div>
           </div>
 
-          {error && (
-            <p className="text-sm text-red-400">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-400">{error}</p>}
 
           <Button
             onClick={handleSubmit}
