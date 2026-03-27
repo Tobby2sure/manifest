@@ -1,0 +1,56 @@
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+
+export async function toggleInterest(
+  intentId: string,
+  userId: string
+): Promise<boolean> {
+  const supabase = await createClient();
+
+  const { data: existing } = await supabase
+    .from("intent_interests")
+    .select("id")
+    .eq("intent_id", intentId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existing) {
+    await supabase.from("intent_interests").delete().eq("id", existing.id);
+    revalidatePath("/feed");
+    return false;
+  } else {
+    const { error } = await supabase.from("intent_interests").insert({
+      user_id: userId,
+      intent_id: intentId,
+    });
+    if (error) throw new Error(error.message);
+    revalidatePath("/feed");
+    return true;
+  }
+}
+
+export async function getIntentInterests(intentId: string): Promise<number> {
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("intent_interests")
+    .select("*", { count: "exact", head: true })
+    .eq("intent_id", intentId);
+
+  if (error) return 0;
+  return count ?? 0;
+}
+
+export async function getUserInterestedIds(userId: string): Promise<string[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("intent_interests")
+    .select("intent_id")
+    .eq("user_id", userId);
+
+  if (error) return [];
+  return (data ?? []).map((row: { intent_id: string }) => row.intent_id);
+}

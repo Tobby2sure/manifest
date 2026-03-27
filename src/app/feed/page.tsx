@@ -6,6 +6,7 @@ import type {
   Sector,
   IntentPriority,
 } from "@/lib/types/database";
+import type { IntentSort } from "@/app/actions/intents";
 import { FeedClient } from "./feed-client";
 
 interface FeedPageProps {
@@ -14,6 +15,9 @@ interface FeedPageProps {
     ecosystem?: string;
     sector?: string;
     priority?: string;
+    search?: string;
+    sort?: string;
+    page?: string;
   }>;
 }
 
@@ -25,9 +29,13 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     ecosystem: (params.ecosystem as Ecosystem) || undefined,
     sector: (params.sector as Sector) || undefined,
     priority: (params.priority as IntentPriority) || undefined,
+    search: params.search || undefined,
+    sort: (params.sort as IntentSort) || undefined,
+    page: params.page ? parseInt(params.page, 10) : 0,
+    pageSize: 20,
   };
 
-  const intents = await getIntents(filters);
+  const { intents, total } = await getIntents(filters);
 
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-[#080810]">
@@ -44,11 +52,15 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
             </div>
           }
         >
-          <FeedClient intents={intents} initialFilters={filters} />
+          <FeedClient
+            intents={intents}
+            total={total}
+            initialFilters={filters}
+          />
         </Suspense>
       </div>
     </main>
   );
 }
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";

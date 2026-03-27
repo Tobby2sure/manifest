@@ -31,6 +31,20 @@ export async function sendConnectionRequest(
     throw new Error(error.message);
   }
 
+  // Notify the intent owner about the connection request
+  try {
+    const { createNotification } = await import("@/app/actions/notifications");
+    const { getProfile } = await import("@/app/actions/profiles");
+    const senderProfile = await getProfile(senderId);
+    await createNotification(receiverId, "connection_request", {
+      senderName: senderProfile?.display_name ?? "Someone",
+      intentId,
+      senderId,
+    });
+  } catch {
+    // Non-fatal
+  }
+
   revalidatePath("/feed");
   return data as ConnectionRequest;
 }
@@ -50,6 +64,21 @@ export async function respondToRequest(
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  // Notify the sender about the response
+  try {
+    const { createNotification } = await import("@/app/actions/notifications");
+    const { getProfile } = await import("@/app/actions/profiles");
+    const req = data as ConnectionRequest;
+    const receiverProfile = await getProfile(req.receiver_id);
+    const notifType = status === "accepted" ? "request_accepted" : "request_declined";
+    await createNotification(req.sender_id, notifType, {
+      intentId: req.intent_id,
+      receiverName: receiverProfile?.display_name ?? "Someone",
+    });
+  } catch {
+    // Non-fatal
   }
 
   revalidatePath("/feed");

@@ -66,6 +66,8 @@ export interface Profile {
   email: string | null;
   account_type: AccountType;
   avatar_url: string | null;
+  last_active_at: string | null;
+  response_rate: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -131,10 +133,16 @@ export interface SavedIntent {
   created_at: string;
 }
 
+export type NotificationType =
+  | "connection_request"
+  | "request_accepted"
+  | "request_declined"
+  | "intent_expiring";
+
 export interface Notification {
   id: string;
   user_id: string;
-  type: string;
+  type: NotificationType;
   payload: Record<string, unknown>;
   read: boolean;
   created_at: string;

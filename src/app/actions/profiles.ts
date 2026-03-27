@@ -136,3 +136,38 @@ export async function syncTwitterFromPrivy(
   if (error) return null;
   return data as Profile;
 }
+
+export async function updateLastActive(userId: string): Promise<void> {
+  const supabase = await createClient();
+  await supabase
+    .from("profiles")
+    .update({ last_active_at: new Date().toISOString() })
+    .eq("id", userId);
+}
+
+export async function calculateResponseRate(userId: string): Promise<number> {
+  const supabase = await createClient();
+
+  const { count: total } = await supabase
+    .from("connection_requests")
+    .select("*", { count: "exact", head: true })
+    .eq("receiver_id", userId);
+
+  if (!total || total === 0) return 0;
+
+  const { count: accepted } = await supabase
+    .from("connection_requests")
+    .select("*", { count: "exact", head: true })
+    .eq("receiver_id", userId)
+    .eq("status", "accepted");
+
+  const rate = Math.round(((accepted ?? 0) / total) * 100);
+
+  // Update cached value
+  await supabase
+    .from("profiles")
+    .update({ response_rate: rate })
+    .eq("id", userId);
+
+  return rate;
+}

@@ -13,31 +13,41 @@ import type {
   IntentClosedReason,
 } from "@/lib/types/database";
 
+export type IntentSort = "newest" | "ending_soon";
+
 export interface IntentFilters {
   type?: IntentType;
   ecosystem?: Ecosystem;
   sector?: Sector;
   priority?: IntentPriority;
+  search?: string;
+  sort?: IntentSort;
+  activeOnly?: boolean;
   page?: number;
   pageSize?: number;
 }
 
 export async function getIntents(
   filters?: IntentFilters
-): Promise<IntentWithAuthor[]> {
+): Promise<{ intents: IntentWithAuthor[]; total: number }> {
   const supabase = await createClient();
   const page = filters?.page ?? 0;
   const pageSize = filters?.pageSize ?? 20;
   const from = page * pageSize;
   const to = from + pageSize - 1;
 
+  const activeOnly = filters?.activeOnly !== false;
+
   let query = supabase
     .from("intents")
-    .select("*, author:profiles!author_id(*)")
-    .eq("lifecycle_status", "active" as IntentLifecycleStatus)
-    .gte("expires_at", new Date().toISOString())
-    .order("created_at", { ascending: false })
+    .select("*, author:profiles!author_id(*)", { count: "exact" })
     .range(from, to);
+
+  if (activeOnly) {
+    query = query
+      .eq("lifecycle_status", "active" as IntentLifecycleStatus)
+      .gte("expires_at", new Date().toISOString());
+  }
 
   if (filters?.type) {
     query = query.eq("type", filters.type);
@@ -51,14 +61,28 @@ export async function getIntents(
   if (filters?.priority) {
     query = query.eq("priority", filters.priority);
   }
+  if (filters?.search) {
+    query = query.textSearch("content", filters.search, { type: "websearch" });
+  }
 
-  const { data, error } = await query;
+  // Sort
+  const sort = filters?.sort ?? "newest";
+  if (sort === "ending_soon") {
+    query = query.order("expires_at", { ascending: true });
+  } else {
+    query = query.order("created_at", { ascending: false });
+  }
+
+  const { data, error, count } = await query;
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return (data ?? []) as unknown as IntentWithAuthor[];
+  return {
+    intents: (data ?? []) as unknown as IntentWithAuthor[],
+    total: count ?? 0,
+  };
 }
 
 export async function getIntent(id: string): Promise<IntentWithAuthor | null> {

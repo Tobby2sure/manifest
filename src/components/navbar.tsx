@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useUser } from "@/lib/hooks/use-user";
-import { Plus, User, LogOut, Settings } from "lucide-react";
-import { useState } from "react";
+import { Plus, User, LogOut, Settings, Bell } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 import { PostIntentDialog } from "@/components/post-intent-dialog";
+import { getUnreadCount } from "@/app/actions/notifications";
 
 export function Navbar() {
   const hasPrivy = !!process.env.NEXT_PUBLIC_PRIVY_APP_ID;
@@ -38,8 +39,25 @@ function NavbarWithAuth() {
   const { login, logout, ready, authenticated } = usePrivy();
   const { profile } = useUser();
   const [postDialogOpen, setPostDialogOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const canPost = authenticated && profile?.twitter_verified;
+
+  const fetchUnread = useCallback(async () => {
+    if (!profile?.id) return;
+    try {
+      const count = await getUnreadCount(profile.id);
+      setUnreadCount(count);
+    } catch {
+      // ignore
+    }
+  }, [profile?.id]);
+
+  useEffect(() => {
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    return () => clearInterval(interval);
+  }, [fetchUnread]);
 
   const initials = profile?.display_name
     ? profile.display_name
@@ -92,6 +110,18 @@ function NavbarWithAuth() {
                     Post Intent
                   </Button>
                 )}
+
+                {/* Notification bell */}
+                <Link href="/notifications" className="relative">
+                  <button className="rounded-lg p-2 text-zinc-400 hover:text-white hover:bg-white/5 transition-colors">
+                    <Bell className="size-4" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center size-4 rounded-full bg-red-500 text-[10px] font-bold text-white">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                </Link>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger
