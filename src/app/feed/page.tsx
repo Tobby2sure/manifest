@@ -50,3 +50,5 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     </main>
   );
 }
+
+export const dynamic = 'force-dynamic';
