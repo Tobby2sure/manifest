@@ -1,7 +1,8 @@
 import type { PrivyClientConfig } from '@privy-io/react-auth';
 
 export const privyConfig: PrivyClientConfig = {
-  loginMethods: ['email', 'twitter', 'wallet'],
+  // Keep wallet out for now — WalletConnect requires extra config
+  loginMethods: ['email', 'twitter'],
   embeddedWallets: {
     ethereum: {
       createOnLogin: 'all-users',
