@@ -1,7 +1,8 @@
 'use client';
 
+import { usePrivy } from '@privy-io/react-auth';
+
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
 import { INTENT_TYPE_CONFIG } from '@/lib/types/database';
 import type { IntentType } from '@/lib/types/database';
 import { ArrowRight, Handshake, Search, Shield } from 'lucide-react';
@@ -24,9 +25,7 @@ const INTENT_TYPES: IntentType[] = [
 ];
 
 export default function HomePage() {
-  const { data: session, status } = useSession();
-  const authenticated = !!session?.user;
-  const ready = status !== 'loading';
+  const { ready, authenticated, login } = usePrivy();
 
   return (
     <main className="min-h-screen bg-[#080810]">

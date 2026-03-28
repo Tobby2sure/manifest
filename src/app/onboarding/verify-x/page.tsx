@@ -1,17 +1,18 @@
 "use client";
 
+import { usePrivy } from "@privy-io/react-auth";
+
 import { useRouter } from "next/navigation";
-import { useSession, signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/lib/hooks/use-user";
 import { CheckCircle, ArrowRight } from "lucide-react";
 
 export default function VerifyXPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { ready, authenticated, login, linkTwitter } = usePrivy();
   const { profile } = useUser();
 
-  const isAuthenticated = !!session?.user;
+  const isAuthenticated = authenticated;
   const isLoading = status === "loading";
 
   if (isLoading) {
@@ -34,7 +35,7 @@ export default function VerifyXPage() {
               Sign in with your X (Twitter) account to verify your identity.
             </p>
             <Button
-              onClick={() => signIn("twitter")}
+              onClick={() => linkTwitter()}
               className="w-full bg-emerald-600 hover:bg-emerald-500 text-white border-0"
             >
               Sign in with X

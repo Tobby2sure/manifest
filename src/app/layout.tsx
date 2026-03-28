@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from 'sonner';
-import { AppShell } from '@/components/app-shell';
+import ClientProviders from '@/components/client-providers';
 
 export const metadata: Metadata = {
   title: { default: 'Manifest', template: '%s | Manifest' },
@@ -24,30 +24,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* Suppress Privy async errors before any JS runs */}
-        <script dangerouslySetInnerHTML={{ __html: `
-          window.__privyErrSuppressed = false;
-          window.addEventListener('unhandledrejection', function(e) {
-            var msg = (e.reason && e.reason.message) ? e.reason.message : String(e.reason || '');
-            if (msg.indexOf('Privy') !== -1 || msg.indexOf('privy') !== -1 || msg.indexOf('app ID') !== -1) {
-              e.preventDefault();
-              window.__privyErrSuppressed = true;
-            }
-          });
-          window.addEventListener('error', function(e) {
-            var msg = e.message || '';
-            if (msg.indexOf('Privy') !== -1 || msg.indexOf('privy') !== -1 || msg.indexOf('app ID') !== -1) {
-              e.preventDefault();
-              return true;
-            }
-          });
-        `}} />
-      </head>
       <body className="min-h-full flex flex-col bg-[#080810] text-white font-sans antialiased">
-        <AppShell>
+        <ClientProviders>
           {children}
-        </AppShell>
+        </ClientProviders>
         <Toaster theme="dark" richColors />
       </body>
     </html>

@@ -1,8 +1,9 @@
 "use client";
 
+import { usePrivy } from "@privy-io/react-auth";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession, signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,9 +17,9 @@ const STEPS = ["Account Type", "Your Details", "Organization", "Connect X"];
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { authenticated, linkTwitter } = usePrivy();
   const { profile } = useUser();
-  const user = session?.user as { id?: string; username?: string; twitter_id?: string; wallet?: { address?: string } } | undefined;
+  const { user } = useUser();
 
   const [step, setStep] = useState(0);
   const [accountType, setAccountType] = useState<AccountType>(
@@ -41,8 +42,8 @@ export default function OnboardingPage() {
   const isOrg = accountType === "organization";
   const totalSteps = isOrg ? 4 : 3;
 
-  const hasTwitter = !!user?.username;
-  const twitterUsername = user?.username;
+  const hasTwitter = !!user?.twitter?.username;
+  const twitterUsername = user?.twitter?.username;
 
   function currentStepIndex() {
     if (step === 0) return 0;
@@ -353,7 +354,7 @@ export default function OnboardingPage() {
                 </div>
               ) : (
                 <Button
-                  onClick={() => signIn('twitter')}
+                  onClick={() => linkTwitter()}
                   variant="outline"
                   className="w-full"
                 >
