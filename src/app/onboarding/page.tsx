@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { usePrivy } from "@privy-io/react-auth";
+import { useSession, signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,8 +16,9 @@ const STEPS = ["Account Type", "Your Details", "Organization", "Connect X"];
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { user, linkTwitter } = usePrivy();
+  const { data: session } = useSession();
   const { profile } = useUser();
+  const user = session?.user as { id?: string; username?: string; twitter_id?: string; wallet?: { address?: string } } | undefined;
 
   const [step, setStep] = useState(0);
   const [accountType, setAccountType] = useState<AccountType>(
@@ -40,8 +41,8 @@ export default function OnboardingPage() {
   const isOrg = accountType === "organization";
   const totalSteps = isOrg ? 4 : 3;
 
-  const twitterAccount = user?.twitter;
-  const hasTwitter = !!twitterAccount;
+  const hasTwitter = !!user?.username;
+  const twitterUsername = user?.username;
 
   function currentStepIndex() {
     if (step === 0) return 0;
@@ -82,16 +83,15 @@ export default function OnboardingPage() {
 
     try {
       await upsertProfile({
-        id: user.id,
+        id: user.id!,
         display_name: displayName,
         bio: bio || undefined,
         telegram_handle: telegram || undefined,
         email: email || undefined,
         account_type: accountType,
-        twitter_handle: twitterAccount?.username ?? undefined,
+        twitter_handle: twitterUsername ?? undefined,
         twitter_verified: hasTwitter,
-        wallet_address:
-          user.wallet?.address ?? undefined,
+        wallet_address: undefined,
       });
       router.push("/feed");
     } catch (e) {
@@ -347,13 +347,13 @@ export default function OnboardingPage() {
                       X Connected
                     </p>
                     <p className="text-xs text-zinc-400">
-                      @{twitterAccount?.username}
+                      @{twitterUsername}
                     </p>
                   </div>
                 </div>
               ) : (
                 <Button
-                  onClick={linkTwitter}
+                  onClick={() => signIn('twitter')}
                   variant="outline"
                   className="w-full"
                 >

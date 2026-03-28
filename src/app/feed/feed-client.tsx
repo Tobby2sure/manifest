@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { usePrivy } from "@privy-io/react-auth";
+import { signIn } from "next-auth/react";
 import { IntentCard } from "@/components/intent-card";
 import { PostIntentDialog } from "@/components/post-intent-dialog";
 import { RequestConnectionDialog } from "@/components/request-connection-dialog";
@@ -70,7 +70,7 @@ interface FeedClientProps {
 export function FeedClient({ intents: initialIntents, total, initialFilters }: FeedClientProps) {
   const router = useRouter();
   const { profile, isAuthenticated } = useUser();
-  const { login } = usePrivy();
+  const login = () => signIn('twitter');
   const [isPending, startTransition] = useTransition();
 
   const [postDialogOpen, setPostDialogOpen] = useState(false);

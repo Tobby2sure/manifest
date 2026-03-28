@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePrivy } from "@privy-io/react-auth";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,204 +11,122 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useUser } from "@/lib/hooks/use-user";
-import { Plus, User, LogOut, Settings, Bell, Menu, X } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { Plus, User, LogOut, Settings, Bell } from "lucide-react";
+import { useState } from "react";
 import { PostIntentDialog } from "@/components/post-intent-dialog";
-import { getUnreadCount } from "@/app/actions/notifications";
 
 export function Navbar() {
-  const hasPrivy = !!process.env.NEXT_PUBLIC_PRIVY_APP_ID;
+  const { data: session, status } = useSession();
+  const [intentDialogOpen, setIntentDialogOpen] = useState(false);
 
-  if (!hasPrivy) {
-    return (
-      <nav className="border-b border-white/[0.08] bg-[#080810]">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-          <Link href="/feed" className="text-lg font-bold tracking-tight text-white/90">
-            Manifest
-          </Link>
-        </div>
-      </nav>
-    );
-  }
-
-  return <NavbarWithAuth />;
-}
-
-function NavbarWithAuth() {
-  const { login, logout, ready, authenticated } = usePrivy();
-  const { profile } = useUser();
-  const [postDialogOpen, setPostDialogOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  const canPost = authenticated && profile?.twitter_verified;
-
-  const fetchUnread = useCallback(async () => {
-    if (!profile?.id) return;
-    try {
-      const count = await getUnreadCount(profile.id);
-      setUnreadCount(count);
-    } catch {
-      // ignore
-    }
-  }, [profile?.id]);
-
-  useEffect(() => {
-    fetchUnread();
-    const interval = setInterval(fetchUnread, 30000);
-    return () => clearInterval(interval);
-  }, [fetchUnread]);
-
-  const initials = profile?.display_name
-    ? profile.display_name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : "?";
+  const isAuthenticated = !!session?.user;
+  const isLoading = status === 'loading';
+  const user = session?.user as { name?: string; image?: string; username?: string } | undefined;
 
   return (
-    <>
-      <nav className="border-b border-white/[0.08] bg-[#080810]/80 backdrop-blur-md sticky top-0 z-40">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-          {/* Left: Brand */}
-          <Link
-            href="/"
-            className="text-lg font-bold tracking-tight text-white/90"
-          >
-            <span className="text-emerald-400">M</span>anifest
-          </Link>
-
-          {/* Center: Feed link (desktop only) */}
-          <Link
-            href="/feed"
-            className="hidden sm:block text-sm text-zinc-400 hover:text-white transition-colors"
-          >
-            Feed
-          </Link>
-
-          {/* Right: Auth */}
-          <div className="flex items-center gap-2">
-            {!ready ? null : !authenticated ? (
-              <Button
-                onClick={login}
-                size="sm"
-                className="bg-emerald-600 hover:bg-emerald-500 text-white border-0"
-              >
-                Sign In
-              </Button>
-            ) : (
-              <>
-                {canPost && (
-                  <Button
-                    onClick={() => setPostDialogOpen(true)}
-                    size="sm"
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white border-0"
-                  >
-                    <Plus className="size-3.5 sm:mr-1" />
-                    <span className="hidden sm:inline">Post Intent</span>
-                  </Button>
-                )}
-
-                {/* Notification bell */}
-                <Link href="/notifications" className="relative">
-                  <button className="rounded-lg p-2 text-zinc-400 hover:text-white hover:bg-white/5 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
-                    <Bell className="size-4" />
-                    {unreadCount > 0 && (
-                      <span className="absolute top-0.5 right-0.5 flex items-center justify-center size-4 rounded-full bg-red-500 text-[10px] font-bold text-white">
-                        {unreadCount > 9 ? "9+" : unreadCount}
-                      </span>
-                    )}
-                  </button>
-                </Link>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={
-                      <button className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-                        <Avatar size="sm">
-                          {profile?.avatar_url ? (
-                            <AvatarImage
-                              src={profile.avatar_url}
-                              alt={profile.display_name ?? ""}
-                            />
-                          ) : null}
-                          <AvatarFallback className="text-xs">
-                            {initials}
-                          </AvatarFallback>
-                        </Avatar>
-                      </button>
-                    }
-                  />
-                  <DropdownMenuContent align="end" sideOffset={8}>
-                    {profile && (
-                      <>
-                        <div className="px-1.5 py-1">
-                          <p className="text-sm font-medium">
-                            {profile.display_name ?? "Anonymous"}
-                          </p>
-                          {profile.twitter_handle && (
-                            <p className="text-xs text-muted-foreground">
-                              @{profile.twitter_handle}
-                            </p>
-                          )}
-                        </div>
-                        <DropdownMenuSeparator />
-                      </>
-                    )}
-                    {/* Mobile-only feed link */}
-                    <DropdownMenuItem
-                      className="sm:hidden"
-                      render={
-                        <Link href="/feed">
-                          Feed
-                        </Link>
-                      }
-                    />
-                    <DropdownMenuItem
-                      render={
-                        <Link
-                          href={
-                            profile
-                              ? `/profile/${profile.id}`
-                              : "/onboarding"
-                          }
-                        >
-                          <User className="size-4 mr-2" />
-                          Profile
-                        </Link>
-                      }
-                    />
-                    <DropdownMenuItem
-                      render={
-                        <Link href="/settings">
-                          <Settings className="size-4 mr-2" />
-                          Settings
-                        </Link>
-                      }
-                    />
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={logout}>
-                      <LogOut className="size-4 mr-2" />
-                      Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            )}
+    <nav className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#080810]/90 backdrop-blur-xl">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 text-xs font-bold text-black">
+            M
           </div>
-        </div>
-      </nav>
+          <span className="text-base font-bold tracking-tight text-white/90">Manifest</span>
+        </Link>
 
-      {profile && (
-        <PostIntentDialog
-          open={postDialogOpen}
-          onOpenChange={setPostDialogOpen}
-          userId={profile.id}
-          twitterVerified={profile.twitter_verified}
-        />
-      )}
-    </>
+        {/* Nav links */}
+        <div className="hidden items-center gap-6 sm:flex">
+          <Link href="/feed" className="text-sm text-zinc-400 hover:text-white transition-colors">
+            Explore
+          </Link>
+        </div>
+
+        {/* Right side */}
+        <div className="flex items-center gap-2">
+          {isLoading ? (
+            <div className="h-8 w-20 animate-pulse rounded-lg bg-white/5" />
+          ) : isAuthenticated ? (
+            <>
+              {/* Post intent button */}
+              <Button
+                size="sm"
+                onClick={() => setIntentDialogOpen(true)}
+                className="hidden gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white sm:flex"
+              >
+                <Plus className="h-4 w-4" />
+                Post Intent
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setIntentDialogOpen(true)}
+                className="flex sm:hidden text-zinc-400 hover:text-white"
+              >
+                <Plus className="h-5 w-5" />
+              </Button>
+
+              {/* Notifications */}
+              <Link href="/notifications">
+                <Button variant="ghost" size="icon" className="relative text-zinc-400 hover:text-white">
+                  <Bell className="h-5 w-5" />
+                </Button>
+              </Link>
+
+              {/* User menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-2 rounded-full focus:outline-none">
+                    <Avatar className="h-8 w-8 ring-1 ring-white/10 hover:ring-white/30 transition-all">
+                      <AvatarImage src={user?.image ?? ''} />
+                      <AvatarFallback className="bg-zinc-800 text-xs">
+                        {user?.name?.[0]?.toUpperCase() ?? 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-48 bg-[#0e0e14] border-white/[0.08]"
+                >
+                  <div className="px-3 py-2">
+                    <p className="text-sm font-medium text-white truncate">{user?.name}</p>
+                    <p className="text-xs text-zinc-500 truncate">@{user?.username}</p>
+                  </div>
+                  <DropdownMenuSeparator className="bg-white/[0.08]" />
+                  <DropdownMenuItem
+                    onClick={() => window.location.href = '/settings'}
+                    className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-white/[0.08]" />
+                  <DropdownMenuItem
+                    onClick={() => signOut()}
+                    className="flex items-center gap-2 cursor-pointer text-red-400 hover:text-red-300 focus:text-red-300"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <Button
+              size="sm"
+              onClick={() => signIn('twitter')}
+              className="bg-white text-black hover:bg-zinc-100 font-medium"
+            >
+              Sign in with X
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <PostIntentDialog
+        open={intentDialogOpen}
+        onOpenChange={setIntentDialogOpen}
+        userId={(session?.user as { id?: string })?.id ?? ''}
+        twitterVerified={isAuthenticated}
+      />
+    </nav>
   );
 }

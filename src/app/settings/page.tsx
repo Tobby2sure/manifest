@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { usePrivy } from '@privy-io/react-auth';
+import { signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,8 +14,7 @@ import { toast } from 'sonner';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user, logout } = usePrivy();
-  const { profile, isLoading } = useUser();
+  const { user, profile, isLoading } = useUser();
 
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
@@ -80,7 +79,7 @@ export default function SettingsPage() {
     );
   }
 
-  const walletAddress = profile.wallet_address ?? user.wallet?.address;
+  const walletAddress = profile.wallet_address;
 
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-[#080810]">
@@ -209,8 +208,7 @@ export default function SettingsPage() {
           <Button
             variant="outline"
             onClick={async () => {
-              await logout();
-              router.push('/');
+              await signOut({ callbackUrl: '/' });
             }}
             className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
           >

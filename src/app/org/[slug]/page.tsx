@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { usePrivy } from "@privy-io/react-auth";
 import { useUser } from "@/lib/hooks/use-user";
 import { getOrg, generateInviteCode } from "./actions";
 import { Button } from "@/components/ui/button";
@@ -44,7 +43,7 @@ interface OrgData {
 export default function OrgPage() {
   const params = useParams();
   const router = useRouter();
-  const { authenticated } = usePrivy();
+  const { isAuthenticated } = useUser();
   const { profile } = useUser();
   const [org, setOrg] = useState<OrgData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -210,7 +209,7 @@ export default function OrgPage() {
           )}
 
           {/* Non-member: Join */}
-          {authenticated && !isMember && (
+          {isAuthenticated && !isMember && (
             <div className="mt-4 pt-4 border-t border-white/[0.06]">
               <p className="text-sm text-zinc-400 mb-2">
                 Have an invite code? Use it to join this organization.

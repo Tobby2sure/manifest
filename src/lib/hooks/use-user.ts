@@ -1,44 +1,42 @@
-"use client";
+'use client';
 
-import { usePrivy } from "@privy-io/react-auth";
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import type { Profile } from "@/lib/types/database";
+import { useSession } from 'next-auth/react';
+import { useQuery } from '@tanstack/react-query';
+import { createClient } from '@/lib/supabase/client';
+
+export interface UserData {
+  id: string;
+  name?: string | null;
+  image?: string | null;
+  username?: string;
+  twitter_id?: string;
+  profile?: Record<string, unknown> | null;
+}
 
 export function useUser() {
-  const { user, ready, authenticated } = usePrivy();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: session, status } = useSession();
+  const supabase = createClient();
 
-  useEffect(() => {
-    if (!ready) return;
-
-    if (!authenticated || !user) {
-      setProfile(null);
-      setIsLoading(false);
-      return;
-    }
-
-    const supabase = createClient();
-
-    async function fetchProfile() {
+  const query = useQuery({
+    queryKey: ['user-profile', session?.user],
+    queryFn: async () => {
+      if (!session?.user) return null;
+      const userId = (session.user as { id?: string }).id;
+      if (!userId) return null;
       const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user!.id)
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
         .single();
-
-      setProfile(data as Profile | null);
-      setIsLoading(false);
-    }
-
-    fetchProfile();
-  }, [user, ready, authenticated]);
+      return data;
+    },
+    enabled: !!session?.user,
+  });
 
   return {
-    user,
-    profile,
-    isLoading: !ready || isLoading,
-    isAuthenticated: authenticated,
+    user: session?.user as UserData | undefined,
+    profile: query.data,
+    isLoading: status === 'loading',
+    isAuthenticated: !!session?.user,
   };
 }

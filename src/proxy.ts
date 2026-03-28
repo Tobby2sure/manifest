@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { PrivyClient } from "@privy-io/server-auth";
+import { getToken } from "next-auth/jwt";
 
 const PUBLIC_ROUTES = ["/", "/feed", "/profile", "/api", "/onboarding", "/invite"];
-
-const privyClient = new PrivyClient(
-  process.env.NEXT_PUBLIC_PRIVY_APP_ID!,
-  process.env.PRIVY_APP_SECRET!
-);
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -30,29 +25,20 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Attempt to verify Privy auth token
-  const authToken =
-    request.cookies.get("privy-token")?.value ??
-    request.headers.get("authorization")?.replace("Bearer ", "");
+  // Verify NextAuth session token
+  const token = await getToken({ req: request });
 
-  if (!authToken) {
+  if (!token) {
     return NextResponse.redirect(new URL("/onboarding", request.url));
   }
 
-  try {
-    const { userId } = await privyClient.verifyAuthToken(authToken);
+  // Pass userId as header for downstream use
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-user-id", token.sub ?? "");
 
-    // Pass userId as header for downstream use
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set("x-privy-user-id", userId);
-
-    return NextResponse.next({
-      request: { headers: requestHeaders },
-    });
-  } catch {
-    // Invalid token — redirect to onboarding
-    return NextResponse.redirect(new URL("/onboarding", request.url));
-  }
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  });
 }
 
 export const config = {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { usePrivy } from "@privy-io/react-auth";
+import { signIn } from "next-auth/react";
 import { useUser } from "@/lib/hooks/use-user";
 import { validateInvite, consumeInvite } from "@/app/actions/invites";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ interface InviteOrg {
 export default function InvitePage() {
   const params = useParams();
   const router = useRouter();
-  const { login, authenticated } = usePrivy();
+  const { isAuthenticated } = useUser();
   const { profile } = useUser();
   const [org, setOrg] = useState<InviteOrg | null>(null);
   const [loading, setLoading] = useState(true);
@@ -129,9 +129,9 @@ export default function InvitePage() {
               <p className="text-xs text-zinc-400">Redirecting...</p>
             </div>
           </div>
-        ) : !authenticated ? (
+        ) : !isAuthenticated ? (
           <Button
-            onClick={login}
+            onClick={() => signIn('twitter')}
             className="w-full bg-emerald-600 hover:bg-emerald-500 text-white border-0"
           >
             <Users className="size-4 mr-1.5" />
