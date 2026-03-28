@@ -36,35 +36,44 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Exchange code for access token
+    // Exchange code for access token (confidential client uses Basic auth)
+    const tokenBody = new URLSearchParams({
+      code,
+      grant_type: "authorization_code",
+      redirect_uri: REDIRECT_URI,
+      code_verifier: codeVerifier,
+      client_id: CLIENT_ID,
+    });
+
     const tokenRes = await fetch("https://api.twitter.com/2/oauth2/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: `Basic ${btoa(`${CLIENT_ID}:${CLIENT_SECRET}`)}`,
+        Authorization: `Basic ${Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString("base64")}`,
       },
-      body: new URLSearchParams({
-        code,
-        grant_type: "authorization_code",
-        redirect_uri: REDIRECT_URI,
-        code_verifier: codeVerifier,
-      }),
+      body: tokenBody,
     });
 
-    if (!tokenRes.ok) {
-      const err = await tokenRes.text();
-      console.error("Token exchange failed:", err);
+    const tokenData = await tokenRes.json();
+    console.log("[twitter-callback] token response:", JSON.stringify(tokenData));
+
+    if (!tokenRes.ok || !tokenData.access_token) {
+      console.error("Token exchange failed:", tokenData);
       return NextResponse.redirect(`${appUrl}/onboarding/verify-x?error=token_failed`);
     }
 
-    const { access_token } = await tokenRes.json();
+    const { access_token } = tokenData;
 
     // Fetch Twitter user info
     const userRes = await fetch("https://api.twitter.com/2/users/me?user.fields=username,name,profile_image_url", {
       headers: { Authorization: `Bearer ${access_token}` },
     });
 
-    if (!userRes.ok) {
+    const userData = await userRes.json();
+    console.log("[twitter-callback] user response:", JSON.stringify(userData));
+
+    if (!userRes.ok || !userData.data) {
+      console.error("User fetch failed:", userData);
       return NextResponse.redirect(`${appUrl}/onboarding/verify-x?error=user_fetch_failed`);
     }
 
