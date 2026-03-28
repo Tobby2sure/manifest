@@ -1,27 +1,36 @@
 "use client";
 
-import { useDynamicContext, useSocialAccounts } from "@dynamic-labs/sdk-react-core";
-import { ProviderEnum } from "@dynamic-labs/sdk-api-core";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/lib/hooks/use-user";
-import { CheckCircle, ArrowRight, Loader2 } from "lucide-react";
+import { CheckCircle, ArrowRight, Loader2, AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 
 export default function VerifyXPage() {
   const router = useRouter();
-  const { isAuthenticated, twitterVerified, twitterHandle } = useUser();
+  const searchParams = useSearchParams();
+  const { isAuthenticated, twitterVerified, twitterHandle, user, refetch } = useUser();
   const { setShowAuthFlow } = useDynamicContext();
-  const { linkSocialAccount, isProcessing } = useSocialAccounts();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleConnectX = async () => {
-    try {
-      await linkSocialAccount(ProviderEnum.Twitter, { forcePopup: true });
-    } catch (e) {
-      console.error("Twitter link error:", e);
+  const success = searchParams.get("success");
+  const error = searchParams.get("error");
+
+  // Refetch profile after successful OAuth redirect
+  useEffect(() => {
+    if (success === "true") {
+      refetch();
     }
+  }, [success, refetch]);
+
+  const handleConnectX = () => {
+    if (!user?.userId) return;
+    setIsLoading(true);
+    // Direct Twitter OAuth — no Dynamic dependency
+    window.location.href = `/api/auth/twitter?userId=${user.userId}`;
   };
 
-  // Not logged in at all
   if (!isAuthenticated) {
     return (
       <main className="min-h-[calc(100vh-4rem)] bg-[#0a0a12] flex items-center justify-center p-4">
@@ -35,8 +44,7 @@ export default function VerifyXPage() {
     );
   }
 
-  // Already verified
-  if (twitterVerified) {
+  if (twitterVerified || success === "true") {
     return (
       <main className="min-h-[calc(100vh-4rem)] bg-[#0a0a12] flex items-center justify-center p-4">
         <div className="w-full max-w-md">
@@ -44,10 +52,12 @@ export default function VerifyXPage() {
             <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="size-7 text-emerald-400" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-1">X Account Verified</h2>
-            <p className="text-zinc-400 text-sm mb-2">
-              Connected as <span className="text-white font-medium">@{twitterHandle}</span>
-            </p>
+            <h2 className="text-xl font-bold text-white mb-1">X Account Verified ✓</h2>
+            {twitterHandle && (
+              <p className="text-zinc-400 text-sm mb-2">
+                Connected as <span className="text-white font-medium">@{twitterHandle}</span>
+              </p>
+            )}
             <p className="text-zinc-500 text-xs mb-6">You can now post intents and connect with others.</p>
             <Button onClick={() => router.push("/feed")} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white">
               Go to Feed <ArrowRight className="size-4 ml-1.5" />
@@ -58,7 +68,6 @@ export default function VerifyXPage() {
     );
   }
 
-  // Logged in but X not yet linked
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-[#0a0a12] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -70,6 +79,13 @@ export default function VerifyXPage() {
           <p className="text-zinc-400 text-sm text-center mb-8">
             Linking X gives you a verified badge, lets you post intents, and connect with others on Manifest.
           </p>
+
+          {error && (
+            <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-3 mb-6 text-sm text-red-400">
+              <AlertCircle className="size-4 shrink-0" />
+              {error === "access_denied" ? "Authorization was cancelled." : `Something went wrong (${error}). Try again.`}
+            </div>
+          )}
 
           <div className="space-y-3 mb-8">
             {[
@@ -86,11 +102,11 @@ export default function VerifyXPage() {
 
           <Button
             onClick={handleConnectX}
-            disabled={isProcessing}
+            disabled={isLoading}
             className="w-full bg-black hover:bg-zinc-900 text-white border border-white/10 py-3 font-semibold cursor-pointer"
           >
-            {isProcessing ? (
-              <><Loader2 className="size-4 mr-2 animate-spin" />Connecting...</>
+            {isLoading ? (
+              <><Loader2 className="size-4 mr-2 animate-spin" />Redirecting to X...</>
             ) : (
               <><span className="mr-2 font-bold">𝕏</span>Connect X Account</>
             )}
