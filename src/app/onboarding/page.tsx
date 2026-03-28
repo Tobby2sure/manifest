@@ -18,7 +18,7 @@ const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { authenticated, linkTwitter } = usePrivy();
+  const { authenticated, linkTwitter, login } = usePrivy();
   const { profile } = useUser();
   const { user } = useUser();
 
@@ -114,14 +114,24 @@ export default function OnboardingPage() {
 
   if (!user) {
     return (
-      <main className="min-h-[calc(100vh-4rem)] bg-[#0a0a12] flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-[#F1F5F9]">
-            Sign in to get started
+      <main className="min-h-[calc(100vh-4rem)] bg-[#0a0a12] flex items-center justify-center p-4">
+        <div className="text-center max-w-sm">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center text-2xl font-bold text-white mx-auto mb-6 shadow-lg shadow-violet-500/20">
+            M
+          </div>
+          <h1 className="text-2xl font-bold text-[#F1F5F9] mb-2">
+            Welcome to Manifest
           </h1>
-          <p className="text-[#94A3B8] mt-2">
-            You need to be logged in to complete onboarding.
+          <p className="text-[#94A3B8] mb-8">
+            Sign in to declare your intents and connect with the Web3 ecosystem.
           </p>
+          <button
+            onClick={() => login()}
+            className="w-full py-3 px-6 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-xl transition-all duration-200 active:scale-95 shadow-lg shadow-violet-500/20 cursor-pointer"
+          >
+            Sign In to Continue
+          </button>
+          <p className="text-[#475569] text-xs mt-4">Email, X (Twitter), or wallet</p>
         </div>
       </main>
     );
