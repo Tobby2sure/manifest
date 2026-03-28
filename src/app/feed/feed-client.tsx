@@ -223,8 +223,12 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
             </Button>
           )}
           {isAuthenticated && !profile?.twitter_verified && (
-            <Button variant="outline" disabled className="text-[#475569] w-full sm:w-auto">
-              Verify X to Post
+            <Button
+              variant="outline"
+              onClick={() => router.push('/onboarding/verify-x')}
+              className="border-violet-500/30 text-violet-300 hover:bg-violet-500/10 hover:border-violet-500/50 w-full sm:w-auto cursor-pointer transition-all"
+            >
+              𝕏 Verify to Post
             </Button>
           )}
           {!isAuthenticated && (

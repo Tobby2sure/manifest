@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Plus, LogOut, Settings, Bell } from 'lucide-react';
+import { Plus, LogOut, Settings, Bell, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { PostIntentDialog } from '@/components/post-intent-dialog';
 import { useUser } from '@/lib/hooks/use-user';
@@ -89,6 +89,9 @@ export function Navbar() {
                     {twitterVerified && <p className="text-xs text-emerald-400 mt-0.5">✓ X Verified</p>}
                   </div>
                   <DropdownMenuSeparator className="bg-white/[0.08]" />
+                  <DropdownMenuItem onClick={() => window.location.href = '/profile/me'} className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
+                    <User className="h-4 w-4" />My Profile
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => window.location.href = '/settings'} className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
                     <Settings className="h-4 w-4" />Settings
                   </DropdownMenuItem>
