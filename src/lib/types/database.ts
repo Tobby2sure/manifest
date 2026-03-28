@@ -20,7 +20,8 @@ export type Ecosystem =
   | "avalanche"
   | "bnb-chain"
   | "cosmos"
-  | "multi-chain";
+  | "multi-chain"
+  | (string & {});
 
 export type Sector =
   | "defi"
@@ -32,7 +33,8 @@ export type Sector =
   | "ai"
   | "security"
   | "identity"
-  | "payments";
+  | "payments"
+  | (string & {});
 
 export type IntentPriority = "Open" | "Active" | "Urgent";
 
