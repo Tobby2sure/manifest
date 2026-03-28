@@ -88,6 +88,14 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
   const [searchValue, setSearchValue] = useState(initialFilters.search ?? "");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Custom filter inputs for "Other" ecosystem/sector
+  const predefinedEcosystems = Object.keys(ECOSYSTEM_CONFIG);
+  const predefinedSectors = Object.keys(SECTOR_CONFIG);
+  const isCustomEcosystem = !!(initialFilters.ecosystem && !predefinedEcosystems.includes(initialFilters.ecosystem));
+  const isCustomSector = !!(initialFilters.sector && !predefinedSectors.includes(initialFilters.sector));
+  const [customEcosystem, setCustomEcosystem] = useState(isCustomEcosystem ? (initialFilters.ecosystem ?? "") : "");
+  const [customSector, setCustomSector] = useState(isCustomSector ? (initialFilters.sector ?? "") : "");
+
   // Infinite scroll
   const [allIntents, setAllIntents] = useState(initialIntents);
   const [page, setPage] = useState(initialFilters.page ?? 0);
@@ -144,6 +152,8 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
 
   const clearAllFilters = useCallback(() => {
     setSearchValue("");
+    setCustomEcosystem("");
+    setCustomSector("");
     router.push("/feed");
   }, [router]);
 
@@ -283,45 +293,47 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
         </Button>
       </div>
 
-      {/* Type filter pills — sticky with blur */}
-      <div className="sticky top-14 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-3 pb-4 mb-5 bg-[#080810]/70 backdrop-blur-2xl border-b border-white/[0.04]">
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-0.5">
-          <button
-            onClick={() => updateFilter("type", null)}
-            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-300 cursor-pointer ${
-              !activeType
-                ? "bg-violet-500/15 text-violet-300 border border-violet-500/30 shadow-[0_0_12px_rgba(139,92,246,0.1)]"
-                : "text-[#94A3B8] hover:text-white hover:bg-white/[0.04] border border-transparent"
-            }`}
-          >
-            All
-          </button>
-          {INTENT_TYPES.map((type) => {
-            const config = INTENT_TYPE_CONFIG[type];
-            const isActive = activeType === type;
-            return (
-              <button
-                key={type}
-                onClick={() => updateFilter("type", isActive ? null : type)}
-                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-300 cursor-pointer flex items-center gap-1.5 ${
-                  isActive
-                    ? `${config.color} border border-current/20 shadow-[0_0_12px_rgba(139,92,246,0.08)]`
-                    : "text-[#94A3B8] hover:text-white hover:bg-white/[0.04] border border-transparent"
-                }`}
-              >
-                <span className={`size-1.5 rounded-full ${isActive ? 'bg-current' : 'bg-[#475569]'} transition-colors duration-200`} />
-                {config.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Main content: sidebar + grid */}
       <div className="flex gap-6 mb-6">
         {/* Filter sidebar */}
         <div className={`shrink-0 w-60 ${showSidebar ? "block" : "hidden lg:block"}`}>
-          <div className="sticky top-32 space-y-6">
+          <div className="sticky top-20 space-y-6">
+            {/* Intent Type */}
+            <div>
+              <h3 className="text-[11px] font-semibold text-[#F1F5F9]/40 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <span className="h-px flex-1 bg-gradient-to-r from-white/[0.06] to-transparent" />
+                Intent Type
+                <span className="h-px flex-1 bg-gradient-to-l from-white/[0.06] to-transparent" />
+              </h3>
+              <div className="space-y-0.5 max-h-64 overflow-y-auto scrollbar-hide">
+                {INTENT_TYPES.map((type) => {
+                  const config = INTENT_TYPE_CONFIG[type];
+                  return (
+                    <label
+                      key={type}
+                      className={`flex items-center gap-2.5 cursor-pointer group rounded-lg px-2.5 py-1.5 transition-all duration-200 ${
+                        activeType === type ? 'bg-white/[0.04]' : 'hover:bg-white/[0.02]'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={activeType === type}
+                        onChange={() =>
+                          updateFilter("type", activeType === type ? null : type)
+                        }
+                        className="premium-checkbox"
+                      />
+                      <span className={`text-sm transition-colors duration-200 ${
+                        activeType === type ? 'text-[#F1F5F9]' : 'text-[#94A3B8] group-hover:text-[#CBD5E1]'
+                      }`}>
+                        {config.label}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Ecosystem */}
             <div>
               <h3 className="text-[11px] font-semibold text-[#F1F5F9]/40 uppercase tracking-widest mb-3 flex items-center gap-2">
@@ -340,9 +352,10 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                     <input
                       type="checkbox"
                       checked={activeEcosystem === key}
-                      onChange={() =>
-                        updateFilter("ecosystem", activeEcosystem === key ? null : key)
-                      }
+                      onChange={() => {
+                        setCustomEcosystem("");
+                        updateFilter("ecosystem", activeEcosystem === key ? null : key);
+                      }}
                       className="premium-checkbox"
                     />
                     <span className={`text-sm transition-colors duration-200 ${
@@ -353,6 +366,25 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                   </label>
                 ))}
               </div>
+              <input
+                type="text"
+                placeholder="Other ecosystem..."
+                value={customEcosystem}
+                onChange={(e) => setCustomEcosystem(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && customEcosystem.trim()) {
+                    updateFilter("ecosystem", customEcosystem.trim().toLowerCase());
+                  }
+                }}
+                onBlur={() => {
+                  if (customEcosystem.trim()) {
+                    updateFilter("ecosystem", customEcosystem.trim().toLowerCase());
+                  }
+                }}
+                className={`mt-2 w-full h-8 rounded-lg border bg-white/[0.03] px-2.5 text-xs text-[#F1F5F9] outline-none placeholder:text-[#475569]/60 transition-all duration-200 focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/10 ${
+                  isCustomEcosystem ? 'border-violet-500/30 bg-white/[0.05]' : 'border-white/[0.07]'
+                }`}
+              />
             </div>
 
             {/* Sector */}
@@ -373,9 +405,10 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                     <input
                       type="checkbox"
                       checked={activeSector === key}
-                      onChange={() =>
-                        updateFilter("sector", activeSector === key ? null : key)
-                      }
+                      onChange={() => {
+                        setCustomSector("");
+                        updateFilter("sector", activeSector === key ? null : key);
+                      }}
                       className="premium-checkbox"
                     />
                     <span className={`text-sm transition-colors duration-200 ${
@@ -386,6 +419,25 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                   </label>
                 ))}
               </div>
+              <input
+                type="text"
+                placeholder="Other sector..."
+                value={customSector}
+                onChange={(e) => setCustomSector(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && customSector.trim()) {
+                    updateFilter("sector", customSector.trim().toLowerCase());
+                  }
+                }}
+                onBlur={() => {
+                  if (customSector.trim()) {
+                    updateFilter("sector", customSector.trim().toLowerCase());
+                  }
+                }}
+                className={`mt-2 w-full h-8 rounded-lg border bg-white/[0.03] px-2.5 text-xs text-[#F1F5F9] outline-none placeholder:text-[#475569]/60 transition-all duration-200 focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/10 ${
+                  isCustomSector ? 'border-violet-500/30 bg-white/[0.05]' : 'border-white/[0.07]'
+                }`}
+              />
             </div>
 
             {/* Priority */}

@@ -44,7 +44,9 @@ export function PostIntentDialog({
   const [intentType, setIntentType] = useState<IntentType>("partnership");
   const [content, setContent] = useState("");
   const [ecosystem, setEcosystem] = useState<Ecosystem | "">("");
+  const [customEcosystem, setCustomEcosystem] = useState("");
   const [sector, setSector] = useState<Sector | "">("");
+  const [customSector, setCustomSector] = useState("");
   const [priority, setPriority] = useState<IntentPriority>("Open");
   const [duration, setDuration] = useState(30);
   const [submitting, setSubmitting] = useState(false);
@@ -96,12 +98,14 @@ export function PostIntentDialog({
     setSubmitting(true);
 
     try {
+      const finalEcosystem = ecosystem === "other" ? (customEcosystem.trim().toLowerCase() || null) : (ecosystem || null);
+      const finalSector = sector === "other" ? (customSector.trim().toLowerCase() || null) : (sector || null);
       await createIntent({
         authorId: userId,
         type: intentType,
         content,
-        ecosystem: ecosystem || null,
-        sector: sector || null,
+        ecosystem: finalEcosystem,
+        sector: finalSector,
         priority,
         durationDays: duration,
       });
@@ -109,7 +113,9 @@ export function PostIntentDialog({
       setContent("");
       setIntentType("partnership");
       setEcosystem("");
+      setCustomEcosystem("");
       setSector("");
+      setCustomSector("");
       setPriority("Open");
       setDuration(30);
       setUseTemplate(false);
@@ -246,9 +252,11 @@ export function PostIntentDialog({
               <select
                 id="ecosystem"
                 value={ecosystem}
-                onChange={(e) =>
-                  setEcosystem(e.target.value as Ecosystem | "")
-                }
+                onChange={(e) => {
+                  const val = e.target.value as Ecosystem | "" | "other";
+                  setEcosystem(val);
+                  if (val !== "other") setCustomEcosystem("");
+                }}
                 className="mt-1.5 w-full h-8 rounded-lg border border-white/10 bg-white/5 px-2.5 text-sm text-white/90 outline-none focus:border-emerald-500"
               >
                 <option value="">Select...</option>
@@ -257,7 +265,17 @@ export function PostIntentDialog({
                     {config.label}
                   </option>
                 ))}
+                <option value="other">Other...</option>
               </select>
+              {ecosystem === "other" && (
+                <input
+                  type="text"
+                  placeholder="Type your ecosystem..."
+                  value={customEcosystem}
+                  onChange={(e) => setCustomEcosystem(e.target.value)}
+                  className="mt-1.5 w-full h-8 rounded-lg border border-white/10 bg-white/5 px-2.5 text-sm text-white/90 outline-none focus:border-emerald-500 placeholder:text-zinc-500"
+                />
+              )}
             </div>
             <div>
               <Label className="text-zinc-300" htmlFor="sector">
@@ -266,7 +284,11 @@ export function PostIntentDialog({
               <select
                 id="sector"
                 value={sector}
-                onChange={(e) => setSector(e.target.value as Sector | "")}
+                onChange={(e) => {
+                  const val = e.target.value as Sector | "" | "other";
+                  setSector(val);
+                  if (val !== "other") setCustomSector("");
+                }}
                 className="mt-1.5 w-full h-8 rounded-lg border border-white/10 bg-white/5 px-2.5 text-sm text-white/90 outline-none focus:border-emerald-500"
               >
                 <option value="">Select...</option>
@@ -275,7 +297,17 @@ export function PostIntentDialog({
                     {config.label}
                   </option>
                 ))}
+                <option value="other">Other...</option>
               </select>
+              {sector === "other" && (
+                <input
+                  type="text"
+                  placeholder="Type your sector..."
+                  value={customSector}
+                  onChange={(e) => setCustomSector(e.target.value)}
+                  className="mt-1.5 w-full h-8 rounded-lg border border-white/10 bg-white/5 px-2.5 text-sm text-white/90 outline-none focus:border-emerald-500 placeholder:text-zinc-500"
+                />
+              )}
             </div>
           </div>
 
