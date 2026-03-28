@@ -1,6 +1,6 @@
 'use client';
 
-import { usePrivy } from '@privy-io/react-auth';
+import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import Link from 'next/link';
 import { useRef, useEffect, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
@@ -52,7 +52,7 @@ function CountUp({ target, suffix }: { target: number; suffix: string }) {
 }
 
 export default function HomePage() {
-  const { ready, authenticated } = usePrivy();
+  const { sdkHasLoaded: ready, user} = useDynamicContext();
 
   return (
     <main className="min-h-screen bg-[#0a0a12]">
@@ -111,7 +111,7 @@ export default function HomePage() {
                 Browse Intents
                 <ArrowRight className="size-4 ml-2" />
               </Link>
-              {ready && !authenticated && (
+              {ready && !user && (
                 <Link
                   href="/onboarding"
                   className="inline-flex items-center justify-center rounded-xl border border-violet-500/30 hover:border-violet-500/50 text-violet-300 hover:text-violet-200 font-medium px-7 py-3.5 text-base transition-all duration-200 hover:bg-violet-500/5 cursor-pointer w-full sm:w-auto"
@@ -119,7 +119,7 @@ export default function HomePage() {
                   Post Intent
                 </Link>
               )}
-              {ready && authenticated && (
+              {ready && !!user && (
                 <Link
                   href="/feed"
                   className="inline-flex items-center justify-center rounded-xl border border-white/10 hover:border-white/20 text-[#94A3B8] hover:text-white font-medium px-7 py-3.5 text-base transition-all duration-200 cursor-pointer w-full sm:w-auto"

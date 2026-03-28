@@ -1,9 +1,11 @@
 "use client";
 
-import { PrivyProvider } from "@privy-io/react-auth";
+import { DynamicContextProvider } from "@dynamic-labs/sdk-react-core";
+import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
-import { privyConfig } from "@/lib/privy/config";
+
+const DYNAMIC_ENV_ID = process.env.NEXT_PUBLIC_DYNAMIC_ENV_ID!;
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -11,15 +13,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     defaultOptions: { queries: { staleTime: 1000 * 60 * 5, retry: 1 } },
   }));
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
-  const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
-
-  // On server or before hydration: render children without Privy
-  // This prevents PrivyProvider from running during SSR
-  if (!mounted || !appId) {
+  if (!mounted) {
     return (
       <QueryClientProvider client={queryClient}>
         {children}
@@ -28,10 +24,23 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <PrivyProvider appId={appId} config={privyConfig}>
+    <DynamicContextProvider
+      settings={{
+        environmentId: DYNAMIC_ENV_ID,
+        walletConnectors: [EthereumWalletConnectors],
+        socialProvidersFilter: (providers) =>
+          providers.filter((p) => p === "twitter"),
+        events: {
+          onAuthSuccess: ({ user }) => {
+            console.log("[Dynamic] Auth success:", user.userId);
+          },
+        },
+        initialAuthenticationMode: "connect-and-sign",
+      }}
+    >
       <QueryClientProvider client={queryClient}>
         {children}
       </QueryClientProvider>
-    </PrivyProvider>
+    </DynamicContextProvider>
   );
 }

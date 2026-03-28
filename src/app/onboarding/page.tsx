@@ -1,6 +1,6 @@
 "use client";
 
-import { usePrivy } from "@privy-io/react-auth";
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,9 +18,8 @@ const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { authenticated, linkTwitter, login } = usePrivy();
-  const { profile } = useUser();
-  const { user } = useUser();
+  const { isLoading, isAuthenticated: authenticated, user, profile } = useUser();
+  const { setShowAuthFlow } = useDynamicContext();
 
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
@@ -44,8 +43,9 @@ export default function OnboardingPage() {
   const isOrg = accountType === "organization";
   const totalSteps = isOrg ? 4 : 3;
 
-  const hasTwitter = !!user?.twitter?.username;
-  const twitterUsername = user?.twitter?.username;
+  const twitterCredential = user?.verifiedCredentials?.find(c => c.oauthProvider === 'twitter');
+  const hasTwitter = !!twitterCredential?.oauthUsername;
+  const twitterUsername = twitterCredential?.oauthUsername;
 
   function currentStepIndex() {
     if (step === 0) return 0;
@@ -88,7 +88,7 @@ export default function OnboardingPage() {
 
     try {
       await upsertProfile({
-        id: user.id!,
+        id: user.userId!,
         display_name: displayName,
         bio: bio || undefined,
         telegram_handle: telegram || undefined,
@@ -126,7 +126,7 @@ export default function OnboardingPage() {
             Sign in to declare your intents and connect with the Web3 ecosystem.
           </p>
           <button
-            onClick={() => login()}
+            onClick={() => setShowAuthFlow(true)}
             className="w-full py-3 px-6 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-xl transition-all duration-200 active:scale-95 shadow-lg shadow-violet-500/20 cursor-pointer"
           >
             Sign In to Continue
@@ -418,7 +418,7 @@ export default function OnboardingPage() {
                   </div>
                 ) : (
                   <Button
-                    onClick={() => linkTwitter()}
+                    onClick={() => setShowAuthFlow(true)}
                     variant="outline"
                     className="w-full border-white/[0.07] hover:border-violet-500/30 transition-all duration-200 cursor-pointer"
                   >

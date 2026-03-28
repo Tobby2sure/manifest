@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from 'sonner';
 import ClientProviders from '@/components/client-providers';
 
-// Force all routes dynamic — prevents prerender issues with PrivyProvider
+// Force all routes dynamic
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
