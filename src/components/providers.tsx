@@ -10,14 +10,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     defaultOptions: { queries: { staleTime: 1000 * 60 * 5, retry: 1 } },
   }));
 
-  const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
-
-  if (!appId) {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
-  }
-
   return (
-    <PrivyProvider appId={appId} config={privyConfig}>
+    <PrivyProvider
+      appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
+      config={privyConfig}
+    >
       <QueryClientProvider client={queryClient}>
         {children}
       </QueryClientProvider>

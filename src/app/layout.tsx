@@ -3,6 +3,9 @@ import './globals.css';
 import { Toaster } from 'sonner';
 import ClientProviders from '@/components/client-providers';
 
+// Force all routes dynamic — prevents prerender issues with PrivyProvider
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: { default: 'Manifest', template: '%s | Manifest' },
   description: "Web3 intent board — declare what you're building toward and find the people who make it real.",
@@ -24,7 +27,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-full flex flex-col bg-[#080810] text-white font-sans antialiased">
+      <body className="min-h-full flex flex-col bg-[#0a0a12] text-white font-sans antialiased">
         <ClientProviders>
           {children}
         </ClientProviders>
