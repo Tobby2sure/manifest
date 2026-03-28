@@ -13,7 +13,7 @@ import type { AccountType } from "@/lib/types/database";
 import { useUser } from "@/lib/hooks/use-user";
 import { CheckCircle, ArrowRight, ArrowLeft, User, Building2, Link2 } from "lucide-react";
 
-const STEP_LABELS = ["Account Type", "Your Details", "Organization", "Connect X"];
+const STEP_LABELS = ["Account Type", "Your Details", "Organization"];
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function OnboardingPage() {
@@ -98,7 +98,7 @@ export default function OnboardingPage() {
         twitter_verified: hasTwitter,
         wallet_address: undefined,
       });
-      router.push("/feed");
+      router.push("/onboarding/verify-x");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save profile");
     } finally {

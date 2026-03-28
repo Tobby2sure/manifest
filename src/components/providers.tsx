@@ -17,11 +17,20 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       settings={{
         environmentId: DYNAMIC_ENV_ID,
         walletConnectors: [EthereumWalletConnectors],
+        // Login via email only — Twitter is a separate verification step
         initialAuthenticationMode: "connect-and-sign",
+        events: {
+          onAuthSuccess: ({ user }) => {
+            // Redirect to onboarding after first login
+            if (user.newUser) {
+              window.location.href = '/onboarding';
+            }
+          },
+        },
       }}
     >
       <QueryClientProvider client={queryClient}>
-        {/* DynamicWidget must be mounted for setShowAuthFlow modal to render — hidden visually */}
+        {/* DynamicWidget must be mounted for setShowAuthFlow modal to render — hidden */}
         <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0, pointerEvents: 'none' }}>
           <DynamicWidget />
         </div>
