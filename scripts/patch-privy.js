@@ -32,16 +32,27 @@ function findFiles(dir, results = []) {
 const distDir = path.join(__dirname, '..', 'node_modules', '@privy-io', 'react-auth', 'dist');
 const files = findFiles(distDir);
 
+// Regex catch-all: replace any `25!==X.length` with `X.length<10` regardless of
+// minified variable names — covers ESM and CJS bundles across SDK versions.
+const lengthCheckRe = /25!==([a-zA-Z]{1,2})\.length/g;
+
 let patchedCount = 0;
 for (const file of files) {
   try {
     let content = fs.readFileSync(file, 'utf8');
     let changed = false;
+    // String-literal patterns (legacy, kept for safety)
     for (const [old, replacement] of patterns) {
       if (content.includes(old)) {
         content = content.split(old).join(replacement);
         changed = true;
       }
+    }
+    // Regex pass to catch any remaining 25-char length checks
+    const after = content.replace(lengthCheckRe, '$1.length<10');
+    if (after !== content) {
+      content = after;
+      changed = true;
     }
     if (changed) {
       fs.writeFileSync(file, content);
