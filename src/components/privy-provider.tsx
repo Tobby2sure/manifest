@@ -1,9 +1,39 @@
 'use client';
 
-import React from 'react';
-import { Navbar } from '@/components/navbar';
+import React, { useEffect, useState } from 'react';
 
-// Error boundary to catch Privy init failures gracefully
+// Global unhandled rejection handler — catches Privy's async getServerConfig() throw
+// before it can kill the page. Must be installed before PrivyProvider mounts.
+function useGlobalPrivyErrorSuppressor() {
+  useEffect(() => {
+    const handler = (event: PromiseRejectionEvent) => {
+      const msg = event.reason?.message ?? String(event.reason ?? '');
+      if (
+        msg.includes('invalid Privy app ID') ||
+        msg.includes('Privy app ID') ||
+        msg.includes('getServerConfig') ||
+        msg.includes('privy')
+      ) {
+        event.preventDefault();
+        console.warn('[Privy] Suppressed init error:', msg);
+      }
+    };
+    const errorHandler = (event: ErrorEvent) => {
+      const msg = event.message ?? '';
+      if (msg.includes('invalid Privy app ID') || msg.includes('Privy')) {
+        event.preventDefault();
+        console.warn('[Privy] Suppressed error:', msg);
+      }
+    };
+    window.addEventListener('unhandledrejection', handler);
+    window.addEventListener('error', errorHandler);
+    return () => {
+      window.removeEventListener('unhandledrejection', handler);
+      window.removeEventListener('error', errorHandler);
+    };
+  }, []);
+}
+
 class PrivyErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { hasError: boolean }
@@ -12,64 +42,51 @@ class PrivyErrorBoundary extends React.Component<
     super(props);
     this.state = { hasError: false };
   }
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
+  static getDerivedStateFromError() { return { hasError: true }; }
   componentDidCatch(error: Error) {
-    console.warn('[Privy] init error caught by boundary:', error.message);
+    console.warn('[Privy] Boundary caught:', error.message);
   }
   render() {
-    if (this.state.hasError) {
-      return <>{this.props.children}</>;
-    }
+    if (this.state.hasError) return <>{this.props.children}</>;
     return this.props.children;
   }
 }
 
-let PrivyProviderModule: typeof import('@privy-io/react-auth').PrivyProvider | null = null;
+function PrivyLoader({ children }: { children: React.ReactNode }) {
+  useGlobalPrivyErrorSuppressor();
 
-// Patch the length check that rejects cmn* app IDs
-function patchPrivySDK() {
-  if (typeof window === 'undefined') return;
-  try {
-    // The SDK throws if appId.length !== 25 — patch prototype to be lenient
-    const origError = window.Error;
-    (window as Window & { __privy_patched?: boolean }).__privy_patched = true;
-  } catch {}
-}
+  const [Provider, setProvider] = useState<React.ComponentType<{
+    appId: string;
+    config: Record<string, unknown>;
+    children: React.ReactNode;
+  }> | null>(null);
+  const [config, setConfig] = useState<Record<string, unknown> | null>(null);
+  const [failed, setFailed] = useState(false);
 
-export default function PrivyProviderClient({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const [Provider, setProvider] = React.useState<typeof import('@privy-io/react-auth').PrivyProvider | null>(null);
-  const [config, setConfig] = React.useState<import('@privy-io/react-auth').PrivyClientConfig | null>(null);
-  const [failed, setFailed] = React.useState(false);
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? '';
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!appId) return;
     Promise.all([
       import('@privy-io/react-auth'),
       import('@/lib/privy/config'),
     ])
       .then(([privy, cfg]) => {
-        setProvider(() => privy.PrivyProvider);
-        setConfig(cfg.privyConfig);
+        setProvider(() => privy.PrivyProvider as typeof Provider);
+        setConfig(cfg.privyConfig as Record<string, unknown>);
       })
       .catch((e) => {
-        console.warn('[Privy] failed to load:', e.message);
+        console.warn('[Privy] Failed to load SDK:', e?.message);
         setFailed(true);
       });
   }, [appId]);
 
+  // Always render children — auth is progressive enhancement
   if (!appId || failed || !Provider || !config) {
     return <>{children}</>;
   }
 
   const P = Provider;
-
   return (
     <PrivyErrorBoundary>
       <P appId={appId} config={config}>
@@ -77,4 +94,8 @@ export default function PrivyProviderClient({
       </P>
     </PrivyErrorBoundary>
   );
+}
+
+export default function PrivyProviderClient({ children }: { children: React.ReactNode }) {
+  return <PrivyLoader>{children}</PrivyLoader>;
 }
