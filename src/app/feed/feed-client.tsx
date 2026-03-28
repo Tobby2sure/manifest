@@ -1,8 +1,9 @@
 "use client";
 
+import { useDynamicContext, DynamicConnectButton } from '@dynamic-labs/sdk-react-core';
+
 import { useState, useCallback, useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { usePrivy } from "@privy-io/react-auth";
 import { motion, AnimatePresence } from "framer-motion";
 import { IntentCard } from "@/components/intent-card";
 import { PostIntentDialog } from "@/components/post-intent-dialog";
@@ -72,9 +73,10 @@ interface FeedClientProps {
 }
 
 export function FeedClient({ intents: initialIntents, total, initialFilters }: FeedClientProps) {
+  const { setShowAuthFlow } = useDynamicContext();
   const router = useRouter();
   const { profile, isAuthenticated } = useUser();
-  const { login } = usePrivy();
+  const login = () => setShowAuthFlow(true);
   const [isPending, startTransition] = useTransition();
 
   const [postDialogOpen, setPostDialogOpen] = useState(false);
@@ -226,12 +228,9 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
             </Button>
           )}
           {!isAuthenticated && (
-            <Button
-              onClick={login}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 w-full sm:w-auto cursor-pointer glow-emerald-sm"
-            >
+            <DynamicConnectButton buttonClassName="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg px-4 py-2 text-sm transition-all duration-200 cursor-pointer shadow-lg shadow-emerald-500/20">
               Sign In to Post
-            </Button>
+            </DynamicConnectButton>
           )}
         </div>
 
@@ -521,7 +520,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                         onRequestConnection={
                           isAuthenticated
                             ? (i) => setConnectIntent(i)
-                            : () => login()
+                            : () => setShowAuthFlow(true)
                         }
                         onViewContact={(i) => setViewContactIntent(i)}
                         isSaved={savedIds.has(intent.id)}

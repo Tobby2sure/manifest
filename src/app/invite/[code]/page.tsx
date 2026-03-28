@@ -1,8 +1,8 @@
 "use client";
 
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { usePrivy } from "@privy-io/react-auth";
 import { useUser } from "@/lib/hooks/use-user";
 import { validateInvite, consumeInvite } from "@/app/actions/invites";
 import { Button } from "@/components/ui/button";
@@ -20,9 +20,9 @@ interface InviteOrg {
 export default function InvitePage() {
   const params = useParams();
   const router = useRouter();
+  const { handleLogOut, setShowAuthFlow } = useDynamicContext();
   const { isAuthenticated } = useUser();
   const { profile } = useUser();
-  const { login } = usePrivy();
   const [org, setOrg] = useState<InviteOrg | null>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
@@ -132,7 +132,7 @@ export default function InvitePage() {
           </div>
         ) : !isAuthenticated ? (
           <Button
-            onClick={() => login()}
+            onClick={() => setShowAuthFlow(true)}
             className="w-full bg-emerald-600 hover:bg-emerald-500 text-white border-0"
           >
             <Users className="size-4 mr-1.5" />

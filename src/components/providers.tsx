@@ -1,37 +1,41 @@
 "use client";
 
-import { PrivyProvider } from "@privy-io/react-auth";
+import { DynamicContextProvider, DynamicWidget } from "@dynamic-labs/sdk-react-core";
+import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
-import { privyConfig } from "@/lib/privy/config";
+import { useState } from "react";
+
+const DYNAMIC_ENV_ID = process.env.NEXT_PUBLIC_DYNAMIC_ENV_ID!;
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: { queries: { staleTime: 1000 * 60 * 5, retry: 1 } },
   }));
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
-
-  // On server or before hydration: render children without Privy
-  // This prevents PrivyProvider from running during SSR
-  if (!mounted || !appId) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    );
-  }
-
   return (
-    <PrivyProvider appId={appId} config={privyConfig}>
+    <DynamicContextProvider
+      settings={{
+        environmentId: DYNAMIC_ENV_ID,
+        walletConnectors: [EthereumWalletConnectors],
+        // Login via email only — Twitter is a separate verification step
+        initialAuthenticationMode: "connect-and-sign",
+        events: {
+          onAuthSuccess: ({ user }) => {
+            // Redirect to onboarding after first login
+            if (user.newUser) {
+              window.location.href = '/onboarding';
+            }
+          },
+        },
+      }}
+    >
       <QueryClientProvider client={queryClient}>
+        {/* DynamicWidget must be mounted for setShowAuthFlow modal to render — hidden */}
+        <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0, pointerEvents: 'none' }}>
+          <DynamicWidget />
+        </div>
         {children}
       </QueryClientProvider>
-    </PrivyProvider>
+    </DynamicContextProvider>
   );
 }

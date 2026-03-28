@@ -1,6 +1,6 @@
 "use client";
 
-import { usePrivy } from "@privy-io/react-auth";
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,14 +13,13 @@ import type { AccountType } from "@/lib/types/database";
 import { useUser } from "@/lib/hooks/use-user";
 import { CheckCircle, ArrowRight, ArrowLeft, User, Building2, Link2 } from "lucide-react";
 
-const STEP_LABELS = ["Account Type", "Your Details", "Organization", "Connect X"];
+const STEP_LABELS = ["Account Type", "Your Details", "Organization"];
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { authenticated, linkTwitter } = usePrivy();
-  const { profile } = useUser();
-  const { user } = useUser();
+  const { isLoading, isAuthenticated: authenticated, user, profile } = useUser();
+  const { setShowAuthFlow } = useDynamicContext();
 
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
@@ -44,8 +43,9 @@ export default function OnboardingPage() {
   const isOrg = accountType === "organization";
   const totalSteps = isOrg ? 4 : 3;
 
-  const hasTwitter = !!user?.twitter?.username;
-  const twitterUsername = user?.twitter?.username;
+  const twitterCredential = user?.verifiedCredentials?.find(c => c.oauthProvider === 'twitter');
+  const hasTwitter = !!twitterCredential?.oauthUsername;
+  const twitterUsername = twitterCredential?.oauthUsername;
 
   function currentStepIndex() {
     if (step === 0) return 0;
@@ -88,7 +88,7 @@ export default function OnboardingPage() {
 
     try {
       await upsertProfile({
-        id: user.id!,
+        id: user.userId!,
         display_name: displayName,
         bio: bio || undefined,
         telegram_handle: telegram || undefined,
@@ -98,7 +98,7 @@ export default function OnboardingPage() {
         twitter_verified: hasTwitter,
         wallet_address: undefined,
       });
-      router.push("/feed");
+      router.push("/onboarding/verify-x");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save profile");
     } finally {
@@ -114,14 +114,24 @@ export default function OnboardingPage() {
 
   if (!user) {
     return (
-      <main className="min-h-[calc(100vh-4rem)] bg-[#0a0a12] flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-[#F1F5F9]">
-            Sign in to get started
+      <main className="min-h-[calc(100vh-4rem)] bg-[#0a0a12] flex items-center justify-center p-4">
+        <div className="text-center max-w-sm">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center text-2xl font-bold text-white mx-auto mb-6 shadow-lg shadow-violet-500/20">
+            M
+          </div>
+          <h1 className="text-2xl font-bold text-[#F1F5F9] mb-2">
+            Welcome to Manifest
           </h1>
-          <p className="text-[#94A3B8] mt-2">
-            You need to be logged in to complete onboarding.
+          <p className="text-[#94A3B8] mb-8">
+            Sign in to declare your intents and connect with the Web3 ecosystem.
           </p>
+          <button
+            onClick={() => setShowAuthFlow(true)}
+            className="w-full py-3 px-6 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-xl transition-all duration-200 active:scale-95 shadow-lg shadow-violet-500/20 cursor-pointer"
+          >
+            Sign In to Continue
+          </button>
+          <p className="text-[#475569] text-xs mt-4">Email, X (Twitter), or wallet</p>
         </div>
       </main>
     );
@@ -408,7 +418,7 @@ export default function OnboardingPage() {
                   </div>
                 ) : (
                   <Button
-                    onClick={() => linkTwitter()}
+                    onClick={() => setShowAuthFlow(true)}
                     variant="outline"
                     className="w-full border-white/[0.07] hover:border-violet-500/30 transition-all duration-200 cursor-pointer"
                   >

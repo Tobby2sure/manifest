@@ -1,6 +1,6 @@
 'use client';
 
-import { usePrivy } from '@privy-io/react-auth';
+import { useUser } from '@/lib/hooks/use-user';
 import Link from 'next/link';
 import { useRef, useEffect, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
@@ -52,7 +52,8 @@ function CountUp({ target, suffix }: { target: number; suffix: string }) {
 }
 
 export default function HomePage() {
-  const { ready, authenticated } = usePrivy();
+  const { isAuthenticated: authenticated, isLoading } = useUser();
+  const ready = !isLoading;
 
   return (
     <main className="min-h-screen bg-[#0a0a12]">

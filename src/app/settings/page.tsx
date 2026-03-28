@@ -1,8 +1,9 @@
 'use client';
 
+import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,6 +15,7 @@ import { toast } from 'sonner';
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { handleLogOut } = useDynamicContext();
   const { user, profile, isLoading } = useUser();
 
   const [displayName, setDisplayName] = useState('');
@@ -208,7 +210,7 @@ export default function SettingsPage() {
           <Button
             variant="outline"
             onClick={async () => {
-              await signOut({ callbackUrl: '/' });
+              await handleLogOut();
             }}
             className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
           >
