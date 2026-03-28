@@ -1,22 +1,17 @@
 'use client';
 
 import { usePrivy } from '@privy-io/react-auth';
-
 import Link from 'next/link';
+import { useRef, useEffect, useState } from 'react';
+import { motion, useInView } from 'framer-motion';
 import { INTENT_TYPE_CONFIG } from '@/lib/types/database';
 import type { IntentType } from '@/lib/types/database';
-import { ArrowRight, Handshake, Search, Shield } from 'lucide-react';
-
-const MOCK_CARDS = [
-  { type: 'partnership' as IntentType, content: 'Looking for a DeFi protocol to co-build a cross-chain lending product on Base.', priority: 'Active' },
-  { type: 'investment' as IntentType, content: 'Raising seed round for our ZK-powered identity verification layer on Ethereum.', priority: 'Urgent' },
-  { type: 'integration' as IntentType, content: 'Seeking oracle integration for our prediction market — Chainlink or Pyth preferred.', priority: 'Open' },
-];
+import { ArrowRight, Shield, Search, Handshake, ExternalLink, CheckCircle } from 'lucide-react';
 
 const STEPS = [
-  { icon: Shield, title: 'Verify with X', desc: 'Sign in and link your X account. X verification keeps the feed high-signal.' },
-  { icon: Search, title: 'Declare your intent', desc: 'Post what you\u2019re looking for: partnerships, investment, hiring, integrations, and more.' },
-  { icon: Handshake, title: 'Connect and build', desc: 'Receive requests, accept the right ones, and get the other party\u2019s contact details instantly.' },
+  { icon: Shield, title: 'Verify with X', desc: 'Sign in and link your X account. X verification keeps the feed high-signal.', num: '01' },
+  { icon: Search, title: 'Declare your intent', desc: 'Post what you\u2019re looking for: partnerships, investment, hiring, integrations, and more.', num: '02' },
+  { icon: Handshake, title: 'Connect and build', desc: 'Receive requests, accept the right ones, and get the other party\u2019s contact details instantly.', num: '03' },
 ];
 
 const INTENT_TYPES: IntentType[] = [
@@ -24,29 +19,94 @@ const INTENT_TYPES: IntentType[] = [
   'co-marketing', 'grant', 'ecosystem-support', 'beta-testers',
 ];
 
+const STATS = [
+  { value: 500, suffix: '+', label: 'intents' },
+  { value: 200, suffix: '+', label: 'builders' },
+  { value: 12, suffix: '', label: 'ecosystems' },
+];
+
+const ease = [0.22, 1, 0.36, 1] as const;
+
+function CountUp({ target, suffix }: { target: number; suffix: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true });
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    let frame: number;
+    const duration = 1500;
+    const start = performance.now();
+    function animate(now: number) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(eased * target));
+      if (progress < 1) frame = requestAnimationFrame(animate);
+    }
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [inView, target]);
+
+  return <span ref={ref}>{count}{suffix}</span>;
+}
+
 export default function HomePage() {
-  const { ready, authenticated, login } = usePrivy();
+  const { ready, authenticated } = usePrivy();
 
   return (
-    <main className="min-h-screen bg-[#080810]">
+    <main className="min-h-screen bg-[#0a0a12]">
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(16,185,129,0.12),transparent)]" />
-        <div className="mx-auto max-w-5xl px-4 pt-20 pb-16 sm:pt-28 sm:pb-24 relative">
+      <section className="relative overflow-hidden min-h-[90vh] flex items-center">
+        {/* Gradient mesh background */}
+        <div className="absolute inset-0 animate-gradient-mesh bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(139,92,246,0.15),transparent_50%),radial-gradient(ellipse_60%_40%_at_80%_60%,rgba(16,185,129,0.1),transparent_50%),radial-gradient(ellipse_40%_30%_at_20%_80%,rgba(139,92,246,0.08),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[#0a0a12]/40" />
+
+        <div className="relative mx-auto max-w-5xl px-4 py-20 sm:py-32">
           <div className="flex flex-col items-center text-center">
-            <span className="inline-flex items-center rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400 mb-6">
-              🌐 Built for Web3
-            </span>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.1] max-w-3xl">
-              Declare what you&apos;re building toward
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease }}
+            >
+              <span className="inline-flex items-center rounded-full border border-violet-500/20 bg-violet-500/10 px-3.5 py-1 text-xs font-medium text-violet-400 mb-8">
+                <CheckCircle className="size-3 mr-1.5" />
+                Built for Web3
+              </span>
+            </motion.div>
+
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight leading-[1.08] max-w-4xl">
+              {['Declare', 'what', "you're", 'building', 'toward'].map((word, i) => (
+                <motion.span
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 + i * 0.08, ease }}
+                  className="inline-block mr-[0.3em] text-[#F1F5F9]"
+                >
+                  {word}
+                </motion.span>
+              ))}
             </h1>
-            <p className="mt-5 text-base sm:text-lg text-zinc-400 max-w-2xl leading-relaxed">
+
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.6, ease }}
+              className="mt-6 text-base sm:text-lg text-[#94A3B8] max-w-2xl leading-relaxed"
+            >
               Manifest is where Web3 builders, protocols, and investors post their intentions — and find the people to make them real.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center gap-3 mt-8">
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.75, ease }}
+              className="flex flex-col sm:flex-row items-center gap-3 mt-10"
+            >
               <Link
                 href="/feed"
-                className="inline-flex items-center justify-center rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-6 py-3 text-base transition-colors w-full sm:w-auto"
+                className="inline-flex items-center justify-center rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-7 py-3.5 text-base transition-all duration-200 hover:scale-[1.02] active:scale-[0.97] shadow-lg shadow-emerald-500/20 cursor-pointer w-full sm:w-auto"
               >
                 Browse Intents
                 <ArrowRight className="size-4 ml-2" />
@@ -54,116 +114,143 @@ export default function HomePage() {
               {ready && !authenticated && (
                 <Link
                   href="/onboarding"
-                  className="inline-flex items-center justify-center rounded-xl border border-white/10 hover:border-white/20 text-zinc-300 hover:text-white font-medium px-6 py-3 text-base transition-colors w-full sm:w-auto"
+                  className="inline-flex items-center justify-center rounded-xl border border-violet-500/30 hover:border-violet-500/50 text-violet-300 hover:text-violet-200 font-medium px-7 py-3.5 text-base transition-all duration-200 hover:bg-violet-500/5 cursor-pointer w-full sm:w-auto"
                 >
-                  Post Your Intent
+                  Post Intent
                 </Link>
               )}
               {ready && authenticated && (
                 <Link
                   href="/feed"
-                  className="inline-flex items-center justify-center rounded-xl border border-white/10 hover:border-white/20 text-zinc-300 hover:text-white font-medium px-6 py-3 text-base transition-colors w-full sm:w-auto"
+                  className="inline-flex items-center justify-center rounded-xl border border-white/10 hover:border-white/20 text-[#94A3B8] hover:text-white font-medium px-7 py-3.5 text-base transition-all duration-200 cursor-pointer w-full sm:w-auto"
                 >
                   Go to Feed
                 </Link>
               )}
-            </div>
-          </div>
-
-          {/* Floating mock cards */}
-          <div className="mt-16 grid gap-4 sm:grid-cols-3 max-w-3xl mx-auto">
-            {MOCK_CARDS.map((card, i) => {
-              const config = INTENT_TYPE_CONFIG[card.type];
-              return (
-                <div
-                  key={i}
-                  className="rounded-xl border border-white/[0.08] bg-[#0e0e14] p-4 hover:border-white/[0.15] transition-colors"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium ${config.color}`}>
-                      {config.label}
-                    </span>
-                    <span className={`text-xs px-1.5 py-0.5 rounded ${
-                      card.priority === 'Urgent' ? 'text-red-400 bg-red-500/20' :
-                      card.priority === 'Active' ? 'text-amber-400 bg-amber-500/20' :
-                      'text-emerald-400 bg-emerald-500/20'
-                    }`}>
-                      {card.priority}
-                    </span>
-                  </div>
-                  <p className="text-sm text-white/70 leading-relaxed">{card.content}</p>
-                </div>
-              );
-            })}
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Social proof */}
-      <div className="border-y border-white/[0.06] bg-white/[0.02]">
-        <div className="mx-auto max-w-5xl px-4 py-4">
-          <p className="text-center text-xs sm:text-sm text-zinc-500 tracking-wide">
-            Trusted by builders on <span className="text-zinc-400">Ethereum</span> · <span className="text-zinc-400">Arbitrum</span> · <span className="text-zinc-400">Base</span> · <span className="text-zinc-400">Solana</span> · <span className="text-zinc-400">Cosmos</span>
-          </p>
+      {/* Animated stat strip */}
+      <div className="border-y border-white/[0.07] bg-white/[0.02]">
+        <div className="mx-auto max-w-5xl px-4 py-6">
+          <div className="flex items-center justify-center gap-8 sm:gap-16 text-center">
+            {STATS.map((stat, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="text-2xl sm:text-3xl font-bold text-[#F1F5F9]">
+                  <CountUp target={stat.value} suffix={stat.suffix} />
+                </span>
+                <span className="text-sm text-[#475569]">{stat.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* How it works */}
-      <section className="mx-auto max-w-5xl px-4 py-16 sm:py-24">
-        <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-12">
+      <section className="mx-auto max-w-5xl px-4 py-20 sm:py-28">
+        <motion.h2
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, ease }}
+          className="text-2xl sm:text-3xl font-bold text-[#F1F5F9] text-center mb-16"
+        >
           How it works
-        </h2>
+        </motion.h2>
         <div className="grid gap-8 sm:grid-cols-3">
           {STEPS.map((step, i) => (
-            <div key={i} className="flex flex-col items-center text-center">
-              <div className="size-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4">
-                <step.icon className="size-6 text-emerald-400" />
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.04, ease }}
+              className="relative flex flex-col items-center text-center group"
+            >
+              <div className="relative mb-5">
+                <span className="absolute -top-2 -right-2 text-xs font-bold text-violet-400/60">{step.num}</span>
+                <div className="size-16 rounded-2xl bg-[#0f0f1a] border border-white/[0.07] flex items-center justify-center group-hover:border-violet-500/30 group-hover:bg-violet-500/5 transition-all duration-200">
+                  <step.icon className="size-7 text-violet-400" />
+                </div>
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed max-w-xs">{step.desc}</p>
-            </div>
+              <h3 className="text-lg font-semibold text-[#F1F5F9] mb-2">{step.title}</h3>
+              <p className="text-sm text-[#94A3B8] leading-relaxed max-w-xs">{step.desc}</p>
+            </motion.div>
           ))}
         </div>
       </section>
 
       {/* Intent type showcase */}
-      <section className="border-t border-white/[0.06] bg-white/[0.01]">
-        <div className="mx-auto max-w-5xl px-4 py-16 sm:py-24">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-4">
-            Every kind of intent
-          </h2>
-          <p className="text-sm text-zinc-400 text-center mb-10 max-w-lg mx-auto">
-            Whether you&apos;re raising a round, looking for a co-marketing partner, or hiring your next engineer — there&apos;s an intent type for it.
-          </p>
+      <section className="border-t border-white/[0.07] bg-white/[0.01]">
+        <div className="mx-auto max-w-5xl px-4 py-20 sm:py-28">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, ease }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#F1F5F9] mb-4">
+              Every kind of intent
+            </h2>
+            <p className="text-sm text-[#94A3B8] max-w-lg mx-auto">
+              Whether you&apos;re raising a round, looking for a co-marketing partner, or hiring your next engineer — there&apos;s an intent type for it.
+            </p>
+          </motion.div>
           <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x">
-            {INTENT_TYPES.map((type) => {
+            {INTENT_TYPES.map((type, i) => {
               const config = INTENT_TYPE_CONFIG[type];
+              const dotColor = config.color.replace(/bg-(\w+)-500\/20.*/, '$1');
               return (
-                <div
+                <motion.div
                   key={type}
-                  className="shrink-0 snap-start rounded-xl border border-white/[0.08] bg-[#0e0e14] p-4 w-56"
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.04, ease }}
+                  className="shrink-0 snap-start rounded-xl border border-white/[0.07] bg-[#0f0f1a] p-4 w-56 hover:border-white/[0.12] hover:scale-[1.02] transition-all duration-200 cursor-pointer"
                 >
-                  <span className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium ${config.color} mb-2`}>
-                    {config.label}
-                  </span>
-                  <p className="text-xs text-zinc-400 leading-relaxed">{config.description}</p>
-                </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className={`size-2 rounded-full ${config.color.split(' ')[0].replace('/20', '')}`} />
+                    <span className={`text-xs font-medium ${config.color.split(' ')[1]}`}>
+                      {config.label}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#475569] leading-relaxed">{config.description}</p>
+                </motion.div>
               );
             })}
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-white/[0.06]">
-        <div className="mx-auto max-w-5xl px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-zinc-500">
-            Manifest · Built for Web3 · © 2025
+      {/* Trust strip */}
+      <div className="border-y border-white/[0.07] bg-white/[0.02]">
+        <div className="mx-auto max-w-5xl px-4 py-5">
+          <p className="text-center text-xs sm:text-sm text-[#475569] tracking-wide">
+            Verified via <span className="text-[#94A3B8]">X</span> · Built on <span className="text-[#94A3B8]">Base</span> · <span className="text-[#94A3B8]">Open source</span>
           </p>
-          <div className="flex items-center gap-4">
-            <Link href="/feed" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="border-t border-white/[0.07]">
+        <div className="mx-auto max-w-5xl px-4 py-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="size-6 rounded-lg bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center text-[10px] font-bold text-white">
+              M
+            </div>
+            <span className="text-xs text-[#475569]">Manifest · 2025</span>
+          </div>
+          <div className="flex items-center gap-6">
+            <Link href="/feed" className="text-xs text-[#475569] hover:text-[#94A3B8] transition-colors duration-200 cursor-pointer">
               Feed
             </Link>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-[#475569] hover:text-[#94A3B8] transition-colors duration-200 cursor-pointer flex items-center gap-1 text-xs">
+              GitHub <ExternalLink className="size-3" />
+            </a>
           </div>
         </div>
       </footer>

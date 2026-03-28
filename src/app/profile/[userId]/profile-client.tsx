@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,12 +15,15 @@ import {
   Award,
   Edit,
   Bookmark,
-  Heart,
+  Zap,
+  TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
 import { getSavedIntents } from "@/app/actions/saved";
 
 type ProfileTab = "active" | "saved" | "nfts";
+
+const ease = [0.22, 1, 0.36, 1] as const;
 
 interface ProfileClientProps {
   profile: Profile;
@@ -32,6 +36,8 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
   const [activeTab, setActiveTab] = useState<ProfileTab>("active");
   const [savedIntents, setSavedIntents] = useState<IntentWithAuthor[]>([]);
   const [loadingSaved, setLoadingSaved] = useState(false);
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0 });
 
   const initials = profile.display_name
     ? profile.display_name
@@ -45,6 +51,14 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
   const activeIntents = intents.filter(
     (i) => i.lifecycle_status === "active"
   );
+
+  // Update tab indicator position
+  useEffect(() => {
+    const el = tabRefs.current[activeTab];
+    if (el) {
+      setTabIndicator({ left: el.offsetLeft, width: el.offsetWidth });
+    }
+  }, [activeTab]);
 
   // Load saved intents when tab switches
   useEffect(() => {
@@ -68,31 +82,43 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
 
   const activity = getActivityLabel();
 
-  const tabs: { key: ProfileTab; label: string; show: boolean }[] = [
-    { key: "active", label: `Active Intents (${activeIntents.length})`, show: true },
-    { key: "saved", label: "Saved Intents", show: isOwn },
-    { key: "nfts", label: "Intent NFTs", show: true },
+  const tabs: { key: ProfileTab; label: string; icon: typeof Award; show: boolean }[] = [
+    { key: "active", label: `Active (${activeIntents.length})`, icon: Zap, show: true },
+    { key: "saved", label: "Saved", icon: Bookmark, show: isOwn },
+    { key: "nfts", label: "NFTs", icon: Award, show: true },
   ];
+
+  const visibleTabs = tabs.filter((t) => t.show);
 
   return (
     <div>
       {/* Profile header */}
-      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 mb-8">
-        <Avatar size="lg" className="size-20 shrink-0">
-          {profile.avatar_url ? (
-            <AvatarImage
-              src={profile.avatar_url}
-              alt={profile.display_name ?? ""}
-            />
-          ) : null}
-          <AvatarFallback className="text-xl">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease }}
+        className="flex flex-col sm:flex-row items-center sm:items-start gap-5 mb-8"
+      >
+        <div className="relative group">
+          <Avatar size="lg" className="size-20 shrink-0 ring-2 ring-white/[0.07] group-hover:ring-violet-500/40 transition-all duration-300">
+            {profile.avatar_url ? (
+              <AvatarImage
+                src={profile.avatar_url}
+                alt={profile.display_name ?? ""}
+              />
+            ) : null}
+            <AvatarFallback className="text-xl bg-[#0f0f1a]">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          {activity && activity.text === "Active now" && (
+            <span className="absolute bottom-0 right-0 size-3.5 rounded-full bg-emerald-400 border-2 border-[#0a0a12] animate-pulse-dot" />
+          )}
+        </div>
 
         <div className="flex-1 text-center sm:text-left">
           <div className="flex items-center justify-center sm:justify-start gap-2">
-            <h1 className="text-2xl font-bold text-white/90">
+            <h1 className="text-2xl font-bold text-[#F1F5F9]">
               {profile.display_name ?? "Anonymous"}
             </h1>
             {profile.twitter_verified && (
@@ -100,34 +126,46 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
             )}
           </div>
           {profile.twitter_handle && (
-            <p className="text-sm text-zinc-400 mt-0.5">
+            <p className="text-sm text-[#94A3B8] mt-0.5">
               @{profile.twitter_handle}
             </p>
           )}
           {profile.bio && (
-            <p className="text-sm text-white/70 mt-2 max-w-lg leading-relaxed">
+            <p className="text-sm text-[#F1F5F9]/70 mt-2 max-w-lg leading-relaxed">
               {profile.bio}
             </p>
           )}
-          <div className="flex items-center justify-center sm:justify-start gap-2 mt-3 flex-wrap">
-            <Badge variant="outline" className="text-xs">
-              {profile.account_type === "organization"
-                ? "Organization"
-                : "Individual"}
-            </Badge>
+
+          {/* Stats row */}
+          <div className="flex items-center justify-center sm:justify-start gap-5 mt-4">
+            <div className="flex items-center gap-1.5 text-sm">
+              <Zap className="size-3.5 text-violet-400" />
+              <span className="font-medium text-[#F1F5F9]">{intents.length}</span>
+              <span className="text-[#475569]">intents</span>
+            </div>
+            {profile.response_rate != null && (
+              <div className="flex items-center gap-1.5 text-sm">
+                <TrendingUp className="size-3.5 text-emerald-400" />
+                <span className="font-medium text-[#F1F5F9]">{profile.response_rate}%</span>
+                <span className="text-[#475569]">response rate</span>
+              </div>
+            )}
             {activity && (
               <span className={`text-xs ${activity.color}`}>
                 {activity.text}
               </span>
             )}
-            {profile.response_rate != null && (
-              <span className="text-xs text-zinc-400">
-                Responds to {profile.response_rate}% of requests
-              </span>
-            )}
+          </div>
+
+          <div className="flex items-center justify-center sm:justify-start gap-2 mt-3 flex-wrap">
+            <Badge variant="outline" className="text-xs border-white/[0.07]">
+              {profile.account_type === "organization"
+                ? "Organization"
+                : "Individual"}
+            </Badge>
           </div>
           {profile.wallet_address && (
-            <p className="text-xs text-zinc-500 mt-2 font-mono truncate max-w-xs">
+            <p className="text-xs text-[#475569] mt-2 font-mono truncate max-w-xs">
               {profile.wallet_address}
             </p>
           )}
@@ -135,155 +173,198 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
 
         {isOwn && (
           <Link href="/settings" className="shrink-0">
-            <Button variant="outline" size="sm" className="w-full sm:w-auto">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto border-white/[0.07] hover:border-white/[0.12] cursor-pointer transition-all duration-200">
               <Edit className="size-3.5 mr-1.5" />
               Edit Profile
             </Button>
           </Link>
         )}
-      </div>
+      </motion.div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-1 mb-6 border-b border-white/[0.06] overflow-x-auto scrollbar-hide">
-        {tabs
-          .filter((t) => t.show)
-          .map((tab) => (
+      {/* Tabs with animated underline */}
+      <div className="relative mb-6 border-b border-white/[0.06]">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+          {visibleTabs.map((tab) => (
             <button
               key={tab.key}
+              ref={(el) => { tabRefs.current[tab.key] = el; }}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              className={`relative px-4 py-2.5 text-sm font-medium transition-colors duration-200 cursor-pointer flex items-center gap-1.5 ${
                 activeTab === tab.key
-                  ? "text-white border-emerald-400"
-                  : "text-zinc-400 border-transparent hover:text-white"
+                  ? "text-[#F1F5F9]"
+                  : "text-[#475569] hover:text-[#94A3B8]"
               }`}
             >
-              {tab.key === "nfts" && <Award className="size-4 inline mr-1.5 -mt-0.5" />}
-              {tab.key === "saved" && <Bookmark className="size-4 inline mr-1.5 -mt-0.5" />}
+              <tab.icon className="size-3.5" />
               {tab.label}
             </button>
           ))}
+        </div>
+        {/* Animated underline */}
+        <motion.div
+          className="absolute bottom-0 h-0.5 bg-violet-500 rounded-full"
+          animate={{ left: tabIndicator.left, width: tabIndicator.width }}
+          transition={{ duration: 0.25, ease }}
+        />
       </div>
 
       {/* Tab content */}
-      {activeTab === "active" && (
-        <div>
-          {activeIntents.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {activeIntents.map((intent) => (
-                <IntentCard
-                  key={intent.id}
-                  intent={intent}
-                  currentUserId={currentProfile?.id ?? null}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-zinc-400">
-              <p>No active intents.</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === "saved" && isOwn && (
-        <div>
-          {loadingSaved ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-48 animate-pulse rounded-xl bg-[#0e0e14] border border-white/[0.08]"
-                />
-              ))}
-            </div>
-          ) : savedIntents.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {savedIntents.map((intent) => (
-                <IntentCard
-                  key={intent.id}
-                  intent={intent}
-                  currentUserId={currentProfile?.id ?? null}
-                  isSaved
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-zinc-400">
-              <Bookmark className="size-6 mx-auto mb-2 text-zinc-500" />
-              <p>No saved intents yet.</p>
-              <p className="text-xs mt-1">
-                Bookmark intents from the feed to save them here.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === "nfts" && (
-        <div className="rounded-xl border border-white/[0.08] bg-[#0e0e14] p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Award className="size-5 text-amber-400" />
-            <h2 className="text-base font-medium text-white/90">
-              Proof of Intent NFTs
-            </h2>
-          </div>
-          <p className="text-sm text-zinc-400 mb-4">
-            {intents.length} intent{intents.length !== 1 ? "s" : ""} posted
-            {profile.wallet_address && (
-              <>
-                {" "}&middot;{" "}
-                <a
-                  href={`https://basescan.org/address/${profile.wallet_address}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1"
-                >
-                  View on BaseScan
-                  <ExternalLink className="size-3" />
-                </a>
-              </>
-            )}
-          </p>
-
-          {intents.length > 0 ? (
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {intents.map((intent) => {
-                const config = INTENT_TYPE_CONFIG[intent.type];
-                return (
-                  <div
+      <AnimatePresence mode="wait">
+        {activeTab === "active" && (
+          <motion.div
+            key="active"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease }}
+          >
+            {activeIntents.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {activeIntents.map((intent, i) => (
+                  <motion.div
                     key={intent.id}
-                    className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3"
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: Math.min(i * 0.04, 0.2), ease }}
                   >
-                    <span
-                      className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium ${config.color}`}
+                    <IntentCard
+                      intent={intent}
+                      currentUserId={currentProfile?.id ?? null}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-[#94A3B8]">
+                <p>No active intents.</p>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {activeTab === "saved" && isOwn && (
+          <motion.div
+            key="saved"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease }}
+          >
+            {loadingSaved ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-48 animate-pulse rounded-xl bg-[#0f0f1a] border border-white/[0.07]"
+                  />
+                ))}
+              </div>
+            ) : savedIntents.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {savedIntents.map((intent, i) => (
+                  <motion.div
+                    key={intent.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: Math.min(i * 0.04, 0.2), ease }}
+                  >
+                    <IntentCard
+                      intent={intent}
+                      currentUserId={currentProfile?.id ?? null}
+                      isSaved
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-[#94A3B8]">
+                <Bookmark className="size-6 mx-auto mb-2 text-[#475569]" />
+                <p>No saved intents yet.</p>
+                <p className="text-xs mt-1 text-[#475569]">
+                  Bookmark intents from the feed to save them here.
+                </p>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {activeTab === "nfts" && (
+          <motion.div
+            key="nfts"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease }}
+          >
+            <div className="rounded-xl border border-white/[0.07] bg-[#0f0f1a] p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Award className="size-5 text-amber-400" />
+                <h2 className="text-base font-medium text-[#F1F5F9]">
+                  Proof of Intent NFTs
+                </h2>
+              </div>
+              <p className="text-sm text-[#94A3B8] mb-4">
+                {intents.length} intent{intents.length !== 1 ? "s" : ""} posted
+                {profile.wallet_address && (
+                  <>
+                    {" "}&middot;{" "}
+                    <a
+                      href={`https://basescan.org/address/${profile.wallet_address}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1 cursor-pointer"
                     >
-                      {config.label}
-                    </span>
-                    <p className="text-xs text-zinc-400 mt-1.5 line-clamp-2">
-                      {intent.content}
-                    </p>
-                    {intent.nft_tx_hash && profile.wallet_address && (
-                      <a
-                        href={`https://basescan.org/tx/${intent.nft_tx_hash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-emerald-400 hover:text-emerald-300 mt-1 inline-flex items-center gap-1"
+                      View on BaseScan
+                      <ExternalLink className="size-3" />
+                    </a>
+                  </>
+                )}
+              </p>
+
+              {intents.length > 0 ? (
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {intents.map((intent, i) => {
+                    const config = INTENT_TYPE_CONFIG[intent.type];
+                    return (
+                      <motion.div
+                        key={intent.id}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: Math.min(i * 0.04, 0.2), ease }}
+                        className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 hover:border-white/[0.1] transition-all duration-200"
                       >
-                        View TX
-                        <ExternalLink className="size-2.5" />
-                      </a>
-                    )}
-                  </div>
-                );
-              })}
+                        <span
+                          className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium ${config.color}`}
+                        >
+                          {config.label}
+                        </span>
+                        <p className="text-xs text-[#94A3B8] mt-1.5 line-clamp-2">
+                          {intent.content}
+                        </p>
+                        {intent.nft_tx_hash && profile.wallet_address && (
+                          <a
+                            href={`https://basescan.org/tx/${intent.nft_tx_hash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-emerald-400 hover:text-emerald-300 mt-1 inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            View TX
+                            <ExternalLink className="size-2.5" />
+                          </a>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-[#475569]">
+                  No NFTs minted yet. Post an intent to earn your first badge.
+                </p>
+              )}
             </div>
-          ) : (
-            <p className="text-sm text-zinc-500">
-              No NFTs minted yet. Post an intent to earn your first badge.
-            </p>
-          )}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

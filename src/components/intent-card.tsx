@@ -7,7 +7,6 @@ import {
   CheckCircle,
   Clock,
   MessageSquare,
-  Zap,
   Circle,
   Eye,
   Share2,
@@ -15,7 +14,6 @@ import {
   BookmarkCheck,
   Heart,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type {
@@ -32,23 +30,30 @@ const PRIORITY_STYLES: Record<string, string> = {
   Active: "bg-amber-500/20 text-amber-400",
 };
 
-const LIFECYCLE_LABELS: Record<string, string> = {
-  active: "Active",
-  in_discussion: "In Discussion",
-  partnership_formed: "Partnership Formed",
-  closed: "Closed",
+const LIFECYCLE_STYLES: Record<string, { label: string; color: string }> = {
+  active: { label: "Active", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
+  in_discussion: { label: "In Discussion", color: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
+  partnership_formed: { label: "Partnered", color: "text-violet-400 bg-violet-500/10 border-violet-500/20" },
+  closed: { label: "Closed", color: "text-zinc-400 bg-zinc-500/10 border-zinc-500/20" },
 };
 
 function getActivityIndicator(lastActiveAt: string | null) {
   if (!lastActiveAt) return null;
   const diff = Date.now() - new Date(lastActiveAt).getTime();
   const hours = diff / (1000 * 60 * 60);
-  if (hours < 24) return { label: "Active", color: "text-emerald-400", dot: "bg-emerald-400" };
+  if (hours < 24) return { label: "Active", color: "text-emerald-400", dot: "bg-emerald-400", pulse: true };
   if (hours < 168) {
     const days = Math.floor(hours / 24);
-    return { label: `Active ${days}d ago`, color: "text-amber-400", dot: "bg-amber-400" };
+    return { label: `${days}d ago`, color: "text-amber-400", dot: "bg-amber-400", pulse: false };
   }
   return null;
+}
+
+// Extract base color name from config color string for left border
+function getBorderColor(colorStr: string): string {
+  const match = colorStr.match(/text-(\w+)-400/);
+  if (!match) return "border-violet-500/50";
+  return `border-${match[1]}-500/50`;
 }
 
 interface IntentCardProps {
@@ -110,6 +115,8 @@ export function IntentCard({
     : "?";
 
   const activity = getActivityIndicator(author.last_active_at ?? null);
+  const lifecycle = LIFECYCLE_STYLES[intent.lifecycle_status];
+  const leftBorderColor = getBorderColor(typeConfig.color);
 
   const handleShare = () => {
     const truncated =
@@ -128,7 +135,6 @@ export function IntentCard({
 
   const handleSave = () => {
     if (!currentUserId) return;
-    // Optimistic update
     const wasSaved = saved;
     setSaved(!wasSaved);
     setSaveCount((c) => (wasSaved ? c - 1 : c + 1));
@@ -136,7 +142,6 @@ export function IntentCard({
       try {
         await toggleSave(intent.id, currentUserId);
       } catch {
-        // Revert on error
         setSaved(wasSaved);
         setSaveCount((c) => (wasSaved ? c + 1 : c - 1));
       }
@@ -145,7 +150,6 @@ export function IntentCard({
 
   const handleInterest = () => {
     if (!currentUserId) return;
-    // Optimistic update
     const wasInterested = interested;
     setInterested(!wasInterested);
     setInterestCount((c) => (wasInterested ? c - 1 : c + 1));
@@ -153,7 +157,6 @@ export function IntentCard({
       try {
         await toggleInterest(intent.id, currentUserId);
       } catch {
-        // Revert on error
         setInterested(wasInterested);
         setInterestCount((c) => (wasInterested ? c + 1 : c - 1));
       }
@@ -161,11 +164,21 @@ export function IntentCard({
   };
 
   return (
-    <div className={`rounded-xl border border-white/[0.08] bg-[#0e0e14] p-4 transition-colors hover:border-white/[0.12] ${isExpired ? "opacity-60" : ""}`}>
+    <div
+      className={`group relative rounded-xl border-l-[3px] ${leftBorderColor} border border-white/[0.07] bg-[#0f0f1a] p-4 transition-all duration-200 hover:border-white/[0.12] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 ${isExpired ? "opacity-60" : ""}`}
+    >
+      {/* Type badge top-right */}
+      <div className="absolute top-3 right-3">
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${typeConfig.color}`}>
+          <span className={`size-1.5 rounded-full ${typeConfig.color.split(' ')[0].replace('/20', '')}`} />
+          {typeConfig.label}
+        </span>
+      </div>
+
       {/* Author row */}
-      <div className="flex items-center gap-3 mb-3">
-        <Link href={`/profile/${author.id}`}>
-          <Avatar size="default">
+      <div className="flex items-center gap-3 mb-3 pr-24">
+        <Link href={`/profile/${author.id}`} className="shrink-0">
+          <Avatar size="default" className="transition-transform duration-200 hover:scale-110">
             {author.avatar_url ? (
               <AvatarImage src={author.avatar_url} alt={author.display_name ?? ""} />
             ) : null}
@@ -174,7 +187,7 @@ export function IntentCard({
         </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <Link href={`/profile/${author.id}`} className="text-sm font-medium text-white/90 truncate hover:text-emerald-400 transition-colors">
+            <Link href={`/profile/${author.id}`} className="text-sm font-medium text-[#F1F5F9] truncate hover:text-violet-400 transition-colors duration-200 cursor-pointer">
               {author.display_name ?? "Anonymous"}
             </Link>
             {author.twitter_verified && (
@@ -182,76 +195,71 @@ export function IntentCard({
             )}
             {activity && (
               <span className={`flex items-center gap-1 text-xs ${activity.color}`}>
-                <span className={`size-1.5 rounded-full ${activity.dot}`} />
+                <span className={`size-1.5 rounded-full ${activity.dot} ${activity.pulse ? 'animate-pulse-dot' : ''}`} />
                 {activity.label}
               </span>
             )}
           </div>
           <div className="flex items-center gap-1.5">
             {author.twitter_handle && (
-              <span className="text-xs text-zinc-400">
+              <span className="text-xs text-[#475569]">
                 @{author.twitter_handle}
               </span>
             )}
             {intent.org_id && (
-              <span className="text-xs text-zinc-500">
-                · <Link href={`/org/${intent.org_id}`} className="hover:text-zinc-300 transition-colors">Org</Link>
+              <span className="text-xs text-[#475569]">
+                · <Link href={`/org/${intent.org_id}`} className="hover:text-[#94A3B8] transition-colors duration-200 cursor-pointer">Org</Link>
               </span>
             )}
           </div>
         </div>
-        {/* Lifecycle badge */}
-        {intent.lifecycle_status !== "active" && (
-          <Badge variant="outline" className="text-xs shrink-0">
-            {LIFECYCLE_LABELS[intent.lifecycle_status]}
-          </Badge>
-        )}
       </div>
 
-      {/* Intent type badge */}
+      {/* Priority + Lifecycle badges */}
       <div className="flex flex-wrap items-center gap-2 mb-3">
-        <span
-          className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium ${typeConfig.color}`}
-        >
-          {typeConfig.label}
-        </span>
         <span className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium ${PRIORITY_STYLES[intent.priority]}`}>
-          {intent.priority === "Urgent" && <span className="relative mr-1"><span className="absolute inset-0 size-2 rounded-full bg-red-400 animate-ping" /><span className="relative size-2 rounded-full bg-red-400 inline-block" /></span>}
+          {intent.priority === "Urgent" && (
+            <span className="relative mr-1">
+              <span className="absolute inset-0 size-2 rounded-full bg-red-400 animate-ping" />
+              <span className="relative size-2 rounded-full bg-red-400 inline-block" />
+            </span>
+          )}
           {intent.priority}
         </span>
+        {intent.lifecycle_status !== "active" && lifecycle && (
+          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${lifecycle.color}`}>
+            {lifecycle.label}
+          </span>
+        )}
         {isExpired && (
-          <span className="inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium bg-zinc-500/20 text-zinc-400">
+          <span className="inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium bg-zinc-500/20 text-[#475569]">
             Expired
           </span>
         )}
       </div>
 
       {/* Content */}
-      <p className="text-sm text-white/80 leading-relaxed mb-3">
+      <p className="text-sm text-[#F1F5F9]/80 leading-[1.6] mb-3">
         {displayContent}
         {intent.content.length > 200 && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="ml-1 text-emerald-400 hover:text-emerald-300 text-xs font-medium"
+            className="ml-1 text-violet-400 hover:text-violet-300 text-xs font-medium cursor-pointer transition-colors duration-200"
           >
             {expanded ? "Show less" : "Read more"}
           </button>
         )}
       </p>
 
-      {/* Tags */}
+      {/* Ecosystem/Sector tags */}
       <div className="flex flex-wrap gap-1.5 mb-3">
         {intent.ecosystem && (
-          <span
-            className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs ${ECOSYSTEM_CONFIG[intent.ecosystem].color}`}
-          >
+          <span className="inline-flex items-center rounded-md bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 text-xs text-[#94A3B8]">
             {ECOSYSTEM_CONFIG[intent.ecosystem].label}
           </span>
         )}
         {intent.sector && (
-          <span
-            className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs ${SECTOR_CONFIG[intent.sector].color}`}
-          >
+          <span className="inline-flex items-center rounded-md bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 text-xs text-[#94A3B8]">
             {SECTOR_CONFIG[intent.sector].label}
           </span>
         )}
@@ -259,7 +267,7 @@ export function IntentCard({
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">
-        <div className="flex items-center gap-3 text-xs text-zinc-400">
+        <div className="flex items-center gap-3 text-xs text-[#475569]">
           <span className="flex items-center gap-1">
             <Clock className="size-3" />
             {timeRemaining} left
@@ -267,15 +275,15 @@ export function IntentCard({
           <span>{postedAgo}</span>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           {/* Interest */}
           <button
             onClick={handleInterest}
             disabled={!currentUserId || isPending}
-            className={`flex items-center gap-1 rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs transition-colors ${
+            className={`flex items-center gap-1 rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs transition-colors duration-200 cursor-pointer ${
               interested
                 ? "text-red-400 hover:text-red-300"
-                : "text-zinc-500 hover:text-zinc-300"
+                : "text-[#475569] hover:text-[#94A3B8]"
             }`}
           >
             <Heart className={`size-3.5 ${interested ? "fill-current" : ""}`} />
@@ -286,10 +294,10 @@ export function IntentCard({
           <button
             onClick={handleSave}
             disabled={!currentUserId || isPending}
-            className={`flex items-center gap-1 rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs transition-colors ${
+            className={`flex items-center gap-1 rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs transition-colors duration-200 cursor-pointer ${
               saved
                 ? "text-amber-400 hover:text-amber-300"
-                : "text-zinc-500 hover:text-zinc-300"
+                : "text-[#475569] hover:text-[#94A3B8]"
             }`}
           >
             {saved ? (
@@ -303,7 +311,7 @@ export function IntentCard({
           {/* Share */}
           <button
             onClick={handleShare}
-            className="flex items-center rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+            className="flex items-center rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs text-[#475569] hover:text-[#94A3B8] transition-colors duration-200 cursor-pointer"
           >
             <Share2 className="size-3.5" />
           </button>
@@ -312,7 +320,7 @@ export function IntentCard({
           {!isOwn && !requestStatus && intent.lifecycle_status === "active" && (
             <Button
               size="sm"
-              className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 ml-1"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 ml-1 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/20 active:scale-[0.97] cursor-pointer"
               onClick={() => onRequestConnection?.(intent)}
             >
               <MessageSquare className="size-3.5 mr-1" />
@@ -328,7 +336,7 @@ export function IntentCard({
           {!isOwn && requestStatus === "accepted" && (
             <Button
               size="sm"
-              className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 ml-1"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 ml-1 cursor-pointer"
               onClick={() => onViewContact?.(intent)}
             >
               <Eye className="size-3.5 mr-1" />

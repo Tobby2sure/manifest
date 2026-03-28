@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { IntentCard } from "@/components/intent-card";
 import { PostIntentDialog } from "@/components/post-intent-dialog";
 import { RequestConnectionDialog } from "@/components/request-connection-dialog";
@@ -32,6 +33,7 @@ import {
   X,
   ChevronDown,
   Filter,
+  Loader2,
 } from "lucide-react";
 
 const INTENT_TYPES: IntentType[] = [
@@ -51,6 +53,8 @@ const SORT_OPTIONS: { value: IntentSort; label: string }[] = [
 ];
 
 const PRIORITY_OPTIONS: IntentPriority[] = ["Urgent", "Active", "Open"];
+
+const ease = [0.22, 1, 0.36, 1] as const;
 
 interface FeedClientProps {
   intents: IntentWithAuthor[];
@@ -89,6 +93,9 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
   const [loadingMore, setLoadingMore] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
+  // Filter transition
+  const [filterKey, setFilterKey] = useState(0);
+
   // User saved/interested state
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [interestedIds, setInterestedIds] = useState<Set<string>>(new Set());
@@ -98,6 +105,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
     setAllIntents(initialIntents);
     setPage(initialFilters.page ?? 0);
     setHasMore(initialIntents.length < total);
+    setFilterKey((k) => k + 1);
   }, [initialIntents, total, initialFilters.page]);
 
   // Load user saved/interested states
@@ -126,7 +134,6 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
       } else {
         params.delete(key);
       }
-      // Reset page when changing filters
       params.delete("page");
       router.push(`/feed?${params.toString()}`);
     },
@@ -138,7 +145,6 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
     router.push("/feed");
   }, [router]);
 
-  // Debounced search
   const handleSearchChange = (value: string) => {
     setSearchValue(value);
     if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -147,7 +153,6 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
     }, 300);
   };
 
-  // Load more
   const loadMore = useCallback(() => {
     if (loadingMore || !hasMore) return;
     setLoadingMore(true);
@@ -167,7 +172,6 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
     });
   }, [loadingMore, hasMore, page, initialFilters, startTransition]);
 
-  // Intersection observer for infinite scroll
   useEffect(() => {
     const el = loadMoreRef.current;
     if (!el) return;
@@ -189,29 +193,29 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white/90">Intent Feed</h1>
-          <p className="text-sm text-zinc-400 mt-1">
+          <h1 className="text-2xl font-bold text-[#F1F5F9]">Intent Feed</h1>
+          <p className="text-sm text-[#94A3B8] mt-1">
             Discover what Web3 builders are looking for
           </p>
         </div>
         {canPost && (
           <Button
             onClick={() => setPostDialogOpen(true)}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 w-full sm:w-auto"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 w-full sm:w-auto transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/20 active:scale-[0.97] cursor-pointer"
           >
             <Plus className="size-4 mr-1.5" />
             Post Intent
           </Button>
         )}
         {isAuthenticated && !profile?.twitter_verified && (
-          <Button variant="outline" disabled className="text-zinc-400 w-full sm:w-auto">
+          <Button variant="outline" disabled className="text-[#475569] w-full sm:w-auto">
             Verify X to Post
           </Button>
         )}
         {!isAuthenticated && (
           <Button
             onClick={login}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 w-full sm:w-auto"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 w-full sm:w-auto cursor-pointer"
           >
             Sign In to Post
           </Button>
@@ -221,18 +225,18 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
       {/* Search + Sort bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[#475569]" />
           <input
             type="text"
             placeholder="Search intents..."
             value={searchValue}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full h-9 rounded-lg border border-white/10 bg-white/5 pl-9 pr-8 text-sm text-white/90 outline-none focus:border-emerald-500/50 placeholder:text-zinc-500"
+            className="w-full h-9 rounded-lg border border-white/[0.07] bg-[#0f0f1a] pl-9 pr-8 text-sm text-[#F1F5F9] outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 placeholder:text-[#475569] transition-all duration-200"
           />
           {searchValue && (
             <button
               onClick={() => handleSearchChange("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-[#475569] hover:text-white cursor-pointer"
             >
               <X className="size-3.5" />
             </button>
@@ -241,7 +245,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
         <select
           value={activeSort}
           onChange={(e) => updateFilter("sort", e.target.value === "newest" ? null : e.target.value)}
-          className="h-9 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white/90 outline-none"
+          className="h-9 rounded-lg border border-white/[0.07] bg-[#0f0f1a] px-3 text-sm text-[#F1F5F9] outline-none cursor-pointer"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -253,41 +257,43 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
           variant="ghost"
           size="sm"
           onClick={() => setShowSidebar(!showSidebar)}
-          className={`text-zinc-400 lg:hidden ${showSidebar ? "bg-white/5" : ""}`}
+          className={`text-[#94A3B8] lg:hidden cursor-pointer ${showSidebar ? "bg-white/5" : ""}`}
         >
           <Filter className="size-4" />
         </Button>
       </div>
 
-      {/* Type filter pills — sticky on scroll */}
-      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide sticky top-14 z-30 bg-[#080810] pt-2 -mx-4 px-4">
-        <button
-          onClick={() => updateFilter("type", null)}
-          className={`shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-            !activeType
-              ? "bg-white/10 text-white"
-              : "text-zinc-400 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          All
-        </button>
-        {INTENT_TYPES.map((type) => {
-          const config = INTENT_TYPE_CONFIG[type];
-          const isActive = activeType === type;
-          return (
-            <button
-              key={type}
-              onClick={() => updateFilter("type", isActive ? null : type)}
-              className={`shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                isActive
-                  ? config.color
-                  : "text-zinc-400 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              {config.label}
-            </button>
-          );
-        })}
+      {/* Type filter pills — sticky with blur */}
+      <div className="sticky top-14 z-30 -mx-4 px-4 pt-2 pb-3 mb-4 bg-[#0a0a12]/80 backdrop-blur-xl border-b border-white/[0.04]">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+          <button
+            onClick={() => updateFilter("type", null)}
+            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 cursor-pointer ${
+              !activeType
+                ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
+                : "text-[#94A3B8] hover:text-white hover:bg-white/5 border border-transparent"
+            }`}
+          >
+            All
+          </button>
+          {INTENT_TYPES.map((type) => {
+            const config = INTENT_TYPE_CONFIG[type];
+            const isActive = activeType === type;
+            return (
+              <button
+                key={type}
+                onClick={() => updateFilter("type", isActive ? null : type)}
+                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 cursor-pointer ${
+                  isActive
+                    ? `${config.color} border border-current/20`
+                    : "text-[#94A3B8] hover:text-white hover:bg-white/5 border border-transparent"
+                }`}
+              >
+                {config.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Main content: sidebar + grid */}
@@ -300,7 +306,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
         >
           {/* Ecosystem */}
           <div>
-            <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-semibold text-[#475569] uppercase tracking-wider mb-2">
               Ecosystem
             </h3>
             <div className="space-y-1.5 max-h-48 overflow-y-auto">
@@ -312,9 +318,9 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                     onChange={() =>
                       updateFilter("ecosystem", activeEcosystem === key ? null : key)
                     }
-                    className="rounded border-white/20 bg-white/5 text-emerald-500 focus:ring-emerald-500/50 size-3.5"
+                    className="rounded border-white/20 bg-white/5 text-violet-500 focus:ring-violet-500/50 size-3.5 cursor-pointer"
                   />
-                  <span className="text-sm text-zinc-400 group-hover:text-white transition-colors">
+                  <span className="text-sm text-[#94A3B8] group-hover:text-white transition-colors duration-200">
                     {config.label}
                   </span>
                 </label>
@@ -324,7 +330,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
 
           {/* Sector */}
           <div>
-            <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-semibold text-[#475569] uppercase tracking-wider mb-2">
               Sector
             </h3>
             <div className="space-y-1.5 max-h-48 overflow-y-auto">
@@ -336,9 +342,9 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                     onChange={() =>
                       updateFilter("sector", activeSector === key ? null : key)
                     }
-                    className="rounded border-white/20 bg-white/5 text-emerald-500 focus:ring-emerald-500/50 size-3.5"
+                    className="rounded border-white/20 bg-white/5 text-violet-500 focus:ring-violet-500/50 size-3.5 cursor-pointer"
                   />
-                  <span className="text-sm text-zinc-400 group-hover:text-white transition-colors">
+                  <span className="text-sm text-[#94A3B8] group-hover:text-white transition-colors duration-200">
                     {config.label}
                   </span>
                 </label>
@@ -348,7 +354,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
 
           {/* Priority */}
           <div>
-            <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-semibold text-[#475569] uppercase tracking-wider mb-2">
               Priority
             </h3>
             <div className="space-y-1.5">
@@ -360,9 +366,9 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                     onChange={() =>
                       updateFilter("priority", activePriority === p ? null : p)
                     }
-                    className="rounded border-white/20 bg-white/5 text-emerald-500 focus:ring-emerald-500/50 size-3.5"
+                    className="rounded border-white/20 bg-white/5 text-violet-500 focus:ring-violet-500/50 size-3.5 cursor-pointer"
                   />
-                  <span className="text-sm text-zinc-400 group-hover:text-white transition-colors">
+                  <span className="text-sm text-[#94A3B8] group-hover:text-white transition-colors duration-200">
                     {p}
                   </span>
                 </label>
@@ -374,7 +380,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
           {hasActiveFilters && (
             <button
               onClick={clearAllFilters}
-              className="text-xs text-emerald-400 hover:text-emerald-300 font-medium"
+              className="text-xs text-violet-400 hover:text-violet-300 font-medium cursor-pointer transition-colors duration-200"
             >
               Clear all filters
             </button>
@@ -384,69 +390,102 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
         {/* Intent grid */}
         <div className="flex-1 min-w-0">
           {/* Result count */}
-          <p className="text-xs text-zinc-500 mb-3">
+          <p className="text-xs text-[#475569] mb-3">
             Showing {allIntents.length} of {total} intents
           </p>
 
-          {allIntents.length > 0 ? (
-            <>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {allIntents.map((intent) => (
-                  <IntentCard
-                    key={intent.id}
-                    intent={intent}
-                    currentUserId={profile?.id ?? null}
-                    onRequestConnection={
-                      isAuthenticated
-                        ? (i) => setConnectIntent(i)
-                        : () => login()
-                    }
-                    onViewContact={(i) => setViewContactIntent(i)}
-                    isSaved={savedIds.has(intent.id)}
-                    isInterested={interestedIds.has(intent.id)}
-                  />
-                ))}
-              </div>
-
-              {/* Load more trigger */}
-              {hasMore && (
-                <div ref={loadMoreRef} className="flex justify-center py-8">
-                  <Button
-                    variant="outline"
-                    onClick={loadMore}
-                    disabled={loadingMore}
-                    className="text-zinc-400"
-                  >
-                    {loadingMore ? "Loading..." : "Load more"}
-                    <ChevronDown className="size-4 ml-1.5" />
-                  </Button>
+          <AnimatePresence mode="wait">
+            {allIntents.length > 0 ? (
+              <motion.div
+                key={filterKey}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {allIntents.map((intent, i) => (
+                    <motion.div
+                      key={intent.id}
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.4,
+                        delay: Math.min(i * 0.04, 0.2),
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                    >
+                      <IntentCard
+                        intent={intent}
+                        currentUserId={profile?.id ?? null}
+                        onRequestConnection={
+                          isAuthenticated
+                            ? (i) => setConnectIntent(i)
+                            : () => login()
+                        }
+                        onViewContact={(i) => setViewContactIntent(i)}
+                        isSaved={savedIds.has(intent.id)}
+                        isInterested={interestedIds.has(intent.id)}
+                      />
+                    </motion.div>
+                  ))}
                 </div>
-              )}
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="size-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
-                <SlidersHorizontal className="size-6 text-zinc-500" />
-              </div>
-              <h3 className="text-lg font-medium text-white/70">
-                No intents found
-              </h3>
-              <p className="text-sm text-zinc-400 mt-1 max-w-sm">
-                {hasActiveFilters
-                  ? "Try adjusting your filters to see more intents."
-                  : "Be the first to post an intent and get discovered."}
-              </p>
-              {canPost && (
-                <Button
-                  onClick={() => setPostDialogOpen(true)}
-                  className="mt-4 bg-emerald-600 hover:bg-emerald-500 text-white border-0"
-                >
-                  <Plus className="size-4 mr-1.5" />
-                  Post Intent
-                </Button>
-              )}
-            </div>
-          )}
+
+                {/* Load more trigger */}
+                {hasMore && (
+                  <div ref={loadMoreRef} className="flex justify-center py-8">
+                    <Button
+                      variant="outline"
+                      onClick={loadMore}
+                      disabled={loadingMore}
+                      className="text-[#94A3B8] border-white/[0.07] hover:border-white/[0.12] transition-all duration-200 cursor-pointer"
+                    >
+                      {loadingMore ? (
+                        <>
+                          <Loader2 className="size-4 mr-1.5 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          Load more
+                          <ChevronDown className="size-4 ml-1.5" />
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="flex flex-col items-center justify-center py-20 text-center"
+              >
+                <div className="size-16 rounded-2xl bg-[#0f0f1a] border border-white/[0.07] flex items-center justify-center mb-4">
+                  <SlidersHorizontal className="size-6 text-[#475569]" />
+                </div>
+                <h3 className="text-lg font-medium text-[#F1F5F9]/70">
+                  No intents found
+                </h3>
+                <p className="text-sm text-[#94A3B8] mt-1 max-w-sm">
+                  {hasActiveFilters
+                    ? "Try adjusting your filters to see more intents."
+                    : "Be the first to post an intent and get discovered."}
+                </p>
+                {canPost && (
+                  <Button
+                    onClick={() => setPostDialogOpen(true)}
+                    className="mt-4 bg-emerald-600 hover:bg-emerald-500 text-white border-0 cursor-pointer"
+                  >
+                    <Plus className="size-4 mr-1.5" />
+                    Post Intent
+                  </Button>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
