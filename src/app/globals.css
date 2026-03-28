@@ -179,3 +179,102 @@
     animation: none;
   }
 }
+
+/* ── Premium UI utilities ── */
+
+/* Noise/grain texture overlay */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+/* Glow utilities */
+.glow-emerald-sm {
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+.glow-violet-sm {
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
+}
+
+/* Premium custom checkboxes */
+.premium-checkbox {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.premium-checkbox:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+  background: rgba(139, 92, 246, 0.06);
+}
+.premium-checkbox:checked {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.5);
+}
+.premium-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 2px;
+  background: rgb(139, 92, 246);
+}
+.premium-checkbox:focus-visible {
+  outline: 2px solid rgba(139, 92, 246, 0.4);
+  outline-offset: 2px;
+}
+
+/* Glass morphism */
+.glass-card {
+  background: linear-gradient(135deg, rgba(15, 15, 26, 0.8), rgba(15, 15, 26, 0.4));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Animated gradient border on hover */
+.card-glow-border {
+  position: relative;
+}
+.card-glow-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(16, 185, 129, 0.2), rgba(139, 92, 246, 0.1));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.card-glow-border:hover::before {
+  opacity: 1;
+}
+
+/* Hero mesh gradient background */
+.hero-mesh {
+  background:
+    radial-gradient(ellipse 60% 40% at 10% 20%, rgba(139, 92, 246, 0.08), transparent),
+    radial-gradient(ellipse 50% 50% at 80% 60%, rgba(16, 185, 129, 0.06), transparent),
+    radial-gradient(ellipse 40% 30% at 50% 10%, rgba(59, 130, 246, 0.05), transparent);
+}
+
+/* Shimmer for stats tiles */
+.shimmer-stat {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.02) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 4s ease-in-out infinite;
+}

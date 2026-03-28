@@ -193,52 +193,70 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
   return (
     <>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-[#F1F5F9]">Intent Feed</h1>
-          <p className="text-sm text-[#94A3B8] mt-1">
-            Discover what Web3 builders are looking for
-          </p>
+      <div className="mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-white via-white to-white/50 bg-clip-text text-transparent">
+              Intent Feed
+            </h1>
+            <p className="text-sm text-[#94A3B8]/80 mt-2 max-w-md">
+              Discover what Web3 builders are looking for — and make your move.
+            </p>
+          </div>
+          {canPost && (
+            <Button
+              onClick={() => setPostDialogOpen(true)}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 w-full sm:w-auto transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/25 active:scale-[0.97] cursor-pointer glow-emerald-sm"
+            >
+              <Plus className="size-4 mr-1.5" />
+              Post Intent
+            </Button>
+          )}
+          {isAuthenticated && !profile?.twitter_verified && (
+            <Button variant="outline" disabled className="text-[#475569] w-full sm:w-auto">
+              Verify X to Post
+            </Button>
+          )}
+          {!isAuthenticated && (
+            <Button
+              onClick={login}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 w-full sm:w-auto cursor-pointer glow-emerald-sm"
+            >
+              Sign In to Post
+            </Button>
+          )}
         </div>
-        {canPost && (
-          <Button
-            onClick={() => setPostDialogOpen(true)}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 w-full sm:w-auto transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/20 active:scale-[0.97] cursor-pointer"
-          >
-            <Plus className="size-4 mr-1.5" />
-            Post Intent
-          </Button>
-        )}
-        {isAuthenticated && !profile?.twitter_verified && (
-          <Button variant="outline" disabled className="text-[#475569] w-full sm:w-auto">
-            Verify X to Post
-          </Button>
-        )}
-        {!isAuthenticated && (
-          <Button
-            onClick={login}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 w-full sm:w-auto cursor-pointer"
-          >
-            Sign In to Post
-          </Button>
-        )}
+
+        {/* Stats bar */}
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: "Total Intents", value: total },
+            { label: "Active Now", value: allIntents.filter(i => i.lifecycle_status === 'active').length },
+            { label: "This Week", value: allIntents.filter(i => Date.now() - new Date(i.created_at).getTime() < 7 * 86400000).length },
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 shimmer-stat">
+              <p className="text-[11px] text-[#475569] font-medium uppercase tracking-wider">{stat.label}</p>
+              <p className="text-lg font-semibold text-[#F1F5F9] mt-0.5 tabular-nums">{stat.value}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Search + Sort bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[#475569]" />
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 mb-5">
+        <div className="relative flex-1 group">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-[#475569] transition-colors duration-200 group-focus-within:text-violet-400" />
           <input
             type="text"
-            placeholder="Search intents..."
+            placeholder="Search intents by keyword, project, or ecosystem..."
             value={searchValue}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full h-9 rounded-lg border border-white/[0.07] bg-[#0f0f1a] pl-9 pr-8 text-sm text-[#F1F5F9] outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 placeholder:text-[#475569] transition-all duration-200"
+            className="w-full h-11 rounded-xl border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm pl-10 pr-9 text-sm text-[#F1F5F9] outline-none focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 focus:bg-white/[0.05] placeholder:text-[#475569]/70 transition-all duration-300"
           />
           {searchValue && (
             <button
               onClick={() => handleSearchChange("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-[#475569] hover:text-white cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#475569] hover:text-white cursor-pointer transition-colors duration-200"
             >
               <X className="size-3.5" />
             </button>
@@ -247,7 +265,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
         <select
           value={activeSort}
           onChange={(e) => updateFilter("sort", e.target.value === "newest" ? null : e.target.value)}
-          className="h-9 rounded-lg border border-white/[0.07] bg-[#0f0f1a] px-3 text-sm text-[#F1F5F9] outline-none cursor-pointer"
+          className="h-11 rounded-xl border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm px-3.5 text-sm text-[#F1F5F9] outline-none cursor-pointer hover:border-white/[0.12] transition-all duration-200"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -259,21 +277,21 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
           variant="ghost"
           size="sm"
           onClick={() => setShowSidebar(!showSidebar)}
-          className={`text-[#94A3B8] lg:hidden cursor-pointer ${showSidebar ? "bg-white/5" : ""}`}
+          className={`text-[#94A3B8] lg:hidden cursor-pointer h-11 rounded-xl ${showSidebar ? "bg-white/[0.06] text-violet-400" : "hover:bg-white/[0.04]"}`}
         >
           <Filter className="size-4" />
         </Button>
       </div>
 
       {/* Type filter pills — sticky with blur */}
-      <div className="sticky top-14 z-30 -mx-4 px-4 pt-2 pb-3 mb-4 bg-[#0a0a12]/80 backdrop-blur-xl border-b border-white/[0.04]">
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+      <div className="sticky top-14 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-3 pb-4 mb-5 bg-[#080810]/70 backdrop-blur-2xl border-b border-white/[0.04]">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-0.5">
           <button
             onClick={() => updateFilter("type", null)}
-            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 cursor-pointer ${
+            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-300 cursor-pointer ${
               !activeType
-                ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
-                : "text-[#94A3B8] hover:text-white hover:bg-white/5 border border-transparent"
+                ? "bg-violet-500/15 text-violet-300 border border-violet-500/30 shadow-[0_0_12px_rgba(139,92,246,0.1)]"
+                : "text-[#94A3B8] hover:text-white hover:bg-white/[0.04] border border-transparent"
             }`}
           >
             All
@@ -285,12 +303,13 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
               <button
                 key={type}
                 onClick={() => updateFilter("type", isActive ? null : type)}
-                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 cursor-pointer ${
+                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-300 cursor-pointer flex items-center gap-1.5 ${
                   isActive
-                    ? `${config.color} border border-current/20`
-                    : "text-[#94A3B8] hover:text-white hover:bg-white/5 border border-transparent"
+                    ? `${config.color} border border-current/20 shadow-[0_0_12px_rgba(139,92,246,0.08)]`
+                    : "text-[#94A3B8] hover:text-white hover:bg-white/[0.04] border border-transparent"
                 }`}
               >
+                <span className={`size-1.5 rounded-full ${isActive ? 'bg-current' : 'bg-[#475569]'} transition-colors duration-200`} />
                 {config.label}
               </button>
             );
@@ -301,100 +320,129 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
       {/* Main content: sidebar + grid */}
       <div className="flex gap-6 mb-6">
         {/* Filter sidebar */}
-        <div
-          className={`shrink-0 w-56 space-y-5 ${
-            showSidebar ? "block" : "hidden lg:block"
-          }`}
-        >
-          {/* Ecosystem */}
-          <div>
-            <h3 className="text-xs font-semibold text-[#475569] uppercase tracking-wider mb-2">
-              Ecosystem
-            </h3>
-            <div className="space-y-1.5 max-h-48 overflow-y-auto">
-              {Object.entries(ECOSYSTEM_CONFIG).map(([key, config]) => (
-                <label key={key} className="flex items-center gap-2 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={activeEcosystem === key}
-                    onChange={() =>
-                      updateFilter("ecosystem", activeEcosystem === key ? null : key)
-                    }
-                    className="rounded border-white/20 bg-white/5 text-violet-500 focus:ring-violet-500/50 size-3.5 cursor-pointer"
-                  />
-                  <span className="text-sm text-[#94A3B8] group-hover:text-white transition-colors duration-200">
-                    {config.label}
-                  </span>
-                </label>
-              ))}
+        <div className={`shrink-0 w-60 ${showSidebar ? "block" : "hidden lg:block"}`}>
+          <div className="sticky top-32 space-y-6">
+            {/* Ecosystem */}
+            <div>
+              <h3 className="text-[11px] font-semibold text-[#F1F5F9]/40 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <span className="h-px flex-1 bg-gradient-to-r from-white/[0.06] to-transparent" />
+                Ecosystem
+                <span className="h-px flex-1 bg-gradient-to-l from-white/[0.06] to-transparent" />
+              </h3>
+              <div className="space-y-0.5 max-h-48 overflow-y-auto scrollbar-hide">
+                {Object.entries(ECOSYSTEM_CONFIG).map(([key, config]) => (
+                  <label
+                    key={key}
+                    className={`flex items-center gap-2.5 cursor-pointer group rounded-lg px-2.5 py-1.5 transition-all duration-200 ${
+                      activeEcosystem === key ? 'bg-white/[0.04]' : 'hover:bg-white/[0.02]'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={activeEcosystem === key}
+                      onChange={() =>
+                        updateFilter("ecosystem", activeEcosystem === key ? null : key)
+                      }
+                      className="premium-checkbox"
+                    />
+                    <span className={`text-sm transition-colors duration-200 ${
+                      activeEcosystem === key ? 'text-[#F1F5F9]' : 'text-[#94A3B8] group-hover:text-[#CBD5E1]'
+                    }`}>
+                      {config.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Sector */}
-          <div>
-            <h3 className="text-xs font-semibold text-[#475569] uppercase tracking-wider mb-2">
-              Sector
-            </h3>
-            <div className="space-y-1.5 max-h-48 overflow-y-auto">
-              {Object.entries(SECTOR_CONFIG).map(([key, config]) => (
-                <label key={key} className="flex items-center gap-2 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={activeSector === key}
-                    onChange={() =>
-                      updateFilter("sector", activeSector === key ? null : key)
-                    }
-                    className="rounded border-white/20 bg-white/5 text-violet-500 focus:ring-violet-500/50 size-3.5 cursor-pointer"
-                  />
-                  <span className="text-sm text-[#94A3B8] group-hover:text-white transition-colors duration-200">
-                    {config.label}
-                  </span>
-                </label>
-              ))}
+            {/* Sector */}
+            <div>
+              <h3 className="text-[11px] font-semibold text-[#F1F5F9]/40 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <span className="h-px flex-1 bg-gradient-to-r from-white/[0.06] to-transparent" />
+                Sector
+                <span className="h-px flex-1 bg-gradient-to-l from-white/[0.06] to-transparent" />
+              </h3>
+              <div className="space-y-0.5 max-h-48 overflow-y-auto scrollbar-hide">
+                {Object.entries(SECTOR_CONFIG).map(([key, config]) => (
+                  <label
+                    key={key}
+                    className={`flex items-center gap-2.5 cursor-pointer group rounded-lg px-2.5 py-1.5 transition-all duration-200 ${
+                      activeSector === key ? 'bg-white/[0.04]' : 'hover:bg-white/[0.02]'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={activeSector === key}
+                      onChange={() =>
+                        updateFilter("sector", activeSector === key ? null : key)
+                      }
+                      className="premium-checkbox"
+                    />
+                    <span className={`text-sm transition-colors duration-200 ${
+                      activeSector === key ? 'text-[#F1F5F9]' : 'text-[#94A3B8] group-hover:text-[#CBD5E1]'
+                    }`}>
+                      {config.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Priority */}
-          <div>
-            <h3 className="text-xs font-semibold text-[#475569] uppercase tracking-wider mb-2">
-              Priority
-            </h3>
-            <div className="space-y-1.5">
-              {PRIORITY_OPTIONS.map((p) => (
-                <label key={p} className="flex items-center gap-2 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={activePriority === p}
-                    onChange={() =>
-                      updateFilter("priority", activePriority === p ? null : p)
-                    }
-                    className="rounded border-white/20 bg-white/5 text-violet-500 focus:ring-violet-500/50 size-3.5 cursor-pointer"
-                  />
-                  <span className="text-sm text-[#94A3B8] group-hover:text-white transition-colors duration-200">
-                    {p}
-                  </span>
-                </label>
-              ))}
+            {/* Priority */}
+            <div>
+              <h3 className="text-[11px] font-semibold text-[#F1F5F9]/40 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <span className="h-px flex-1 bg-gradient-to-r from-white/[0.06] to-transparent" />
+                Priority
+                <span className="h-px flex-1 bg-gradient-to-l from-white/[0.06] to-transparent" />
+              </h3>
+              <div className="space-y-0.5">
+                {PRIORITY_OPTIONS.map((p) => (
+                  <label
+                    key={p}
+                    className={`flex items-center gap-2.5 cursor-pointer group rounded-lg px-2.5 py-1.5 transition-all duration-200 ${
+                      activePriority === p ? 'bg-white/[0.04]' : 'hover:bg-white/[0.02]'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={activePriority === p}
+                      onChange={() =>
+                        updateFilter("priority", activePriority === p ? null : p)
+                      }
+                      className="premium-checkbox"
+                    />
+                    <span className={`text-sm transition-colors duration-200 ${
+                      activePriority === p ? 'text-[#F1F5F9]' : 'text-[#94A3B8] group-hover:text-[#CBD5E1]'
+                    }`}>
+                      {p}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Clear filters */}
-          {hasActiveFilters && (
-            <button
-              onClick={clearAllFilters}
-              className="text-xs text-violet-400 hover:text-violet-300 font-medium cursor-pointer transition-colors duration-200"
-            >
-              Clear all filters
-            </button>
-          )}
+            {/* Clear filters */}
+            {hasActiveFilters && (
+              <button
+                onClick={clearAllFilters}
+                className="w-full text-xs text-violet-400 hover:text-violet-300 font-medium cursor-pointer transition-all duration-200 rounded-lg border border-violet-500/20 hover:border-violet-500/30 py-2 hover:bg-violet-500/5"
+              >
+                Clear all filters
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Intent grid */}
         <div className="flex-1 min-w-0">
           {/* Result count */}
-          <p className="text-xs text-[#475569] mb-3">
-            Showing {allIntents.length} of {total} intents
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-xs text-[#475569]">
+              <span className="text-[#F1F5F9]/60 font-medium tabular-nums">{allIntents.length}</span>
+              {' '}of <span className="tabular-nums">{total}</span> intents
+            </p>
+            {isPending && <Loader2 className="size-3.5 text-violet-400 animate-spin" />}
+          </div>
 
           <AnimatePresence mode="wait">
             {allIntents.length > 0 ? (
@@ -405,7 +453,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-5 sm:grid-cols-2">
                   {allIntents.map((intent, i) => (
                     <motion.div
                       key={intent.id}
@@ -435,12 +483,12 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
 
                 {/* Load more trigger */}
                 {hasMore && (
-                  <div ref={loadMoreRef} className="flex justify-center py-8">
+                  <div ref={loadMoreRef} className="flex justify-center py-10">
                     <Button
                       variant="outline"
                       onClick={loadMore}
                       disabled={loadingMore}
-                      className="text-[#94A3B8] border-white/[0.07] hover:border-white/[0.12] transition-all duration-200 cursor-pointer"
+                      className="text-[#94A3B8] border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.03] transition-all duration-300 cursor-pointer rounded-xl px-6"
                     >
                       {loadingMore ? (
                         <>
@@ -462,29 +510,43 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                 key="empty"
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="flex flex-col items-center justify-center py-20 text-center"
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="flex flex-col items-center justify-center py-24 text-center relative"
               >
-                <div className="size-16 rounded-2xl bg-[#0f0f1a] border border-white/[0.07] flex items-center justify-center mb-4">
-                  <SlidersHorizontal className="size-6 text-[#475569]" />
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-violet-500/[0.04] blur-3xl" />
+                  <div className="absolute top-1/3 left-1/3 w-48 h-48 rounded-full bg-emerald-500/[0.03] blur-3xl" />
                 </div>
-                <h3 className="text-lg font-medium text-[#F1F5F9]/70">
-                  No intents found
-                </h3>
-                <p className="text-sm text-[#94A3B8] mt-1 max-w-sm">
-                  {hasActiveFilters
-                    ? "Try adjusting your filters to see more intents."
-                    : "Be the first to post an intent and get discovered."}
-                </p>
-                {canPost && (
-                  <Button
-                    onClick={() => setPostDialogOpen(true)}
-                    className="mt-4 bg-emerald-600 hover:bg-emerald-500 text-white border-0 cursor-pointer"
-                  >
-                    <Plus className="size-4 mr-1.5" />
-                    Post Intent
-                  </Button>
-                )}
+                <div className="relative">
+                  <div className="size-20 rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.08] flex items-center justify-center mb-5 mx-auto">
+                    <SlidersHorizontal className="size-8 text-[#475569]" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-[#F1F5F9]/80">
+                    No intents found
+                  </h3>
+                  <p className="text-sm text-[#94A3B8]/70 mt-2 max-w-sm leading-relaxed">
+                    {hasActiveFilters
+                      ? "Try adjusting your filters or search query to discover more intents."
+                      : "Be the first to post an intent and get discovered by the Web3 community."}
+                  </p>
+                  {hasActiveFilters && (
+                    <button
+                      onClick={clearAllFilters}
+                      className="mt-4 text-sm text-violet-400 hover:text-violet-300 font-medium cursor-pointer transition-colors duration-200"
+                    >
+                      Clear all filters
+                    </button>
+                  )}
+                  {canPost && !hasActiveFilters && (
+                    <Button
+                      onClick={() => setPostDialogOpen(true)}
+                      className="mt-5 bg-emerald-600 hover:bg-emerald-500 text-white border-0 cursor-pointer glow-emerald-sm"
+                    >
+                      <Plus className="size-4 mr-1.5" />
+                      Post Intent
+                    </Button>
+                  )}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
