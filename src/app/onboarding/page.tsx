@@ -440,6 +440,29 @@ export default function OnboardingPage() {
                     {submitting ? "Saving..." : "Complete Setup"}
                   </Button>
                 </div>
+                <button
+                  onClick={async () => {
+                    // Skip X — save profile and go to feed directly
+                    if (!user) return;
+                    setSubmitting(true);
+                    try {
+                      await upsertProfile({
+                        id: user.userId!,
+                        display_name: displayName,
+                        bio: bio || undefined,
+                        telegram_handle: telegram || undefined,
+                        email: email || undefined,
+                        account_type: accountType,
+                        twitter_verified: false,
+                      });
+                      router.push("/feed");
+                    } catch { router.push("/feed"); }
+                    finally { setSubmitting(false); }
+                  }}
+                  className="w-full mt-2 text-sm text-zinc-500 hover:text-zinc-400 transition-colors cursor-pointer"
+                >
+                  Skip X verification for now →
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
