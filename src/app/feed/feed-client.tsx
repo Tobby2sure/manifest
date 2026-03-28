@@ -228,9 +228,12 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
             </Button>
           )}
           {!isAuthenticated && (
-            <DynamicConnectButton buttonClassName="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg px-4 py-2 text-sm transition-all duration-200 cursor-pointer shadow-lg shadow-emerald-500/20">
+            <Button
+              onClick={() => setShowAuthFlow(true)}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 w-full sm:w-auto cursor-pointer shadow-lg shadow-emerald-500/20"
+            >
               Sign In to Post
-            </DynamicConnectButton>
+            </Button>
           )}
         </div>
 

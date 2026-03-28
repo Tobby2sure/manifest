@@ -100,13 +100,13 @@ export function Navbar() {
               </DropdownMenu>
             </>
           ) : (
-            <Button
-              size="sm"
-              onClick={() => setShowAuthFlow(true)}
-              className="bg-white text-black hover:bg-zinc-100 font-medium transition-all cursor-pointer"
-            >
-              Sign In
-            </Button>
+            <DynamicWidget
+              innerButtonComponent={
+                <span className="bg-white text-black hover:bg-zinc-100 font-medium px-3 py-1.5 rounded-md text-sm transition-all cursor-pointer">
+                  Sign In
+                </span>
+              }
+            />
           )}
         </div>
       </div>
