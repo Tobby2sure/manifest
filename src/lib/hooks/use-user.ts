@@ -1,42 +1,32 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { usePrivy } from '@privy-io/react-auth';
 import { useQuery } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 
-export interface UserData {
-  id: string;
-  name?: string | null;
-  image?: string | null;
-  username?: string;
-  twitter_id?: string;
-  profile?: Record<string, unknown> | null;
-}
-
 export function useUser() {
-  const { data: session, status } = useSession();
+  const { user, ready, authenticated } = usePrivy();
   const supabase = createClient();
 
   const query = useQuery({
-    queryKey: ['user-profile', session?.user],
+    queryKey: ['user-profile', user?.id],
     queryFn: async () => {
-      if (!session?.user) return null;
-      const userId = (session.user as { id?: string }).id;
-      if (!userId) return null;
+      if (!user?.id) return null;
       const { data } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('id', user.id)
         .single();
       return data;
     },
-    enabled: !!session?.user,
+    enabled: !!user?.id,
   });
 
   return {
-    user: session?.user as UserData | undefined,
+    user,
     profile: query.data,
-    isLoading: status === 'loading',
-    isAuthenticated: !!session?.user,
+    isLoading: !ready,
+    isAuthenticated: authenticated,
+    refetch: query.refetch,
   };
 }

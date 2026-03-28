@@ -1,2 +1,13 @@
-// Privy has been removed — auth is handled by NextAuth.
-// This file is kept empty to avoid breaking any residual imports.
+import type { PrivyClientConfig } from '@privy-io/react-auth';
+
+export const privyConfig: PrivyClientConfig = {
+  loginMethods: ['email', 'twitter', 'wallet'],
+  embeddedWallets: {
+    createOnLogin: 'all-users',
+  },
+  appearance: {
+    theme: 'dark',
+    accentColor: '#10b981',
+    logo: undefined,
+  },
+};
