@@ -21,8 +21,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       }}
     >
       <QueryClientProvider client={queryClient}>
-        {/* DynamicWidget must be mounted for setShowAuthFlow modal to render */}
-        <DynamicWidget />
+        {/* DynamicWidget must be mounted for setShowAuthFlow modal to render — hidden visually */}
+        <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0, pointerEvents: 'none' }}>
+          <DynamicWidget />
+        </div>
         {children}
       </QueryClientProvider>
     </DynamicContextProvider>
