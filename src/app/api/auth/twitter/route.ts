@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     response_type: "code",
     client_id: CLIENT_ID,
     redirect_uri: REDIRECT_URI,
-    scope: "tweet.read users.read offline.access",
+    scope: "tweet.read users.read",
     state,
     code_challenge: codeChallenge,
     code_challenge_method: "S256",

@@ -45,12 +45,10 @@ export async function GET(request: NextRequest) {
       client_id: CLIENT_ID,
     });
 
+    // Public client PKCE — no Authorization header, client_id in body only
     const tokenRes = await fetch("https://api.twitter.com/2/oauth2/token", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: `Basic ${Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString("base64")}`,
-      },
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: tokenBody,
     });
 
