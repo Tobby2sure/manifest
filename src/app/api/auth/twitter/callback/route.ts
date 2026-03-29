@@ -45,10 +45,14 @@ export async function GET(request: NextRequest) {
       client_id: CLIENT_ID,
     });
 
-    // Public client PKCE — no Authorization header, client_id in body only
+    // Confidential client — requires Basic auth header
+    const basicAuth = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString("base64");
     const tokenRes = await fetch("https://api.twitter.com/2/oauth2/token", {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": `Basic ${basicAuth}`,
+      },
       body: tokenBody,
     });
 
@@ -72,7 +76,8 @@ export async function GET(request: NextRequest) {
 
     if (!userRes.ok || !userData.data) {
       console.error("User fetch failed:", userData);
-      return NextResponse.redirect(`${appUrl}/onboarding/verify-x?error=user_fetch_failed`);
+      const errMsg = encodeURIComponent(JSON.stringify(userData).slice(0,100));
+      return NextResponse.redirect(`${appUrl}/onboarding/verify-x?error=user_fetch_failed&detail=${errMsg}`);
     }
 
     const { data: twitterUser } = await userRes.json();

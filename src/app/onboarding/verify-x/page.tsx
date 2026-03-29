@@ -16,6 +16,7 @@ export default function VerifyXPage() {
 
   const success = searchParams.get("success");
   const error = searchParams.get("error");
+  const detail = searchParams.get("detail");
 
   // Refetch profile after successful OAuth redirect
   useEffect(() => {
@@ -83,7 +84,7 @@ export default function VerifyXPage() {
           {error && (
             <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-3 mb-6 text-sm text-red-400">
               <AlertCircle className="size-4 shrink-0" />
-              {error === "access_denied" ? "Authorization was cancelled." : `Something went wrong (${error}). Try again.`}
+              {error === "access_denied" ? "Authorization was cancelled." : `Something went wrong (${error}). ${detail ? `Detail: ${detail}` : "Try again."}`}
             </div>
           )}
 
