@@ -22,6 +22,7 @@ import type {
 } from "@/lib/types/database";
 import { INTENT_TYPE_CONFIG, ECOSYSTEM_CONFIG, SECTOR_CONFIG } from "@/lib/types/database";
 import { toggleSave } from "@/app/actions/saved";
+import { DealTracker } from "@/components/deal-tracker";
 import { toggleInterest } from "@/app/actions/interests";
 
 const PRIORITY_STYLES: Record<string, string> = {
@@ -345,6 +346,17 @@ export function IntentCard({
           )}
         </div>
       </div>
+
+      {/* Deal Tracker — visible to intent owner only */}
+      {isOwn && currentUserId && (
+        <div className="px-5 pb-4">
+          <DealTracker
+            intentId={intent.id}
+            currentStatus={intent.lifecycle_status}
+            userId={currentUserId}
+          />
+        </div>
+      )}
     </div>
   );
 }

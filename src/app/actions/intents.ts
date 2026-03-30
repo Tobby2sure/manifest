@@ -181,3 +181,35 @@ export async function getIntentsByAuthor(
 
   return (data ?? []) as unknown as IntentWithAuthor[];
 }
+
+export async function updateIntentLifecycle(
+  intentId: string,
+  status: IntentLifecycleStatus,
+  userId: string
+): Promise<Intent> {
+  const supabase = createAdminClient();
+
+  // Verify the user is the author or a connected party
+  const { data: intent } = await supabase
+    .from("intents")
+    .select("author_id")
+    .eq("id", intentId)
+    .single();
+
+  if (!intent || intent.author_id !== userId) {
+    throw new Error("Not authorized to update this intent");
+  }
+
+  const { data, error } = await supabase
+    .from("intents")
+    .update({ lifecycle_status: status, updated_at: new Date().toISOString() })
+    .eq("id", intentId)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/feed");
+  revalidatePath(`/profile/${userId}`);
+  return data as Intent;
+}
