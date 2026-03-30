@@ -1,12 +1,12 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Notification } from "@/lib/types/database";
 
 export async function getNotifications(
   userId: string
 ): Promise<Notification[]> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("notifications")
@@ -22,7 +22,7 @@ export async function getNotifications(
 }
 
 export async function markRead(notificationId: string): Promise<void> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("notifications")
@@ -35,7 +35,7 @@ export async function markRead(notificationId: string): Promise<void> {
 }
 
 export async function markAllRead(userId: string): Promise<void> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("notifications")
@@ -53,7 +53,7 @@ export async function createNotification(
   type: string,
   payload: Record<string, unknown>
 ): Promise<void> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { error } = await supabase.from("notifications").insert({
     user_id: userId,
@@ -68,7 +68,7 @@ export async function createNotification(
 }
 
 export async function getUnreadCount(userId: string): Promise<number> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { count, error } = await supabase
     .from("notifications")

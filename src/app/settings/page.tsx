@@ -71,7 +71,7 @@ export default function SettingsPage() {
     );
   }
 
-  if (!user || !profile) {
+  if (!user) {
     return (
       <main className="min-h-[calc(100vh-4rem)] bg-[#080810] flex items-center justify-center">
         <div className="text-center">
