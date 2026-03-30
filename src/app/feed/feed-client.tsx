@@ -75,7 +75,7 @@ interface FeedClientProps {
 export function FeedClient({ intents: initialIntents, total, initialFilters }: FeedClientProps) {
   const { setShowAuthFlow } = useDynamicContext();
   const router = useRouter();
-  const { profile, isAuthenticated } = useUser();
+  const { profile, isAuthenticated, twitterVerified } = useUser();
   const login = () => setShowAuthFlow(true);
   const [isPending, startTransition] = useTransition();
 
@@ -197,7 +197,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
     return () => observer.disconnect();
   }, [loadMore]);
 
-  const canPost = isAuthenticated && profile?.twitter_verified;
+  const canPost = isAuthenticated && (profile?.twitter_verified || twitterVerified);
   const hasActiveFilters = activeType || activeEcosystem || activeSector || activePriority || searchValue;
 
   return (
@@ -222,7 +222,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
               Post Intent
             </Button>
           )}
-          {isAuthenticated && !profile?.twitter_verified && (
+          {isAuthenticated && !profile?.twitter_verified && !twitterVerified && (
             <Button
               variant="outline"
               onClick={() => router.push('/onboarding/verify-x')}
