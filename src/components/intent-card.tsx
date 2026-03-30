@@ -67,6 +67,7 @@ interface IntentCardProps {
   isInterested?: boolean;
   saveCount?: number;
   interestCount?: number;
+  authorEvents?: string[];
 }
 
 export function IntentCard({
@@ -79,6 +80,7 @@ export function IntentCard({
   isInterested: initialInterested = false,
   saveCount: initialSaveCount = 0,
   interestCount: initialInterestCount = 0,
+  authorEvents = [],
 }: IntentCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [saved, setSaved] = useState(initialSaved);
@@ -213,6 +215,15 @@ export function IntentCard({
               </span>
             )}
           </div>
+          {authorEvents.length > 0 && (
+            <div className="flex items-center gap-1 mt-0.5">
+              {authorEvents.slice(0, 2).map((eventName) => (
+                <span key={eventName} className="inline-flex items-center text-[10px] text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded-full border border-violet-500/20">
+                  📍 {eventName}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

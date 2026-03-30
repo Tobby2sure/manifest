@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { deliverIntentWebhooks } from "@/lib/webhooks";
 import type {
   Intent,
   IntentWithAuthor,
@@ -135,6 +136,9 @@ export async function createIntent(input: {
 
   // NFT mint stub — will be implemented in a future milestone
   // mintProofOfIntentNFT(data.id, input.authorId);
+
+  // Fire webhooks (fire-and-forget)
+  deliverIntentWebhooks(data as Intent);
 
   revalidatePath("/feed");
   return data as Intent;
