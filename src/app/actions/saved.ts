@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import type { IntentWithAuthor } from "@/lib/types/database";
 
@@ -8,7 +8,7 @@ export async function toggleSave(
   intentId: string,
   userId: string
 ): Promise<boolean> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Check if already saved
   const { data: existing } = await supabase
@@ -36,7 +36,7 @@ export async function toggleSave(
 export async function getSavedIntents(
   userId: string
 ): Promise<IntentWithAuthor[]> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("saved_intents")
@@ -54,7 +54,7 @@ export async function getSavedIntents(
 }
 
 export async function getUserSavedIds(userId: string): Promise<string[]> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("saved_intents")
@@ -66,7 +66,7 @@ export async function getUserSavedIds(userId: string): Promise<string[]> {
 }
 
 export async function getSaveCount(intentId: string): Promise<number> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { count, error } = await supabase
     .from("saved_intents")

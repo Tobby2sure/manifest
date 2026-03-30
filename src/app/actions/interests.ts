@@ -1,13 +1,13 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 
 export async function toggleInterest(
   intentId: string,
   userId: string
 ): Promise<boolean> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: existing } = await supabase
     .from("intent_interests")
@@ -32,7 +32,7 @@ export async function toggleInterest(
 }
 
 export async function getIntentInterests(intentId: string): Promise<number> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { count, error } = await supabase
     .from("intent_interests")
@@ -44,7 +44,7 @@ export async function getIntentInterests(intentId: string): Promise<number> {
 }
 
 export async function getUserInterestedIds(userId: string): Promise<string[]> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("intent_interests")

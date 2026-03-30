@@ -1,10 +1,10 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Organization } from "@/lib/types/database";
 
 export async function getOrg(slug: string) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: org, error } = await supabase
     .from("organizations")
@@ -41,7 +41,7 @@ export async function createOrg(data: {
   twitter_handle?: string;
   created_by: string;
 }) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: org, error } = await supabase
     .from("organizations")
