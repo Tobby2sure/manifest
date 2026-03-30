@@ -19,6 +19,7 @@ import { useUser } from '@/lib/hooks/use-user';
 export function Navbar() {
   const { sdkHasLoaded, user: dynamicUser, handleLogOut, setShowAuthFlow } = useDynamicContext();
   const { user, twitterHandle, twitterVerified } = useUser();
+  const isLoggedIn = !!dynamicUser || !!user;
   const [intentDialogOpen, setIntentDialogOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -30,7 +31,7 @@ export function Navbar() {
 
   const displayName = twitterHandle
     ? `@${twitterHandle}`
-    : dynamicUser?.email ?? 'User';
+    : (user?.verifiedCredentials?.find((c: any) => c.oauthProvider === 'email')?.oauthUsername ?? dynamicUser?.email ?? 'User');
 
   return (
     <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'border-b border-white/[0.08] bg-[#0a0a12]/90 backdrop-blur-xl' : 'bg-transparent'}`}>
@@ -56,7 +57,7 @@ export function Navbar() {
         <div className="flex items-center gap-2">
           {!sdkHasLoaded ? (
             <div className="h-8 w-24 animate-pulse rounded-lg bg-white/5" />
-          ) : !!user ? (
+          ) : isLoggedIn ? (
             <>
               <Button
                 size="sm"
