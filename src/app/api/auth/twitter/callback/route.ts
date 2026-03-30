@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const CLIENT_ID = process.env.TWITTER_CLIENT_ID!;
 const CLIENT_SECRET = process.env.TWITTER_CLIENT_SECRET!;
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
     console.log("[twitter-callback] final handle:", twitterHandle, "id:", twitterId);
 
     // Save to Supabase — even if we only have the Twitter ID, mark as verified
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const { error: dbError } = await supabase
       .from("profiles")
       .update({

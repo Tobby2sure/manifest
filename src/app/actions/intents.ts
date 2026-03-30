@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import type {
   Intent,
@@ -30,7 +30,7 @@ export interface IntentFilters {
 export async function getIntents(
   filters?: IntentFilters
 ): Promise<{ intents: IntentWithAuthor[]; total: number }> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const page = filters?.page ?? 0;
   const pageSize = filters?.pageSize ?? 20;
   const from = page * pageSize;
@@ -86,7 +86,7 @@ export async function getIntents(
 }
 
 export async function getIntent(id: string): Promise<IntentWithAuthor | null> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("intents")
@@ -108,7 +108,7 @@ export async function createIntent(input: {
   priority: IntentPriority;
   durationDays: number;
 }): Promise<Intent> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + input.durationDays);
@@ -144,7 +144,7 @@ export async function closeIntent(
   id: string,
   reason: IntentClosedReason
 ): Promise<Intent> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("intents")
@@ -167,7 +167,7 @@ export async function closeIntent(
 export async function getIntentsByAuthor(
   authorId: string
 ): Promise<IntentWithAuthor[]> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("intents")

@@ -1,10 +1,10 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Profile, AccountType } from "@/lib/types/database";
 
 export async function getProfile(userId: string): Promise<Profile | null> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("profiles")
@@ -28,7 +28,7 @@ export async function upsertProfile(input: {
   twitter_verified?: boolean;
   wallet_address?: string;
 }): Promise<Profile> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("profiles")
@@ -69,7 +69,7 @@ export async function updateProfile(
     twitter_verified?: boolean;
   }
 ): Promise<Profile> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("profiles")
@@ -86,7 +86,7 @@ export async function updateProfile(
 }
 
 export async function isTwitterVerified(userId: string): Promise<boolean> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("profiles")
@@ -99,7 +99,7 @@ export async function isTwitterVerified(userId: string): Promise<boolean> {
 }
 
 export async function updateLastActive(userId: string): Promise<void> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   await supabase
     .from("profiles")
     .update({ last_active_at: new Date().toISOString() })
@@ -107,7 +107,7 @@ export async function updateLastActive(userId: string): Promise<void> {
 }
 
 export async function calculateResponseRate(userId: string): Promise<number> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { count: total } = await supabase
     .from("connection_requests")

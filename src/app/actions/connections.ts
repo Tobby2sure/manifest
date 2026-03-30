@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import type {
   ConnectionRequest,
@@ -13,7 +13,7 @@ export async function sendConnectionRequest(
   receiverId: string,
   pitchMessage: string
 ): Promise<ConnectionRequest> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("connection_requests")
@@ -53,7 +53,7 @@ export async function respondToRequest(
   requestId: string,
   status: "accepted" | "declined"
 ): Promise<ConnectionRequest> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("connection_requests")
@@ -88,7 +88,7 @@ export async function respondToRequest(
 export async function getConnectionRequests(
   userId: string
 ): Promise<ConnectionRequest[]> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("connection_requests")
@@ -106,7 +106,7 @@ export async function getConnectionRequests(
 export async function getMyRequests(
   userId: string
 ): Promise<ConnectionRequest[]> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("connection_requests")
@@ -125,7 +125,7 @@ export async function getContactDetails(
   connectionId: string,
   userId: string
 ): Promise<{ telegram_handle: string | null; email: string | null } | null> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // First verify the request is accepted and the user is involved
   const { data: request, error: reqError } = await supabase
@@ -158,7 +158,7 @@ export async function getRequestForIntent(
   intentId: string,
   senderId: string
 ): Promise<ConnectionRequest | null> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("connection_requests")

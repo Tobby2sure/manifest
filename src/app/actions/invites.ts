@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 function generateCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
@@ -12,7 +12,7 @@ function generateCode(): string {
 }
 
 export async function createInvite(orgId: string, createdBy: string) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const code = generateCode();
   const { data, error } = await supabase
@@ -26,7 +26,7 @@ export async function createInvite(orgId: string, createdBy: string) {
 }
 
 export async function validateInvite(code: string) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("org_invites")
@@ -46,7 +46,7 @@ export async function validateInvite(code: string) {
 }
 
 export async function consumeInvite(code: string, userId: string) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const invite = await validateInvite(code);
   if (!invite) throw new Error("Invalid or expired invite code");
