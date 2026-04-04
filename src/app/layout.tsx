@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from 'sonner';
 import ClientProviders from '@/components/client-providers';
+import { Navbar } from '@/components/navbar';
 
 // Force all routes dynamic
 export const dynamic = 'force-dynamic';
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-[#0a0a12] text-white font-sans antialiased">
         <ClientProviders>
+          <Navbar />
           {children}
         </ClientProviders>
         <Toaster theme="dark" richColors />
