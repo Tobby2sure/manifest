@@ -32,7 +32,7 @@ export function useUser() {
     isLoading: !sdkHasLoaded,
     isAuthenticated: !!user,
     twitterHandle: twitterAccount?.oauthUsername ?? null,
-    twitterVerified: !!twitterAccount,
+    twitterVerified: !!twitterAccount || !!(query.data as any)?.twitter_verified,
     refetch: query.refetch,
   };
 }

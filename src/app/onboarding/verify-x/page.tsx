@@ -10,7 +10,8 @@ import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 export default function VerifyXPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAuthenticated, twitterVerified, twitterHandle, user, refetch } = useUser();
+  const { isAuthenticated, twitterVerified, twitterHandle, user, profile, refetch } = useUser();
+  const isVerified = twitterVerified || !!profile?.twitter_verified;
   const { setShowAuthFlow } = useDynamicContext();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,7 +46,7 @@ export default function VerifyXPage() {
     );
   }
 
-  if (twitterVerified || success === "true") {
+  if (isVerified || success === "true") {
     return (
       <main className="min-h-[calc(100vh-4rem)] bg-[#0a0a12] flex items-center justify-center p-4">
         <div className="w-full max-w-md">
