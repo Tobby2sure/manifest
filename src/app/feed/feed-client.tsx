@@ -233,19 +233,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
           )}
         </div>
 
-        {/* Stats bar */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { label: "Total Intents", value: total },
-            { label: "Active Now", value: allIntents.filter(i => i.lifecycle_status === 'active').length },
-            { label: "This Week", value: allIntents.filter(i => Date.now() - new Date(i.created_at).getTime() < 7 * 86400000).length },
-          ].map((stat) => (
-            <div key={stat.label} className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 shimmer-stat">
-              <p className="text-[11px] text-[#475569] font-medium uppercase tracking-wider">{stat.label}</p>
-              <p className="text-lg font-semibold text-[#F1F5F9] mt-0.5 tabular-nums">{stat.value}</p>
-            </div>
-          ))}
-        </div>
+  
       </div>
 
       {/* Search + Sort bar */}
