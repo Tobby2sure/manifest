@@ -20,10 +20,18 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         // Login via email only — Twitter is a separate verification step
         initialAuthenticationMode: "connect-and-sign",
         events: {
-          onAuthSuccess: ({ user }) => {
-            // Redirect to onboarding after first login
-            if (user.newUser) {
-              window.location.href = '/onboarding';
+          onAuthSuccess: async ({ user }) => {
+            // Only redirect to onboarding if truly new AND no profile exists
+            if (!user.newUser) return;
+            // Check if profile already exists before redirecting
+            try {
+              const res = await fetch(`/api/check-profile?userId=${user.userId}`);
+              const data = await res.json();
+              if (!data.exists) {
+                window.location.href = '/onboarding';
+              }
+            } catch {
+              // Fallback: don't redirect if check fails
             }
           },
         },
