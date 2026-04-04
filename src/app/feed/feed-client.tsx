@@ -213,15 +213,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
               Discover what Web3 builders are looking for — and make your move.
             </p>
           </div>
-          {canPost && (
-            <Button
-              onClick={() => setPostDialogOpen(true)}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 w-full sm:w-auto transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/25 active:scale-[0.97] cursor-pointer glow-emerald-sm"
-            >
-              <Plus className="size-4 mr-1.5" />
-              Post Intent
-            </Button>
-          )}
+
           {isAuthenticated && !profile?.twitter_verified && !twitterVerified && (
             <Button
               variant="outline"
