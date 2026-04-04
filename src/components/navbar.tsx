@@ -11,8 +11,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Plus, LogOut, Settings, Bell, User } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Plus, LogOut, Settings, Bell, User, CheckCheck, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { getNotifications } from '@/app/actions/notifications';
+import type { Notification } from '@/lib/types/database';
+import { formatDistanceToNow } from 'date-fns';
 import { PostIntentDialog } from '@/components/post-intent-dialog';
 import { useUser } from '@/lib/hooks/use-user';
 
@@ -22,12 +25,22 @@ export function Navbar() {
   const isLoggedIn = !!dynamicUser || !!user;
   const [intentDialogOpen, setIntentDialogOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifHover, setNotifHover] = useState(false);
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', fn);
     return () => window.removeEventListener('scroll', fn);
   }, []);
+
+  useEffect(() => {
+    if (!user?.userId) return;
+    getNotifications(user.userId)
+      .then(data => setNotifications(data.slice(0, 5)))
+      .catch(() => {});
+  }, [user?.userId]);
 
   const displayName = twitterHandle
     ? `@${twitterHandle}`
@@ -72,11 +85,64 @@ export function Navbar() {
               <Button size="icon" variant="ghost" onClick={() => setIntentDialogOpen(true)} className="flex sm:hidden text-zinc-400 hover:text-white cursor-pointer">
                 <Plus className="h-5 w-5" />
               </Button>
-              <Link href="/notifications">
-                <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white transition-colors cursor-pointer">
-                  <Bell className="h-5 w-5" />
-                </Button>
-              </Link>
+              {/* Notification bell with hover preview */}
+              <div
+                className="relative"
+                onMouseEnter={() => setNotifHover(true)}
+                onMouseLeave={() => setNotifHover(false)}
+              >
+                <Link href="/notifications">
+                  <Button variant="ghost" size="icon" className="relative text-zinc-400 hover:text-white transition-colors cursor-pointer">
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-violet-600 text-[9px] font-bold text-white">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </Button>
+                </Link>
+                {/* Hover preview panel */}
+                {notifHover && (
+                  <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-white/[0.08] bg-[#0e0e14] shadow-2xl shadow-black/50 z-50 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+                      <span className="text-sm font-semibold text-white">Notifications</span>
+                      {unreadCount > 0 && (
+                        <span className="text-xs text-violet-400">{unreadCount} unread</span>
+                      )}
+                    </div>
+                    {notifications.length === 0 ? (
+                      <div className="px-4 py-6 text-center text-zinc-500 text-sm">
+                        No notifications yet
+                      </div>
+                    ) : (
+                      <div>
+                        {notifications.slice(0, 4).map(n => (
+                          <div key={n.id} className={`flex items-start gap-3 px-4 py-3 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors ${!n.read ? 'bg-violet-500/[0.04]' : ''}`}>
+                            <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${!n.read ? 'bg-violet-500/20' : 'bg-white/5'}`}>
+                              {n.type === 'connection_request' && <MessageSquare className="size-3.5 text-blue-400" />}
+                              {n.type === 'request_accepted' && <CheckCircle className="size-3.5 text-emerald-400" />}
+                              {n.type === 'request_declined' && <XCircle className="size-3.5 text-red-400" />}
+                              {!['connection_request','request_accepted','request_declined'].includes(n.type) && <Bell className="size-3.5 text-violet-400" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-zinc-300 leading-relaxed">
+                                {(n.payload as any)?.message ?? n.type.replace(/_/g, ' ')}
+                              </p>
+                              <p className="text-[10px] text-zinc-600 mt-0.5">
+                                {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                              </p>
+                            </div>
+                            {!n.read && <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500" />}
+                          </div>
+                        ))}
+                        <Link href="/notifications" className="block px-4 py-2.5 text-center text-xs text-violet-400 hover:text-violet-300 transition-colors">
+                          View all notifications →
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
               <DropdownMenu>
                 <DropdownMenuTrigger>
                   <button className="rounded-full focus:outline-none cursor-pointer">
