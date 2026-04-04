@@ -9,6 +9,7 @@ import {
   Clock,
   Bell,
   CheckCheck,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/lib/hooks/use-user";
@@ -26,6 +27,9 @@ const NOTIF_ICONS: Record<NotificationType, typeof MessageSquare> = {
   request_accepted: CheckCircle,
   request_declined: XCircle,
   intent_expiring: Clock,
+  org_approval_request: Bell,
+  org_intent_approved: CheckCircle,
+  org_intent_rejected: XCircle,
 };
 
 const NOTIF_COLORS: Record<NotificationType, string> = {
@@ -33,6 +37,9 @@ const NOTIF_COLORS: Record<NotificationType, string> = {
   request_accepted: "text-emerald-400",
   request_declined: "text-red-400",
   intent_expiring: "text-amber-400",
+  org_approval_request: "text-violet-400",
+  org_intent_approved: "text-emerald-400",
+  org_intent_rejected: "text-red-400",
 };
 
 const NOTIF_BG: Record<NotificationType, string> = {
@@ -40,6 +47,9 @@ const NOTIF_BG: Record<NotificationType, string> = {
   request_accepted: "bg-emerald-500/10",
   request_declined: "bg-red-500/10",
   intent_expiring: "bg-amber-500/10",
+  org_approval_request: "bg-violet-500/10",
+  org_intent_approved: "bg-emerald-500/10",
+  org_intent_rejected: "bg-red-500/10",
 };
 
 function getNotificationMessage(notif: Notification): string {

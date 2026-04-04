@@ -42,7 +42,8 @@ export type IntentLifecycleStatus =
   | "active"
   | "in_discussion"
   | "partnership_formed"
-  | "closed";
+  | "closed"
+  | "pending_org_approval";
 
 export type IntentClosedReason =
   | "expired"
@@ -114,7 +115,24 @@ export interface Intent {
 }
 
 export interface IntentWithAuthor extends Intent {
-  author: Profile;
+  author: Profile & {
+    org_memberships?: Array<{
+      role: string;
+      organizations: Organization;
+    }>;
+  };
+}
+
+export interface OrgIntentRequest {
+  id: string;
+  intent_id: string;
+  org_id: string;
+  submitted_by: string;
+  reviewed_by: string | null;
+  status: "pending" | "approved" | "rejected";
+  rejection_reason: string | null;
+  created_at: string;
+  reviewed_at: string | null;
 }
 
 export interface ConnectionRequest {
@@ -139,7 +157,10 @@ export type NotificationType =
   | "connection_request"
   | "request_accepted"
   | "request_declined"
-  | "intent_expiring";
+  | "intent_expiring"
+  | "org_approval_request"
+  | "org_intent_approved"
+  | "org_intent_rejected";
 
 export interface Notification {
   id: string;

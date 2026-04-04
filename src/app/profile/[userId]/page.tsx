@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getProfile } from "@/app/actions/profiles";
 import { getIntentsByAuthor } from "@/app/actions/intents";
+import { getUserOrgs } from "@/app/actions/org-intents";
 import { ProfileClient } from "./profile-client";
 import { notFound } from "next/navigation";
 
@@ -24,12 +25,17 @@ export default async function ProfilePage({
     notFound();
   }
 
-  const intents = await getIntentsByAuthor(userId);
+  const [intents, orgMemberships] = await Promise.all([
+    getIntentsByAuthor(userId),
+    getUserOrgs(userId).catch(() => []),
+  ]);
+
+  const profileWithOrgs = { ...profile, org_memberships: orgMemberships };
 
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-[#080810]">
       <div className="mx-auto max-w-3xl px-4 py-8">
-        <ProfileClient profile={profile} intents={intents} />
+        <ProfileClient profile={profileWithOrgs} intents={intents} />
       </div>
     </main>
   );

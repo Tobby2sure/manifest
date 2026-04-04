@@ -23,6 +23,7 @@ import type {
 import { INTENT_TYPE_CONFIG, ECOSYSTEM_CONFIG, SECTOR_CONFIG } from "@/lib/types/database";
 import { toggleSave } from "@/app/actions/saved";
 import { DealTracker } from "@/components/deal-tracker";
+import { OrgBadge } from "@/components/org-badge";
 import { toggleInterest } from "@/app/actions/interests";
 
 const PRIORITY_STYLES: Record<string, string> = {
@@ -36,6 +37,7 @@ const LIFECYCLE_STYLES: Record<string, { label: string; color: string }> = {
   in_discussion: { label: "In Discussion", color: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
   partnership_formed: { label: "Partnered", color: "text-violet-400 bg-violet-500/10 border-violet-500/20" },
   closed: { label: "Closed", color: "text-zinc-400 bg-zinc-500/10 border-zinc-500/20" },
+  pending_org_approval: { label: "Pending Org Approval", color: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
 };
 
 function getActivityIndicator(lastActiveAt: string | null) {
@@ -196,6 +198,13 @@ export function IntentCard({
             {author.twitter_verified && (
               <CheckCircle className="size-3.5 text-emerald-400 shrink-0" />
             )}
+            {intent.author.org_memberships?.[0] && (
+              <OrgBadge
+                orgName={intent.author.org_memberships[0].organizations.name}
+                orgSlug={intent.author.org_memberships[0].organizations.slug}
+                size="sm"
+              />
+            )}
             {activity && (
               <span className={`flex items-center gap-1 text-xs ${activity.color}`}>
                 <span className={`size-1.5 rounded-full ${activity.dot} ${activity.pulse ? 'animate-pulse-dot' : ''}`} />
@@ -276,6 +285,14 @@ export function IntentCard({
           </span>
         )}
       </div>
+
+      {/* Pending org approval banner */}
+      {intent.lifecycle_status === "pending_org_approval" && (
+        <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 mb-3">
+          <span className="text-sm">⏳</span>
+          <span className="text-xs font-medium text-amber-400">Pending Org Approval</span>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-3.5 border-t border-white/[0.05]">

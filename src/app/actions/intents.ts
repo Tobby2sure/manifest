@@ -41,7 +41,7 @@ export async function getIntents(
 
   let query = supabase
     .from("intents")
-    .select("*, author:profiles!author_id(*)", { count: "exact" })
+    .select("*, author:profiles!author_id(*, org_memberships:org_members(role, organizations(*)))", { count: "exact" })
     .range(from, to);
 
   if (activeOnly) {
@@ -91,7 +91,7 @@ export async function getIntent(id: string): Promise<IntentWithAuthor | null> {
 
   const { data, error } = await supabase
     .from("intents")
-    .select("*, author:profiles!author_id(*)")
+    .select("*, author:profiles!author_id(*, org_memberships:org_members(role, organizations(*)))")
     .eq("id", id)
     .single();
 
@@ -175,7 +175,7 @@ export async function getIntentsByAuthor(
 
   const { data, error } = await supabase
     .from("intents")
-    .select("*, author:profiles!author_id(*)")
+    .select("*, author:profiles!author_id(*, org_memberships:org_members(role, organizations(*)))")
     .eq("author_id", authorId)
     .order("created_at", { ascending: false });
 

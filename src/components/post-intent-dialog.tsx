@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { createIntent } from "@/app/actions/intents";
+import { getUserOrgs, submitIntentForOrgApproval } from "@/app/actions/org-intents";
 import {
   INTENT_TYPE_CONFIG,
   ECOSYSTEM_CONFIG,
@@ -22,9 +23,10 @@ import type {
   Ecosystem,
   Sector,
   IntentPriority,
+  Organization,
 } from "@/lib/types/database";
 import { INTENT_TEMPLATES } from "@/lib/intent-templates";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 
 const PRIORITIES: IntentPriority[] = ["Open", "Active", "Urgent"];
 
@@ -52,6 +54,14 @@ export function PostIntentDialog({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [useTemplate, setUseTemplate] = useState(false);
+  const [userOrgs, setUserOrgs] = useState<Array<{ role: string; organizations: Organization }>>([]);
+  const [selectedOrgId, setSelectedOrgId] = useState<string>("");
+
+  useEffect(() => {
+    if (open && userId) {
+      getUserOrgs(userId).then(setUserOrgs).catch(() => {});
+    }
+  }, [open, userId]);
 
   const intentTypes = Object.entries(INTENT_TYPE_CONFIG) as [
     IntentType,
@@ -100,8 +110,9 @@ export function PostIntentDialog({
     try {
       const finalEcosystem = ecosystem === "other" ? (customEcosystem.trim().toLowerCase() || null) : (ecosystem || null);
       const finalSector = sector === "other" ? (customSector.trim().toLowerCase() || null) : (sector || null);
-      await createIntent({
+      const intent = await createIntent({
         authorId: userId,
+        orgId: selectedOrgId || undefined,
         type: intentType,
         content,
         ecosystem: finalEcosystem,
@@ -109,6 +120,9 @@ export function PostIntentDialog({
         priority,
         durationDays: duration,
       });
+      if (selectedOrgId) {
+        await submitIntentForOrgApproval(intent.id, selectedOrgId, userId);
+      }
       onOpenChange(false);
       setContent("");
       setIntentType("partnership");
@@ -119,6 +133,7 @@ export function PostIntentDialog({
       setPriority("Open");
       setDuration(30);
       setUseTemplate(false);
+      setSelectedOrgId("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create intent");
     } finally {
@@ -173,6 +188,33 @@ export function PostIntentDialog({
         </DialogHeader>
 
         <div className="space-y-4 mt-2">
+          {/* Posting as */}
+          {userOrgs.length > 0 && (
+            <div>
+              <Label className="text-zinc-300">Posting as</Label>
+              <select
+                value={selectedOrgId}
+                onChange={(e) => setSelectedOrgId(e.target.value)}
+                className="mt-1.5 w-full h-8 rounded-lg border border-white/10 bg-white/5 px-2.5 text-sm text-white/90 outline-none focus:border-emerald-500"
+              >
+                <option value="">Yourself</option>
+                {userOrgs.map((m) => (
+                  <option key={m.organizations.id} value={m.organizations.id}>
+                    {m.organizations.name}
+                  </option>
+                ))}
+              </select>
+              {selectedOrgId && (
+                <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 mt-2">
+                  <Info className="size-4 text-amber-400 shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-300/80">
+                    Will need admin approval before going live
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Intent Type Selector */}
           <div>
             <Label className="text-zinc-300 mb-2">Intent Type</Label>

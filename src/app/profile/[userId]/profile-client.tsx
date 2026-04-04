@@ -6,8 +6,9 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { IntentCard } from "@/components/intent-card";
+import { OrgBadge } from "@/components/org-badge";
 import { useUser } from "@/lib/hooks/use-user";
-import type { Profile, IntentWithAuthor } from "@/lib/types/database";
+import type { Profile, IntentWithAuthor, Organization } from "@/lib/types/database";
 import { INTENT_TYPE_CONFIG } from "@/lib/types/database";
 import {
   CheckCircle,
@@ -26,7 +27,7 @@ type ProfileTab = "active" | "saved" | "nfts";
 const ease = [0.22, 1, 0.36, 1] as const;
 
 interface ProfileClientProps {
-  profile: Profile;
+  profile: Profile & { org_memberships?: Array<{ role: string; organizations: Organization }> };
   intents: IntentWithAuthor[];
 }
 
@@ -124,6 +125,14 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
             {profile.twitter_verified && (
               <CheckCircle className="size-5 text-emerald-400" />
             )}
+            {profile.org_memberships?.map((m) => (
+              <OrgBadge
+                key={m.organizations.id}
+                orgName={m.organizations.name}
+                orgSlug={m.organizations.slug}
+                size="md"
+              />
+            ))}
           </div>
           {profile.twitter_handle && (
             <p className="text-sm text-[#94A3B8] mt-0.5">
