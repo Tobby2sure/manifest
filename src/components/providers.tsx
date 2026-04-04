@@ -29,6 +29,12 @@ export default function Providers({ children }: { children: React.ReactNode }) {
               const data = await res.json();
               if (!data.exists) {
                 window.location.href = '/onboarding';
+              } else {
+                // Returning user — go to feed if not already there
+                const current = window.location.pathname;
+                if (current === '/' || current.startsWith('/onboarding')) {
+                  window.location.href = '/feed';
+                }
               }
             } catch {
               // Fallback: don't redirect if check fails
