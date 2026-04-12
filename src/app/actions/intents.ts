@@ -3,6 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { deliverIntentWebhooks } from "@/lib/webhooks";
+import { mintProofOfIntentNFT as mintIntentNFT } from "@/lib/mint";
 import type {
   Intent,
   IntentWithAuthor,
@@ -134,8 +135,31 @@ export async function createIntent(input: {
     throw new Error(error.message);
   }
 
-  // NFT mint stub — will be implemented in a future milestone
-  // mintProofOfIntentNFT(data.id, input.authorId);
+  // Mint proof-of-intent NFT in the background
+  (async () => {
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("wallet_address")
+        .eq("id", input.authorId)
+        .single();
+
+      if (profile?.wallet_address) {
+        const result = await mintIntentNFT(profile.wallet_address);
+        if (result) {
+          await supabase
+            .from("intents")
+            .update({
+              nft_token_id: result.tokenId,
+              nft_tx_hash: result.txHash,
+            })
+            .eq("id", data.id);
+        }
+      }
+    } catch (err) {
+      console.error("[intent-nft] mint failed:", err);
+    }
+  })();
 
   // Fire webhooks (fire-and-forget)
   deliverIntentWebhooks(data as Intent);

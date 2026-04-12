@@ -19,6 +19,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         walletConnectors: [EthereumWalletConnectors],
         // Login via email only — Twitter is a separate verification step
         initialAuthenticationMode: "connect-and-sign",
+        // Embedded wallets: enable in Dynamic Labs dashboard → Embedded Wallets → Enable
         events: {
           onAuthSuccess: async ({ user }) => {
             // Only redirect to onboarding if truly new AND no profile exists

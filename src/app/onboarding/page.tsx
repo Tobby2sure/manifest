@@ -19,7 +19,7 @@ const ease = [0.22, 1, 0.36, 1] as const;
 export default function OnboardingPage() {
   const router = useRouter();
   const { isLoading, isAuthenticated: authenticated, user, profile } = useUser();
-  const { setShowAuthFlow } = useDynamicContext();
+  const { setShowAuthFlow, primaryWallet } = useDynamicContext();
 
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
@@ -87,6 +87,7 @@ export default function OnboardingPage() {
     setError("");
 
     try {
+      const walletAddress = primaryWallet?.address ?? undefined;
       await upsertProfile({
         id: user.userId!,
         display_name: displayName,
@@ -96,7 +97,7 @@ export default function OnboardingPage() {
         account_type: accountType,
         twitter_handle: twitterUsername ?? undefined,
         twitter_verified: hasTwitter,
-        wallet_address: undefined,
+        wallet_address: walletAddress,
       });
       router.push("/onboarding/verify-x");
     } catch (e) {
@@ -454,6 +455,7 @@ export default function OnboardingPage() {
                         email: email || undefined,
                         account_type: accountType,
                         twitter_verified: false,
+                        wallet_address: primaryWallet?.address ?? undefined,
                       });
                       router.push("/feed");
                     } catch { router.push("/feed"); }

@@ -40,7 +40,8 @@ export async function GET(req: NextRequest) {
   const { data, error, count } = await query;
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[intents-api] list error:", error.message);
+    return NextResponse.json({ error: "Failed to fetch intents" }, { status: 500 });
   }
 
   return NextResponse.json({
@@ -92,11 +93,28 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const supabase = createAdminClient();
+
+  // Verify org membership if org_id is provided
+  if (body.org_id) {
+    const { data: membership } = await supabase
+      .from("org_members")
+      .select("id")
+      .eq("org_id", body.org_id)
+      .eq("profile_id", userId)
+      .maybeSingle();
+
+    if (!membership) {
+      return NextResponse.json(
+        { error: "You are not a member of this organization" },
+        { status: 403 }
+      );
+    }
+  }
+
   const durationDays = body.duration_days ?? 30;
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + durationDays);
-
-  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("intents")
@@ -115,7 +133,8 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[intents-api] create error:", error.message);
+    return NextResponse.json({ error: "Failed to create intent" }, { status: 500 });
   }
 
   // Fire webhooks (fire-and-forget)
