@@ -110,6 +110,7 @@ export interface Intent {
   closed_reason: IntentClosedReason | null;
   nft_token_id: string | null;
   nft_tx_hash: string | null;
+  is_founding: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -180,7 +181,9 @@ export type NotificationType =
   | "intent_expiring"
   | "org_approval_request"
   | "org_intent_approved"
-  | "org_intent_rejected";
+  | "org_intent_rejected"
+  | "intent_engagement_summary"
+  | "intent_suggestions";
 
 export interface Notification {
   id: string;
@@ -189,6 +192,19 @@ export interface Notification {
   payload: Record<string, unknown>;
   read: boolean;
   created_at: string;
+}
+
+export interface Endorsement {
+  id: string;
+  intent_id: string;
+  endorser_id: string;
+  endorsee_id: string;
+  content: string;
+  created_at: string;
+}
+
+export interface EndorsementWithAuthor extends Endorsement {
+  endorser: Profile;
 }
 
 // ── Config records ──

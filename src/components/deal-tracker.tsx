@@ -4,8 +4,10 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, MessageCircle, Handshake, XCircle, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { updateIntentLifecycle } from "@/app/actions/intents";
 import { updateConnectionLifecycle } from "@/app/actions/connections";
+import { createEndorsement } from "@/app/actions/endorsements";
 import type { IntentLifecycleStatus } from "@/lib/types/database";
 import { toast } from "sonner";
 
@@ -45,13 +47,17 @@ interface DealTrackerProps {
   connectionId?: string;
   currentStatus: IntentLifecycleStatus;
   userId: string;
+  partnerId?: string | null;
   onStatusChange?: (status: IntentLifecycleStatus) => void;
 }
 
-export function DealTracker({ intentId, connectionId, currentStatus, userId, onStatusChange }: DealTrackerProps) {
+export function DealTracker({ intentId, connectionId, currentStatus, userId, partnerId, onStatusChange }: DealTrackerProps) {
   const [status, setStatus] = useState(currentStatus);
   const [loading, setLoading] = useState(false);
   const [showEndorsementPrompt, setShowEndorsementPrompt] = useState(false);
+  const [endorsementText, setEndorsementText] = useState("");
+  const [endorsementSaving, setEndorsementSaving] = useState(false);
+  const [endorsementSaved, setEndorsementSaved] = useState(false);
 
   const currentIdx = STAGES.findIndex(s => s.status === status);
 
@@ -161,7 +167,7 @@ export function DealTracker({ intentId, connectionId, currentStatus, userId, onS
 
       {/* Endorsement prompt */}
       <AnimatePresence>
-        {showEndorsementPrompt && (
+        {showEndorsementPrompt && !endorsementSaved && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -174,20 +180,42 @@ export function DealTracker({ intentId, connectionId, currentStatus, userId, onS
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-white mb-1">Leave an endorsement?</p>
-                <p className="text-xs text-zinc-400 mb-3">
+                <p className="text-xs text-zinc-400 mb-2">
                   Tell the community how it went — 1-2 sentences about working with your partner.
-                  Builds trust for both of you.
                 </p>
+                <Textarea
+                  value={endorsementText}
+                  onChange={(e) => setEndorsementText(e.target.value)}
+                  placeholder="Great partnership — they delivered fast and communication was excellent."
+                  className="min-h-16 bg-white/5 border-white/10 text-sm mb-2"
+                  maxLength={280}
+                />
                 <div className="flex gap-2">
                   <Button
                     size="sm"
                     className="bg-violet-600 hover:bg-violet-500 text-white text-xs cursor-pointer"
-                    onClick={() => {
-                      setShowEndorsementPrompt(false);
-                      window.location.href = `/profile/me?endorse=${intentId}`;
+                    disabled={endorsementSaving || endorsementText.length < 10}
+                    onClick={async () => {
+                      if (!partnerId || endorsementText.length < 10) return;
+                      setEndorsementSaving(true);
+                      try {
+                        await createEndorsement({
+                          intentId,
+                          endorserId: userId,
+                          endorseeId: partnerId,
+                          content: endorsementText,
+                        });
+                        setEndorsementSaved(true);
+                        setShowEndorsementPrompt(false);
+                        toast.success("Endorsement saved! It will appear on their profile.");
+                      } catch {
+                        toast.error("Failed to save endorsement");
+                      } finally {
+                        setEndorsementSaving(false);
+                      }
                     }}
                   >
-                    Write Endorsement
+                    {endorsementSaving ? "Saving..." : "Submit Endorsement"}
                   </Button>
                   <Button
                     size="sm"
