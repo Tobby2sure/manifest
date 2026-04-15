@@ -1,6 +1,6 @@
 export function IntentCardSkeleton() {
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-card p-4 animate-pulse">
+    <div className="rounded-xl border border-white/[0.08] bg-card p-4 animate-pulse" role="status" aria-label="Loading intent card">
       {/* Author row */}
       <div className="flex items-center gap-3 mb-3">
         <div className="size-9 rounded-full bg-white/[0.06]" />
@@ -50,7 +50,7 @@ export function FeedSkeleton() {
 
 export function ProfileSkeleton() {
   return (
-    <div className="animate-pulse">
+    <div className="animate-pulse" role="status" aria-label="Loading profile">
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 mb-8">
         <div className="size-20 rounded-full bg-white/[0.06] shrink-0" />
         <div className="flex-1 space-y-3 w-full">
@@ -79,7 +79,7 @@ export function ProfileSkeleton() {
 
 export function NotificationSkeleton() {
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-white/[0.08] bg-card p-4 animate-pulse">
+    <div className="flex items-start gap-3 rounded-xl border border-white/[0.08] bg-card p-4 animate-pulse" role="status" aria-label="Loading notification">
       <div className="size-9 rounded-full bg-white/[0.06] shrink-0" />
       <div className="flex-1 space-y-2">
         <div className="h-4 w-3/4 rounded bg-white/[0.06]" />

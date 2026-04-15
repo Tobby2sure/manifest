@@ -95,7 +95,7 @@ export function Navbar() {
               >
                 <Plus className="h-4 w-4" />Post Intent
               </Button>
-              <Button size="icon" variant="ghost" onClick={() => setIntentDialogOpen(true)} className="flex sm:hidden text-zinc-400 hover:text-white cursor-pointer">
+              <Button size="icon" variant="ghost" onClick={() => setIntentDialogOpen(true)} aria-label="Post intent" className="flex sm:hidden text-zinc-400 hover:text-white cursor-pointer">
                 <Plus className="h-5 w-5" />
               </Button>
               {/* Notification bell with click preview */}
@@ -103,6 +103,8 @@ export function Navbar() {
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="Notifications"
+                  aria-expanded={notifOpen}
                   className="relative text-zinc-400 hover:text-white transition-colors cursor-pointer"
                   onClick={() => setNotifOpen(!notifOpen)}
                 >

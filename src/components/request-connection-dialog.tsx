@@ -130,6 +130,7 @@ export function RequestConnectionDialog({
                 placeholder="Explain why you're a great fit for this intent..."
                 className="mt-1.5 min-h-24 bg-white/5 border-white/10"
                 maxLength={500}
+                aria-invalid={!!error || undefined}
               />
             </div>
 

@@ -326,6 +326,8 @@ export function IntentCard({
           <button
             onClick={handleInterest}
             disabled={!currentUserId || isPending}
+            aria-pressed={interested}
+            aria-label={`Interest${interestCount > 0 ? ` (${interestCount})` : ""}`}
             className={`flex items-center gap-1 rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs transition-all duration-200 cursor-pointer hover:bg-white/[0.04] ${
               interested
                 ? "text-red-400 hover:text-red-300"
@@ -340,6 +342,8 @@ export function IntentCard({
           <button
             onClick={handleSave}
             disabled={!currentUserId || isPending}
+            aria-pressed={saved}
+            aria-label={`Save${saveCount > 0 ? ` (${saveCount})` : ""}`}
             className={`flex items-center gap-1 rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs transition-all duration-200 cursor-pointer hover:bg-white/[0.04] ${
               saved
                 ? "text-amber-400 hover:text-amber-300"
@@ -357,6 +361,7 @@ export function IntentCard({
           {/* Share */}
           <button
             onClick={handleShare}
+            aria-label="Share"
             className="flex items-center rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs text-text-muted hover:text-text-body hover:bg-white/[0.04] transition-all duration-200 cursor-pointer"
           >
             <Share2 className="size-3.5" />

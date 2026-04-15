@@ -296,6 +296,7 @@ export function PostIntentDialog({
             placeholder={currentTemplate.placeholder}
             className="min-h-24 bg-white/5 border-white/10"
             maxLength={500}
+            aria-invalid={!!error || undefined}
           />
 
           {/* Hint chips */}
