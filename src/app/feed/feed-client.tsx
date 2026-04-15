@@ -203,38 +203,17 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
   return (
     <>
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-white via-white to-white/50 bg-clip-text text-transparent">
-              Intent Feed
-            </h1>
-            <p className="text-sm text-[#94A3B8]/80 mt-2 max-w-md">
-              Discover what Web3 builders are looking for — and make your move.
-            </p>
-          </div>
-
-          {isAuthenticated && !profile?.twitter_verified && !twitterVerified && (
-            <Button
-              variant="outline"
-              onClick={() => router.push('/onboarding/verify-x')}
-              className="border-violet-500/30 text-violet-300 hover:bg-violet-500/10 hover:border-violet-500/50 w-full sm:w-auto cursor-pointer transition-all"
-            >
-              𝕏 Verify to Post
-            </Button>
-          )}
-          {!isAuthenticated && (
-            <Button
-              onClick={() => setShowAuthFlow(true)}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 w-full sm:w-auto cursor-pointer shadow-lg shadow-emerald-500/20"
-            >
-              Sign In to Post
-            </Button>
-          )}
+      {isAuthenticated && !profile?.twitter_verified && !twitterVerified && (
+        <div className="mb-6 flex justify-end">
+          <Button
+            variant="outline"
+            onClick={() => router.push('/onboarding/verify-x')}
+            className="border-violet-500/30 text-violet-300 hover:bg-violet-500/10 hover:border-violet-500/50 w-full sm:w-auto cursor-pointer transition-all"
+          >
+            𝕏 Verify to Post
+          </Button>
         </div>
-
-  
-      </div>
+      )}
 
       {/* Search + Sort bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 mb-5">

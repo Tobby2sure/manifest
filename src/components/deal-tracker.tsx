@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, MessageCircle, Handshake, XCircle, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { updateIntentLifecycle } from "@/app/actions/intents";
+import { updateConnectionLifecycle } from "@/app/actions/connections";
 import type { IntentLifecycleStatus } from "@/lib/types/database";
 import { toast } from "sonner";
 
@@ -41,12 +42,13 @@ const STAGES: { status: IntentLifecycleStatus; label: string; desc: string; icon
 
 interface DealTrackerProps {
   intentId: string;
+  connectionId?: string;
   currentStatus: IntentLifecycleStatus;
   userId: string;
   onStatusChange?: (status: IntentLifecycleStatus) => void;
 }
 
-export function DealTracker({ intentId, currentStatus, userId, onStatusChange }: DealTrackerProps) {
+export function DealTracker({ intentId, connectionId, currentStatus, userId, onStatusChange }: DealTrackerProps) {
   const [status, setStatus] = useState(currentStatus);
   const [loading, setLoading] = useState(false);
   const [showEndorsementPrompt, setShowEndorsementPrompt] = useState(false);
@@ -57,7 +59,11 @@ export function DealTracker({ intentId, currentStatus, userId, onStatusChange }:
     if (newStatus === status) return;
     setLoading(true);
     try {
-      await updateIntentLifecycle(intentId, newStatus, userId);
+      if (connectionId) {
+        await updateConnectionLifecycle(connectionId, newStatus, userId);
+      } else {
+        await updateIntentLifecycle(intentId, newStatus, userId);
+      }
       setStatus(newStatus);
       onStatusChange?.(newStatus);
 

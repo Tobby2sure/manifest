@@ -142,8 +142,28 @@ export interface ConnectionRequest {
   receiver_id: string;
   pitch_message: string;
   status: ConnectionRequestStatus;
+  lifecycle_status: IntentLifecycleStatus;
   created_at: string;
   updated_at: string;
+}
+
+export interface ConnectionWithIntent extends ConnectionRequest {
+  intents: {
+    id: string;
+    type: string;
+    content: string;
+    author_id: string;
+  };
+  sender_profile: {
+    id: string;
+    display_name: string | null;
+    avatar_url: string | null;
+  };
+  receiver_profile: {
+    id: string;
+    display_name: string | null;
+    avatar_url: string | null;
+  };
 }
 
 export interface SavedIntent {

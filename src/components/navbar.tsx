@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Plus, LogOut, Settings, Bell, User, CheckCheck, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { getNotifications } from '@/app/actions/notifications';
 import type { Notification } from '@/lib/types/database';
 import { formatDistanceToNow } from 'date-fns';
@@ -26,7 +26,8 @@ export function Navbar() {
   const [intentDialogOpen, setIntentDialogOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [notifHover, setNotifHover] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
   const unreadCount = notifications.filter(n => !n.read).length;
 
   useEffect(() => {
@@ -41,6 +42,18 @@ export function Navbar() {
       .then(data => setNotifications(data.slice(0, 5)))
       .catch(() => {});
   }, [user?.userId]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
+    }
+    if (notifOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [notifOpen]);
 
   const displayName = twitterHandle
     ? `@${twitterHandle}`
@@ -85,24 +98,23 @@ export function Navbar() {
               <Button size="icon" variant="ghost" onClick={() => setIntentDialogOpen(true)} className="flex sm:hidden text-zinc-400 hover:text-white cursor-pointer">
                 <Plus className="h-5 w-5" />
               </Button>
-              {/* Notification bell with hover preview */}
-              <div
-                className="relative"
-                onMouseEnter={() => setNotifHover(true)}
-                onMouseLeave={() => setNotifHover(false)}
-              >
-                <Link href="/notifications">
-                  <Button variant="ghost" size="icon" className="relative text-zinc-400 hover:text-white transition-colors cursor-pointer">
-                    <Bell className="h-5 w-5" />
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-violet-600 text-[9px] font-bold text-white">
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                      </span>
-                    )}
-                  </Button>
-                </Link>
-                {/* Hover preview panel */}
-                {notifHover && (
+              {/* Notification bell with click preview */}
+              <div className="relative" ref={notifRef}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                  onClick={() => setNotifOpen(!notifOpen)}
+                >
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-violet-600 text-[9px] font-bold text-white">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </Button>
+                {/* Click preview panel */}
+                {notifOpen && (
                   <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-white/[0.08] bg-[#0e0e14] shadow-2xl shadow-black/50 z-50 overflow-hidden">
                     <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
                       <span className="text-sm font-semibold text-white">Notifications</span>
@@ -135,8 +147,8 @@ export function Navbar() {
                             {!n.read && <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500" />}
                           </div>
                         ))}
-                        <Link href="/notifications" className="block px-4 py-2.5 text-center text-xs text-violet-400 hover:text-violet-300 transition-colors">
-                          View all notifications →
+                        <Link href="/notifications" onClick={() => setNotifOpen(false)} className="block px-4 py-2.5 text-center text-xs text-violet-400 hover:text-violet-300 transition-colors">
+                          More
                         </Link>
                       </div>
                     )}
