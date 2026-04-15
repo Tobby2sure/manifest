@@ -278,8 +278,18 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-text-body">
-                <p>No active intents.</p>
+              <div className="text-center py-16 text-text-body">
+                <Zap className="size-8 mx-auto mb-3 text-text-muted" />
+                <p className="font-medium">No active intents</p>
+                <p className="text-xs mt-1 text-text-muted">
+                  {isOwn ? "Post your first intent to get started." : "This user has no active intents right now."}
+                </p>
+                {isOwn && (
+                  <Link href="/feed" className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors">
+                    <Zap className="size-3.5" />
+                    Post Intent
+                  </Link>
+                )}
               </div>
             )}
           </motion.div>
@@ -348,12 +358,15 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                 })}
               </div>
             ) : (
-              <div className="text-center py-12 text-text-body">
-                <Handshake className="size-6 mx-auto mb-2 text-text-muted" />
-                <p>No connections yet.</p>
+              <div className="text-center py-16 text-text-body">
+                <Handshake className="size-8 mx-auto mb-3 text-text-muted" />
+                <p className="font-medium">No connections yet</p>
                 <p className="text-xs mt-1 text-text-muted">
                   Accepted connection requests will appear here with deal tracking.
                 </p>
+                <Link href="/feed" className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 text-violet-300 text-sm font-medium border border-violet-500/20 transition-colors">
+                  Browse intents
+                </Link>
               </div>
             )}
           </motion.div>
@@ -394,12 +407,15 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-text-body">
-                <Bookmark className="size-6 mx-auto mb-2 text-text-muted" />
-                <p>No saved intents yet.</p>
+              <div className="text-center py-16 text-text-body">
+                <Bookmark className="size-8 mx-auto mb-3 text-text-muted" />
+                <p className="font-medium">No saved intents yet</p>
                 <p className="text-xs mt-1 text-text-muted">
                   Bookmark intents from the feed to save them here.
                 </p>
+                <Link href="/feed" className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 text-violet-300 text-sm font-medium border border-violet-500/20 transition-colors">
+                  Explore the feed
+                </Link>
               </div>
             )}
           </motion.div>
@@ -454,9 +470,9 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-text-body">
-                <MessageSquare className="size-6 mx-auto mb-2 text-text-muted" />
-                <p>No endorsements yet.</p>
+              <div className="text-center py-16 text-text-body">
+                <MessageSquare className="size-8 mx-auto mb-3 text-text-muted" />
+                <p className="font-medium">No endorsements yet</p>
                 <p className="text-xs mt-1 text-text-muted">
                   Endorsements appear when partners leave feedback after a deal.
                 </p>
@@ -534,9 +550,18 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-text-muted">
-                  No NFTs minted yet. Post an intent to earn your first badge.
-                </p>
+                <div className="text-center py-12">
+                  <Award className="size-8 mx-auto mb-3 text-text-muted" />
+                  <p className="font-medium text-text-body">No NFTs minted yet</p>
+                  <p className="text-xs mt-1 text-text-muted">
+                    Post an intent to earn your first Proof of Intent badge.
+                  </p>
+                  {isOwn && (
+                    <Link href="/feed" className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 text-violet-300 text-sm font-medium border border-violet-500/20 transition-colors">
+                      Post an intent
+                    </Link>
+                  )}
+                </div>
               )}
             </div>
           </motion.div>
