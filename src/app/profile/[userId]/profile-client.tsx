@@ -18,11 +18,15 @@ import {
   Bookmark,
   Zap,
   TrendingUp,
+  Handshake,
 } from "lucide-react";
 import Link from "next/link";
 import { getSavedIntents } from "@/app/actions/saved";
+import { getAcceptedConnections } from "@/app/actions/connections";
+import { DealTracker } from "@/components/deal-tracker";
+import type { ConnectionWithIntent } from "@/lib/types/database";
 
-type ProfileTab = "active" | "saved" | "nfts";
+type ProfileTab = "active" | "connections" | "saved" | "nfts";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -37,6 +41,8 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
   const [activeTab, setActiveTab] = useState<ProfileTab>("active");
   const [savedIntents, setSavedIntents] = useState<IntentWithAuthor[]>([]);
   const [loadingSaved, setLoadingSaved] = useState(false);
+  const [connections, setConnections] = useState<ConnectionWithIntent[]>([]);
+  const [loadingConnections, setLoadingConnections] = useState(false);
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0 });
 
@@ -72,6 +78,17 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
     }
   }, [activeTab, isOwn, profile.id, savedIntents.length]);
 
+  // Load accepted connections when tab switches
+  useEffect(() => {
+    if (activeTab === "connections" && isOwn && connections.length === 0) {
+      setLoadingConnections(true);
+      getAcceptedConnections(profile.id).then((data) => {
+        setConnections(data);
+        setLoadingConnections(false);
+      });
+    }
+  }, [activeTab, isOwn, profile.id, connections.length]);
+
   // Activity indicator
   const getActivityLabel = () => {
     if (!profile.last_active_at) return null;
@@ -85,6 +102,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
 
   const tabs: { key: ProfileTab; label: string; icon: typeof Award; show: boolean }[] = [
     { key: "active", label: `Active (${activeIntents.length})`, icon: Zap, show: true },
+    { key: "connections", label: "Connections", icon: Handshake, show: isOwn },
     { key: "saved", label: "Saved", icon: Bookmark, show: isOwn },
     { key: "nfts", label: "NFTs", icon: Award, show: true },
   ];
@@ -246,6 +264,80 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
             ) : (
               <div className="text-center py-12 text-[#94A3B8]">
                 <p>No active intents.</p>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {activeTab === "connections" && isOwn && (
+          <motion.div
+            key="connections"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease }}
+          >
+            {loadingConnections ? (
+              <div className="grid gap-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-40 animate-pulse rounded-xl bg-[#0f0f1a] border border-white/[0.07]"
+                  />
+                ))}
+              </div>
+            ) : connections.length > 0 ? (
+              <div className="grid gap-4">
+                {connections.map((conn, i) => {
+                  const otherParty =
+                    conn.sender_id === profile.id
+                      ? conn.receiver_profile
+                      : conn.sender_profile;
+                  const intentConfig = INTENT_TYPE_CONFIG[conn.intents.type as keyof typeof INTENT_TYPE_CONFIG];
+                  return (
+                    <motion.div
+                      key={conn.id}
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: Math.min(i * 0.04, 0.2), ease }}
+                      className="rounded-xl border border-white/[0.07] bg-[#0f0f1a] overflow-hidden"
+                    >
+                      <div className="p-4 border-b border-white/[0.06]">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            {intentConfig && (
+                              <span className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium ${intentConfig.color}`}>
+                                {intentConfig.label}
+                              </span>
+                            )}
+                            <span className="text-xs text-zinc-400">
+                              with {otherParty?.display_name ?? "Unknown"}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-white/70 line-clamp-2">
+                          {conn.intents.content}
+                        </p>
+                      </div>
+                      <div className="p-4">
+                        <DealTracker
+                          intentId={conn.intent_id}
+                          connectionId={conn.id}
+                          currentStatus={conn.lifecycle_status}
+                          userId={profile.id}
+                        />
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-[#94A3B8]">
+                <Handshake className="size-6 mx-auto mb-2 text-[#475569]" />
+                <p>No connections yet.</p>
+                <p className="text-xs mt-1 text-[#475569]">
+                  Accepted connection requests will appear here with deal tracking.
+                </p>
               </div>
             )}
           </motion.div>

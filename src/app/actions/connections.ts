@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import type {
   ConnectionRequest,
   ConnectionRequestStatus,
+  ConnectionWithIntent,
+  IntentLifecycleStatus,
 } from "@/lib/types/database";
 
 export async function sendConnectionRequest(
@@ -55,9 +57,14 @@ export async function respondToRequest(
 ): Promise<ConnectionRequest> {
   const supabase = createAdminClient();
 
+  const updatePayload: Record<string, string> = { status };
+  if (status === "accepted") {
+    updatePayload.lifecycle_status = "active";
+  }
+
   const { data, error } = await supabase
     .from("connection_requests")
-    .update({ status })
+    .update(updatePayload)
     .eq("id", requestId)
     .select()
     .single();
@@ -169,4 +176,65 @@ export async function getRequestForIntent(
 
   if (error) return null;
   return (data as ConnectionRequest) ?? null;
+}
+
+export async function updateConnectionLifecycle(
+  connectionId: string,
+  newStatus: IntentLifecycleStatus,
+  userId: string
+): Promise<void> {
+  const supabase = createAdminClient();
+
+  // Verify user is a party to this accepted connection
+  const { data: conn, error: fetchError } = await supabase
+    .from("connection_requests")
+    .select("*")
+    .eq("id", connectionId)
+    .eq("status", "accepted")
+    .single();
+
+  if (fetchError || !conn) {
+    throw new Error("Connection not found or not accepted");
+  }
+
+  const req = conn as ConnectionRequest;
+  if (req.sender_id !== userId && req.receiver_id !== userId) {
+    throw new Error("Not authorized to update this connection");
+  }
+
+  const { error } = await supabase
+    .from("connection_requests")
+    .update({ lifecycle_status: newStatus, updated_at: new Date().toISOString() })
+    .eq("id", connectionId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/feed");
+  revalidatePath(`/profile/${userId}`);
+}
+
+export async function getAcceptedConnections(
+  userId: string
+): Promise<ConnectionWithIntent[]> {
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("connection_requests")
+    .select(`
+      *,
+      intents:intent_id (id, type, content, author_id),
+      sender_profile:sender_id (id, display_name, avatar_url),
+      receiver_profile:receiver_id (id, display_name, avatar_url)
+    `)
+    .eq("status", "accepted")
+    .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+    .order("updated_at", { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []) as ConnectionWithIntent[];
 }
