@@ -27,6 +27,7 @@ import type { IntentSort } from "@/app/actions/intents";
 import { getIntents } from "@/app/actions/intents";
 import { getUserSavedIds } from "@/app/actions/saved";
 import { getUserInterestedIds } from "@/app/actions/interests";
+import { getViewCounts, recordView } from "@/app/actions/views";
 import {
   Plus,
   SlidersHorizontal,
@@ -109,6 +110,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
   // User saved/interested state
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [interestedIds, setInterestedIds] = useState<Set<string>>(new Set());
+  const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
 
   // Reset intents when initialIntents change (URL navigation)
   useEffect(() => {
@@ -129,6 +131,24 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
       setInterestedIds(new Set(interested));
     });
   }, [profile?.id]);
+
+  // Load view counts for user's own intents + record views for others
+  useEffect(() => {
+    if (!profile?.id || allIntents.length === 0) return;
+    const ownIntentIds = allIntents
+      .filter((i) => i.author_id === profile.id)
+      .map((i) => i.id);
+    if (ownIntentIds.length > 0) {
+      getViewCounts(ownIntentIds).then(setViewCounts);
+    }
+    // Record views for intents not owned by current user
+    const otherIntentIds = allIntents
+      .filter((i) => i.author_id !== profile.id)
+      .map((i) => i.id);
+    for (const id of otherIntentIds) {
+      recordView(id, profile.id).catch(() => {});
+    }
+  }, [profile?.id, allIntents]);
 
   const activeType = initialFilters.type ?? null;
   const activeEcosystem = initialFilters.ecosystem ?? null;
@@ -491,6 +511,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                         onViewContact={(i) => setViewContactIntent(i)}
                         isSaved={savedIds.has(intent.id)}
                         isInterested={interestedIds.has(intent.id)}
+                        viewCount={viewCounts[intent.id] ?? 0}
                       />
                     </motion.div>
                   ))}

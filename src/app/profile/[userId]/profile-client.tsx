@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { IntentCard } from "@/components/intent-card";
 import { OrgBadge } from "@/components/org-badge";
 import { useUser } from "@/lib/hooks/use-user";
-import type { Profile, IntentWithAuthor, Organization } from "@/lib/types/database";
+import type { Profile, IntentWithAuthor, Organization, EndorsementWithAuthor } from "@/lib/types/database";
 import { INTENT_TYPE_CONFIG } from "@/lib/types/database";
 import {
   CheckCircle,
@@ -19,14 +19,16 @@ import {
   Zap,
   TrendingUp,
   Handshake,
+  MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
 import { getSavedIntents } from "@/app/actions/saved";
 import { getAcceptedConnections } from "@/app/actions/connections";
 import { DealTracker } from "@/components/deal-tracker";
 import type { ConnectionWithIntent } from "@/lib/types/database";
+import { getEndorsementsForUser } from "@/app/actions/endorsements";
 
-type ProfileTab = "active" | "connections" | "saved" | "nfts";
+type ProfileTab = "active" | "connections" | "saved" | "nfts" | "endorsements";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -43,6 +45,8 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
   const [loadingSaved, setLoadingSaved] = useState(false);
   const [connections, setConnections] = useState<ConnectionWithIntent[]>([]);
   const [loadingConnections, setLoadingConnections] = useState(false);
+  const [endorsements, setEndorsements] = useState<EndorsementWithAuthor[]>([]);
+  const [loadingEndorsements, setLoadingEndorsements] = useState(false);
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0 });
 
@@ -89,6 +93,17 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
     }
   }, [activeTab, isOwn, profile.id, connections.length]);
 
+  // Load endorsements when tab switches
+  useEffect(() => {
+    if (activeTab === "endorsements" && endorsements.length === 0) {
+      setLoadingEndorsements(true);
+      getEndorsementsForUser(profile.id).then((data) => {
+        setEndorsements(data);
+        setLoadingEndorsements(false);
+      });
+    }
+  }, [activeTab, profile.id, endorsements.length]);
+
   // Activity indicator
   const getActivityLabel = () => {
     if (!profile.last_active_at) return null;
@@ -103,6 +118,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
   const tabs: { key: ProfileTab; label: string; icon: typeof Award; show: boolean }[] = [
     { key: "active", label: `Active (${activeIntents.length})`, icon: Zap, show: true },
     { key: "connections", label: "Connections", icon: Handshake, show: isOwn },
+    { key: "endorsements", label: "Endorsements", icon: MessageSquare, show: true },
     { key: "saved", label: "Saved", icon: Bookmark, show: isOwn },
     { key: "nfts", label: "NFTs", icon: Award, show: true },
   ];
@@ -383,6 +399,66 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                 <p>No saved intents yet.</p>
                 <p className="text-xs mt-1 text-[#475569]">
                   Bookmark intents from the feed to save them here.
+                </p>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {activeTab === "endorsements" && (
+          <motion.div
+            key="endorsements"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease }}
+          >
+            {loadingEndorsements ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-24 animate-pulse rounded-xl bg-[#0f0f1a] border border-white/[0.07]" />
+                ))}
+              </div>
+            ) : endorsements.length > 0 ? (
+              <div className="space-y-3">
+                {endorsements.map((endorsement, i) => (
+                  <motion.div
+                    key={endorsement.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: Math.min(i * 0.04, 0.2), ease }}
+                    className="rounded-xl border border-white/[0.06] bg-[#0f0f1a] p-4"
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <Link href={`/profile/${endorsement.endorser_id}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                        <Avatar size="default" className="size-7">
+                          {endorsement.endorser.avatar_url ? (
+                            <AvatarImage src={endorsement.endorser.avatar_url} alt={endorsement.endorser.display_name ?? ""} />
+                          ) : null}
+                          <AvatarFallback className="text-xs">
+                            {endorsement.endorser.display_name?.[0]?.toUpperCase() ?? "?"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium text-[#F1F5F9]">
+                          {endorsement.endorser.display_name ?? "Anonymous"}
+                        </span>
+                      </Link>
+                      {endorsement.endorser.twitter_verified && (
+                        <CheckCircle className="size-3.5 text-emerald-400" />
+                      )}
+                    </div>
+                    <p className="text-sm text-[#F1F5F9]/70 leading-relaxed">
+                      &ldquo;{endorsement.content}&rdquo;
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-[#94A3B8]">
+                <MessageSquare className="size-6 mx-auto mb-2 text-[#475569]" />
+                <p>No endorsements yet.</p>
+                <p className="text-xs mt-1 text-[#475569]">
+                  Endorsements appear when partners leave feedback after a deal.
                 </p>
               </div>
             )}

@@ -3,7 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { deliverIntentWebhooks } from "@/lib/webhooks";
-import { mintProofOfIntentNFT as mintIntentNFT } from "@/lib/mint";
+import { mintProofOfIntent } from "@/lib/nft";
 import type {
   Intent,
   IntentWithAuthor,
@@ -115,6 +115,12 @@ export async function createIntent(input: {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + input.durationDays);
 
+  // Check if this intent qualifies for the founding badge (first 100)
+  const { count: intentCount } = await supabase
+    .from("intents")
+    .select("*", { count: "exact", head: true });
+  const isFounding = (intentCount ?? 0) < 100;
+
   const { data, error } = await supabase
     .from("intents")
     .insert({
@@ -127,6 +133,7 @@ export async function createIntent(input: {
       priority: input.priority,
       expires_at: expiresAt.toISOString(),
       lifecycle_status: "active" as IntentLifecycleStatus,
+      is_founding: isFounding,
     })
     .select()
     .single();
@@ -135,8 +142,8 @@ export async function createIntent(input: {
     throw new Error(error.message);
   }
 
-  // Mint proof-of-intent NFT in the background
-  (async () => {
+  // Mint Proof of Intent NFT (fire-and-forget, non-blocking)
+  const mintIntent = async () => {
     try {
       const { data: profile } = await supabase
         .from("profiles")
@@ -145,7 +152,7 @@ export async function createIntent(input: {
         .single();
 
       if (profile?.wallet_address) {
-        const result = await mintIntentNFT(profile.wallet_address);
+        const result = await mintProofOfIntent(profile.wallet_address, data.id);
         if (result) {
           await supabase
             .from("intents")
@@ -156,10 +163,11 @@ export async function createIntent(input: {
             .eq("id", data.id);
         }
       }
-    } catch (err) {
-      console.error("[intent-nft] mint failed:", err);
+    } catch (e) {
+      console.error("[NFT] Mint failed for intent:", data.id, e);
     }
-  })();
+  };
+  mintIntent();
 
   // Fire webhooks (fire-and-forget)
   deliverIntentWebhooks(data as Intent);
@@ -208,6 +216,16 @@ export async function getIntentsByAuthor(
   }
 
   return (data ?? []) as unknown as IntentWithAuthor[];
+}
+
+export async function getFoundingBadgeRemaining(): Promise<number> {
+  const supabase = createAdminClient();
+
+  const { count } = await supabase
+    .from("intents")
+    .select("*", { count: "exact", head: true });
+
+  return Math.max(0, 100 - (count ?? 0));
 }
 
 export async function updateIntentLifecycle(

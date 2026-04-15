@@ -10,6 +10,8 @@ import {
   Bell,
   CheckCheck,
   Building2,
+  Eye,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/lib/hooks/use-user";
@@ -30,6 +32,8 @@ const NOTIF_ICONS: Record<NotificationType, typeof MessageSquare> = {
   org_approval_request: Bell,
   org_intent_approved: CheckCircle,
   org_intent_rejected: XCircle,
+  intent_engagement_summary: Eye,
+  intent_suggestions: Sparkles,
 };
 
 const NOTIF_COLORS: Record<NotificationType, string> = {
@@ -40,6 +44,8 @@ const NOTIF_COLORS: Record<NotificationType, string> = {
   org_approval_request: "text-violet-400",
   org_intent_approved: "text-emerald-400",
   org_intent_rejected: "text-red-400",
+  intent_engagement_summary: "text-violet-400",
+  intent_suggestions: "text-cyan-400",
 };
 
 const NOTIF_BG: Record<NotificationType, string> = {
@@ -50,6 +56,8 @@ const NOTIF_BG: Record<NotificationType, string> = {
   org_approval_request: "bg-violet-500/10",
   org_intent_approved: "bg-emerald-500/10",
   org_intent_rejected: "bg-red-500/10",
+  intent_engagement_summary: "bg-violet-500/10",
+  intent_suggestions: "bg-cyan-500/10",
 };
 
 function getNotificationMessage(notif: Notification): string {
@@ -63,6 +71,15 @@ function getNotificationMessage(notif: Notification): string {
       return `Your connection request was declined`;
     case "intent_expiring":
       return `Your intent is expiring soon`;
+    case "intent_engagement_summary": {
+      const parts: string[] = [];
+      if (p.views) parts.push(`${p.views} views`);
+      if (p.interests) parts.push(`${p.interests} interests`);
+      if (p.saves) parts.push(`${p.saves} saves`);
+      return `Your intent got ${parts.join(", ")} in the last 24h`;
+    }
+    case "intent_suggestions":
+      return p.message as string ?? "Check out intents that match yours";
     default:
       return "You have a new notification";
   }

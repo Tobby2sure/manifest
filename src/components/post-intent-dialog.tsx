@@ -26,7 +26,10 @@ import type {
   Organization,
 } from "@/lib/types/database";
 import { INTENT_TEMPLATES } from "@/lib/intent-templates";
-import { AlertCircle, Info } from "lucide-react";
+import { AlertCircle, Info, Sparkles, Shield } from "lucide-react";
+import { toast } from "sonner";
+import { getVerifiedUserCount } from "@/app/actions/views";
+import { getFoundingBadgeRemaining } from "@/app/actions/intents";
 
 const PRIORITIES: IntentPriority[] = ["Open", "Active", "Urgent"];
 
@@ -56,6 +59,13 @@ export function PostIntentDialog({
   const [useTemplate, setUseTemplate] = useState(false);
   const [userOrgs, setUserOrgs] = useState<Array<{ role: string; organizations: Organization }>>([]);
   const [selectedOrgId, setSelectedOrgId] = useState<string>("");
+  const [foundingRemaining, setFoundingRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      getFoundingBadgeRemaining().then(setFoundingRemaining).catch(() => {});
+    }
+  }, [open]);
 
   useEffect(() => {
     if (open && userId) {
@@ -124,6 +134,21 @@ export function PostIntentDialog({
         await submitIntentForOrgApproval(intent.id, selectedOrgId, userId);
       }
       onOpenChange(false);
+
+      // Success feedback — kill the dead zone
+      getVerifiedUserCount().then((count) => {
+        const reach = count > 0 ? count : 50;
+        toast.success("Intent posted!", {
+          description: `Your intent is now visible to ~${reach} verified users in the network.`,
+          duration: 5000,
+        });
+      }).catch(() => {
+        toast.success("Intent posted!", {
+          description: "Your intent is now live and discoverable.",
+          duration: 4000,
+        });
+      });
+
       setContent("");
       setIntentType("partnership");
       setEcosystem("");
@@ -396,6 +421,15 @@ export function PostIntentDialog({
               <span>90 days</span>
             </div>
           </div>
+
+          {foundingRemaining !== null && foundingRemaining > 0 && (
+            <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2">
+              <Shield className="size-4 text-amber-400 shrink-0" />
+              <p className="text-xs text-amber-300/80">
+                <span className="font-medium text-amber-400">Founding Intent badge</span> — only {foundingRemaining} remaining. Post now to earn yours.
+              </p>
+            </div>
+          )}
 
           {error && <p className="text-sm text-red-400">{error}</p>}
 

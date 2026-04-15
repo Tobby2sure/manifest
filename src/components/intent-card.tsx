@@ -13,6 +13,7 @@ import {
   Bookmark,
   BookmarkCheck,
   Heart,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -70,6 +71,8 @@ interface IntentCardProps {
   saveCount?: number;
   interestCount?: number;
   authorEvents?: string[];
+  viewCount?: number;
+  partnerId?: string | null;
 }
 
 export function IntentCard({
@@ -83,6 +86,8 @@ export function IntentCard({
   saveCount: initialSaveCount = 0,
   interestCount: initialInterestCount = 0,
   authorEvents = [],
+  viewCount = 0,
+  partnerId = null,
 }: IntentCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [saved, setSaved] = useState(initialSaved);
@@ -252,6 +257,12 @@ export function IntentCard({
             {lifecycle.label}
           </span>
         )}
+        {intent.is_founding && (
+          <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-400">
+            <Shield className="size-3" />
+            Founding Intent
+          </span>
+        )}
         {isExpired && (
           <span className="inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium bg-zinc-500/20 text-[#475569]">
             Expired
@@ -302,6 +313,12 @@ export function IntentCard({
             {timeRemaining} left
           </span>
           <span>{postedAgo}</span>
+          {isOwn && viewCount > 0 && (
+            <span className="flex items-center gap-1 text-violet-400/70">
+              <Eye className="size-3" />
+              {viewCount} {viewCount === 1 ? "view" : "views"}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-0.5">
