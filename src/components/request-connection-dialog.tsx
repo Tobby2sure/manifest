@@ -77,7 +77,7 @@ export function RequestConnectionDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-full inset-x-0 bottom-0 top-auto left-0 translate-x-0 translate-y-0 rounded-t-2xl rounded-b-none sm:inset-auto sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:max-w-md bg-[#0e0e14] border-white/[0.08]">
+      <DialogContent className="max-w-full inset-x-0 bottom-0 top-auto left-0 translate-x-0 translate-y-0 rounded-t-2xl rounded-b-none sm:inset-auto sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:max-w-md bg-card border-white/[0.08]">
         <DialogHeader>
           <DialogTitle>Request Connection</DialogTitle>
           <DialogDescription>

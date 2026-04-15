@@ -238,18 +238,18 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
       {/* Search + Sort bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 mb-5">
         <div className="relative flex-1 group">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-[#475569] transition-colors duration-200 group-focus-within:text-violet-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-text-muted transition-colors duration-200 group-focus-within:text-violet-400" />
           <input
             type="text"
             placeholder="Search intents by keyword, project, or ecosystem..."
             value={searchValue}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full h-11 rounded-xl border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm pl-10 pr-9 text-sm text-[#F1F5F9] outline-none focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 focus:bg-white/[0.05] placeholder:text-[#475569]/70 transition-all duration-300"
+            className="w-full h-11 rounded-xl border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm pl-10 pr-9 text-sm text-text-heading outline-none focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 focus:bg-white/[0.05] placeholder:text-text-muted/70 transition-all duration-300"
           />
           {searchValue && (
             <button
               onClick={() => handleSearchChange("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#475569] hover:text-white cursor-pointer transition-colors duration-200"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-white cursor-pointer transition-colors duration-200"
             >
               <X className="size-3.5" />
             </button>
@@ -258,7 +258,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
         <select
           value={activeSort}
           onChange={(e) => updateFilter("sort", e.target.value === "newest" ? null : e.target.value)}
-          className="h-11 rounded-xl border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm px-3.5 text-sm text-[#F1F5F9] outline-none cursor-pointer hover:border-white/[0.12] transition-all duration-200"
+          className="h-11 rounded-xl border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm px-3.5 text-sm text-text-heading outline-none cursor-pointer hover:border-white/[0.12] transition-all duration-200"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -270,7 +270,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
           variant="ghost"
           size="sm"
           onClick={() => setShowSidebar(!showSidebar)}
-          className={`text-[#94A3B8] lg:hidden cursor-pointer h-11 rounded-xl ${showSidebar ? "bg-white/[0.06] text-violet-400" : "hover:bg-white/[0.04]"}`}
+          className={`text-text-body lg:hidden cursor-pointer h-11 rounded-xl ${showSidebar ? "bg-white/[0.06] text-violet-400" : "hover:bg-white/[0.04]"}`}
         >
           <Filter className="size-4" />
         </Button>
@@ -283,7 +283,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
           <div className="sticky top-20 space-y-6">
             {/* Intent Type */}
             <div>
-              <h3 className="text-[11px] font-semibold text-[#F1F5F9]/40 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <h3 className="text-[11px] font-semibold text-text-heading/40 uppercase tracking-widest mb-3 flex items-center gap-2">
                 <span className="h-px flex-1 bg-gradient-to-r from-white/[0.06] to-transparent" />
                 Intent Type
                 <span className="h-px flex-1 bg-gradient-to-l from-white/[0.06] to-transparent" />
@@ -307,7 +307,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                         className="premium-checkbox"
                       />
                       <span className={`text-sm transition-colors duration-200 ${
-                        activeType === type ? 'text-[#F1F5F9]' : 'text-[#94A3B8] group-hover:text-[#CBD5E1]'
+                        activeType === type ? 'text-text-heading' : 'text-text-body group-hover:text-[#CBD5E1]'
                       }`}>
                         {config.label}
                       </span>
@@ -319,7 +319,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
 
             {/* Ecosystem */}
             <div>
-              <h3 className="text-[11px] font-semibold text-[#F1F5F9]/40 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <h3 className="text-[11px] font-semibold text-text-heading/40 uppercase tracking-widest mb-3 flex items-center gap-2">
                 <span className="h-px flex-1 bg-gradient-to-r from-white/[0.06] to-transparent" />
                 Ecosystem
                 <span className="h-px flex-1 bg-gradient-to-l from-white/[0.06] to-transparent" />
@@ -342,7 +342,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                       className="premium-checkbox"
                     />
                     <span className={`text-sm transition-colors duration-200 ${
-                      activeEcosystem === key ? 'text-[#F1F5F9]' : 'text-[#94A3B8] group-hover:text-[#CBD5E1]'
+                      activeEcosystem === key ? 'text-text-heading' : 'text-text-body group-hover:text-[#CBD5E1]'
                     }`}>
                       {config.label}
                     </span>
@@ -364,7 +364,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                     updateFilter("ecosystem", customEcosystem.trim().toLowerCase());
                   }
                 }}
-                className={`mt-2 w-full h-8 rounded-lg border bg-white/[0.03] px-2.5 text-xs text-[#F1F5F9] outline-none placeholder:text-[#475569]/60 transition-all duration-200 focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/10 ${
+                className={`mt-2 w-full h-8 rounded-lg border bg-white/[0.03] px-2.5 text-xs text-text-heading outline-none placeholder:text-text-muted/60 transition-all duration-200 focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/10 ${
                   isCustomEcosystem ? 'border-violet-500/30 bg-white/[0.05]' : 'border-white/[0.07]'
                 }`}
               />
@@ -372,7 +372,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
 
             {/* Sector */}
             <div>
-              <h3 className="text-[11px] font-semibold text-[#F1F5F9]/40 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <h3 className="text-[11px] font-semibold text-text-heading/40 uppercase tracking-widest mb-3 flex items-center gap-2">
                 <span className="h-px flex-1 bg-gradient-to-r from-white/[0.06] to-transparent" />
                 Sector
                 <span className="h-px flex-1 bg-gradient-to-l from-white/[0.06] to-transparent" />
@@ -395,7 +395,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                       className="premium-checkbox"
                     />
                     <span className={`text-sm transition-colors duration-200 ${
-                      activeSector === key ? 'text-[#F1F5F9]' : 'text-[#94A3B8] group-hover:text-[#CBD5E1]'
+                      activeSector === key ? 'text-text-heading' : 'text-text-body group-hover:text-[#CBD5E1]'
                     }`}>
                       {config.label}
                     </span>
@@ -417,7 +417,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                     updateFilter("sector", customSector.trim().toLowerCase());
                   }
                 }}
-                className={`mt-2 w-full h-8 rounded-lg border bg-white/[0.03] px-2.5 text-xs text-[#F1F5F9] outline-none placeholder:text-[#475569]/60 transition-all duration-200 focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/10 ${
+                className={`mt-2 w-full h-8 rounded-lg border bg-white/[0.03] px-2.5 text-xs text-text-heading outline-none placeholder:text-text-muted/60 transition-all duration-200 focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/10 ${
                   isCustomSector ? 'border-violet-500/30 bg-white/[0.05]' : 'border-white/[0.07]'
                 }`}
               />
@@ -425,7 +425,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
 
             {/* Priority */}
             <div>
-              <h3 className="text-[11px] font-semibold text-[#F1F5F9]/40 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <h3 className="text-[11px] font-semibold text-text-heading/40 uppercase tracking-widest mb-3 flex items-center gap-2">
                 <span className="h-px flex-1 bg-gradient-to-r from-white/[0.06] to-transparent" />
                 Priority
                 <span className="h-px flex-1 bg-gradient-to-l from-white/[0.06] to-transparent" />
@@ -447,7 +447,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                       className="premium-checkbox"
                     />
                     <span className={`text-sm transition-colors duration-200 ${
-                      activePriority === p ? 'text-[#F1F5F9]' : 'text-[#94A3B8] group-hover:text-[#CBD5E1]'
+                      activePriority === p ? 'text-text-heading' : 'text-text-body group-hover:text-[#CBD5E1]'
                     }`}>
                       {p}
                     </span>
@@ -472,8 +472,8 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
         <div className="flex-1 min-w-0">
           {/* Result count */}
           <div className="flex items-center justify-between mb-4">
-            <p className="text-xs text-[#475569]">
-              <span className="text-[#F1F5F9]/60 font-medium tabular-nums">{allIntents.length}</span>
+            <p className="text-xs text-text-muted">
+              <span className="text-text-heading/60 font-medium tabular-nums">{allIntents.length}</span>
               {' '}of <span className="tabular-nums">{total}</span> intents
             </p>
             {isPending && <Loader2 className="size-3.5 text-violet-400 animate-spin" />}
@@ -524,7 +524,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                       variant="outline"
                       onClick={loadMore}
                       disabled={loadingMore}
-                      className="text-[#94A3B8] border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.03] transition-all duration-300 cursor-pointer rounded-xl px-6"
+                      className="text-text-body border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.03] transition-all duration-300 cursor-pointer rounded-xl px-6"
                     >
                       {loadingMore ? (
                         <>
@@ -555,12 +555,12 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                 </div>
                 <div className="relative">
                   <div className="size-20 rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.08] flex items-center justify-center mb-5 mx-auto">
-                    <SlidersHorizontal className="size-8 text-[#475569]" />
+                    <SlidersHorizontal className="size-8 text-text-muted" />
                   </div>
-                  <h3 className="text-xl font-semibold text-[#F1F5F9]/80">
+                  <h3 className="text-xl font-semibold text-text-heading/80">
                     No intents found
                   </h3>
-                  <p className="text-sm text-[#94A3B8]/70 mt-2 max-w-sm leading-relaxed">
+                  <p className="text-sm text-text-body/70 mt-2 max-w-sm leading-relaxed">
                     {hasActiveFilters
                       ? "Try adjusting your filters or search query to discover more intents."
                       : "Be the first to post an intent and get discovered by the Web3 community."}

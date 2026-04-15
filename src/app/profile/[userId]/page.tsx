@@ -33,7 +33,7 @@ export default async function ProfilePage({
   const profileWithOrgs = { ...profile, org_memberships: orgMemberships };
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-[#080810]">
+    <main className="min-h-[calc(100vh-4rem)] bg-background">
       <div className="mx-auto max-w-3xl px-4 py-8">
         <ProfileClient profile={profileWithOrgs} intents={intents} />
       </div>

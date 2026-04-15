@@ -56,12 +56,12 @@ export default function HomePage() {
   const ready = !isLoading;
 
   return (
-    <main className="min-h-screen bg-[#0a0a12]">
+    <main className="min-h-screen bg-surface-page">
       {/* Hero */}
       <section className="relative overflow-hidden min-h-[90vh] flex items-center">
         {/* Gradient mesh background */}
         <div className="absolute inset-0 animate-gradient-mesh bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(139,92,246,0.15),transparent_50%),radial-gradient(ellipse_60%_40%_at_80%_60%,rgba(16,185,129,0.1),transparent_50%),radial-gradient(ellipse_40%_30%_at_20%_80%,rgba(139,92,246,0.08),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[#0a0a12]/40" />
+        <div className="absolute inset-0 bg-surface-page/40" />
 
         <div className="relative mx-auto max-w-5xl px-4 py-20 sm:py-32">
           <div className="flex flex-col items-center text-center">
@@ -83,7 +83,7 @@ export default function HomePage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.1 + i * 0.08, ease }}
-                  className="inline-block mr-[0.3em] text-[#F1F5F9]"
+                  className="inline-block mr-[0.3em] text-text-heading"
                 >
                   {word}
                 </motion.span>
@@ -94,7 +94,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.6, ease }}
-              className="mt-6 text-base sm:text-lg text-[#94A3B8] max-w-2xl leading-relaxed"
+              className="mt-6 text-base sm:text-lg text-text-body max-w-2xl leading-relaxed"
             >
               Manifest is where Web3 builders, protocols, and investors post their intentions — and find the people to make them real.
             </motion.p>
@@ -123,7 +123,7 @@ export default function HomePage() {
               {ready && authenticated && (
                 <Link
                   href="/feed"
-                  className="inline-flex items-center justify-center rounded-xl border border-white/10 hover:border-white/20 text-[#94A3B8] hover:text-white font-medium px-7 py-3.5 text-base transition-all duration-200 cursor-pointer w-full sm:w-auto"
+                  className="inline-flex items-center justify-center rounded-xl border border-white/10 hover:border-white/20 text-text-body hover:text-white font-medium px-7 py-3.5 text-base transition-all duration-200 cursor-pointer w-full sm:w-auto"
                 >
                   Go to Feed
                 </Link>
@@ -139,10 +139,10 @@ export default function HomePage() {
           <div className="flex items-center justify-center gap-8 sm:gap-16 text-center">
             {STATS.map((stat, i) => (
               <div key={i} className="flex items-center gap-2">
-                <span className="text-2xl sm:text-3xl font-bold text-[#F1F5F9]">
+                <span className="text-2xl sm:text-3xl font-bold text-text-heading">
                   <CountUp target={stat.value} suffix={stat.suffix} />
                 </span>
-                <span className="text-sm text-[#475569]">{stat.label}</span>
+                <span className="text-sm text-text-muted">{stat.label}</span>
               </div>
             ))}
           </div>
@@ -156,7 +156,7 @@ export default function HomePage() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, ease }}
-          className="text-2xl sm:text-3xl font-bold text-[#F1F5F9] text-center mb-16"
+          className="text-2xl sm:text-3xl font-bold text-text-heading text-center mb-16"
         >
           How it works
         </motion.h2>
@@ -172,12 +172,12 @@ export default function HomePage() {
             >
               <div className="relative mb-5">
                 <span className="absolute -top-2 -right-2 text-xs font-bold text-violet-400/60">{step.num}</span>
-                <div className="size-16 rounded-2xl bg-[#0f0f1a] border border-white/[0.07] flex items-center justify-center group-hover:border-violet-500/30 group-hover:bg-violet-500/5 transition-all duration-200">
+                <div className="size-16 rounded-2xl bg-surface-secondary border border-white/[0.07] flex items-center justify-center group-hover:border-violet-500/30 group-hover:bg-violet-500/5 transition-all duration-200">
                   <step.icon className="size-7 text-violet-400" />
                 </div>
               </div>
-              <h3 className="text-lg font-semibold text-[#F1F5F9] mb-2">{step.title}</h3>
-              <p className="text-sm text-[#94A3B8] leading-relaxed max-w-xs">{step.desc}</p>
+              <h3 className="text-lg font-semibold text-text-heading mb-2">{step.title}</h3>
+              <p className="text-sm text-text-body leading-relaxed max-w-xs">{step.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -193,10 +193,10 @@ export default function HomePage() {
             transition={{ duration: 0.5, ease }}
             className="text-center mb-12"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#F1F5F9] mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-text-heading mb-4">
               Every kind of intent
             </h2>
-            <p className="text-sm text-[#94A3B8] max-w-lg mx-auto">
+            <p className="text-sm text-text-body max-w-lg mx-auto">
               Whether you&apos;re raising a round, looking for a co-marketing partner, or hiring your next engineer — there&apos;s an intent type for it.
             </p>
           </motion.div>
@@ -211,7 +211,7 @@ export default function HomePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: i * 0.04, ease }}
-                  className="shrink-0 snap-start rounded-xl border border-white/[0.07] bg-[#0f0f1a] p-4 w-56 hover:border-white/[0.12] hover:scale-[1.02] transition-all duration-200 cursor-pointer"
+                  className="shrink-0 snap-start rounded-xl border border-white/[0.07] bg-surface-secondary p-4 w-56 hover:border-white/[0.12] hover:scale-[1.02] transition-all duration-200 cursor-pointer"
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`size-2 rounded-full ${config.color.split(' ')[0].replace('/20', '')}`} />
@@ -219,7 +219,7 @@ export default function HomePage() {
                       {config.label}
                     </span>
                   </div>
-                  <p className="text-xs text-[#475569] leading-relaxed">{config.description}</p>
+                  <p className="text-xs text-text-muted leading-relaxed">{config.description}</p>
                 </motion.div>
               );
             })}
@@ -230,8 +230,8 @@ export default function HomePage() {
       {/* Trust strip */}
       <div className="border-y border-white/[0.07] bg-white/[0.02]">
         <div className="mx-auto max-w-5xl px-4 py-5">
-          <p className="text-center text-xs sm:text-sm text-[#475569] tracking-wide">
-            Verified via <span className="text-[#94A3B8]">X</span> · Built on <span className="text-[#94A3B8]">Base</span> · <span className="text-[#94A3B8]">Open source</span>
+          <p className="text-center text-xs sm:text-sm text-text-muted tracking-wide">
+            Verified via <span className="text-text-body">X</span> · Built on <span className="text-text-body">Base</span> · <span className="text-text-body">Open source</span>
           </p>
         </div>
       </div>
@@ -243,13 +243,13 @@ export default function HomePage() {
             <div className="size-6 rounded-lg bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center text-[10px] font-bold text-white">
               M
             </div>
-            <span className="text-xs text-[#475569]">Manifest · 2025</span>
+            <span className="text-xs text-text-muted">Manifest · 2025</span>
           </div>
           <div className="flex items-center gap-6">
-            <Link href="/feed" className="text-xs text-[#475569] hover:text-[#94A3B8] transition-colors duration-200 cursor-pointer">
+            <Link href="/feed" className="text-xs text-text-muted hover:text-text-body transition-colors duration-200 cursor-pointer">
               Feed
             </Link>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-[#475569] hover:text-[#94A3B8] transition-colors duration-200 cursor-pointer flex items-center gap-1 text-xs">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-text-muted hover:text-text-body transition-colors duration-200 cursor-pointer flex items-center gap-1 text-xs">
               GitHub <ExternalLink className="size-3" />
             </a>
           </div>

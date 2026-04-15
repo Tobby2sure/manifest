@@ -8,7 +8,7 @@ import { ReactNode } from "react";
 const Providers = dynamic(() => import("./providers"), {
   ssr: false,
   loading: () => (
-    <div className="min-h-screen bg-[#0a0a12]">
+    <div className="min-h-screen bg-surface-page">
       {/* Blank dark screen while Dynamic SDK initialises — prevents flash */}
     </div>
   ),

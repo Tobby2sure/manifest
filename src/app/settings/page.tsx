@@ -77,12 +77,12 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <main className="min-h-[calc(100vh-4rem)] bg-[#080810]">
+      <main className="min-h-[calc(100vh-4rem)] bg-background">
         <div className="mx-auto max-w-lg px-4 py-8">
           <div className="h-8 w-32 rounded bg-white/[0.06] animate-pulse mb-8" />
           <div className="space-y-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-16 rounded-xl bg-[#0e0e14] animate-pulse border border-white/[0.08]" />
+              <div key={i} className="h-16 rounded-xl bg-card animate-pulse border border-white/[0.08]" />
             ))}
           </div>
         </div>
@@ -92,7 +92,7 @@ export default function SettingsPage() {
 
   if (!user) {
     return (
-      <main className="min-h-[calc(100vh-4rem)] bg-[#080810] flex items-center justify-center">
+      <main className="min-h-[calc(100vh-4rem)] bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-zinc-400">Sign in to access settings.</p>
         </div>
@@ -103,12 +103,12 @@ export default function SettingsPage() {
   const walletAddress = profile.wallet_address;
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-[#080810]">
+    <main className="min-h-[calc(100vh-4rem)] bg-background">
       <div className="mx-auto max-w-lg px-4 py-8">
         <h1 className="text-2xl font-bold text-white/90 mb-8">Settings</h1>
 
         {/* Profile */}
-        <section className="rounded-xl border border-white/[0.08] bg-[#0e0e14] p-5 mb-6">
+        <section className="rounded-xl border border-white/[0.08] bg-card p-5 mb-6">
           <h2 className="text-base font-medium text-white/90 mb-4">Profile</h2>
           <div className="space-y-4">
             <div>
@@ -163,7 +163,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Connected Accounts */}
-        <section className="rounded-xl border border-white/[0.08] bg-[#0e0e14] p-5 mb-6">
+        <section className="rounded-xl border border-white/[0.08] bg-card p-5 mb-6">
           <h2 className="text-base font-medium text-white/90 mb-4">Connected Accounts</h2>
           <div className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
             {profile.twitter_verified ? (
@@ -199,7 +199,7 @@ export default function SettingsPage() {
 
         {/* Wallet */}
         {walletAddress && (
-          <section className="rounded-xl border border-white/[0.08] bg-[#0e0e14] p-5 mb-6">
+          <section className="rounded-xl border border-white/[0.08] bg-card p-5 mb-6">
             <h2 className="text-base font-medium text-white/90 mb-4">My Wallet</h2>
             <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
               <span className="text-sm text-zinc-300 font-mono truncate flex-1">
@@ -224,7 +224,7 @@ export default function SettingsPage() {
         )}
 
         {/* Developer */}
-        <section className="rounded-xl border border-white/[0.08] bg-[#0e0e14] p-5 mb-6">
+        <section className="rounded-xl border border-white/[0.08] bg-card p-5 mb-6">
           <h2 className="text-base font-medium text-white/90 mb-4 flex items-center gap-2">
             <Key className="size-4 text-violet-400" />
             Developer

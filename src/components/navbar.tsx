@@ -60,7 +60,7 @@ export function Navbar() {
     : (user?.verifiedCredentials?.find((c: any) => c.oauthProvider === 'email')?.oauthUsername ?? dynamicUser?.email ?? 'User');
 
   return (
-    <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'border-b border-white/[0.08] bg-[#0a0a12]/90 backdrop-blur-xl' : 'bg-transparent'}`}>
+    <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'border-b border-white/[0.08] bg-surface-page/90 backdrop-blur-xl' : 'bg-transparent'}`}>
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
@@ -115,7 +115,7 @@ export function Navbar() {
                 </Button>
                 {/* Click preview panel */}
                 {notifOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-white/[0.08] bg-[#0e0e14] shadow-2xl shadow-black/50 z-50 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-white/[0.08] bg-card shadow-2xl shadow-black/50 z-50 overflow-hidden">
                     <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
                       <span className="text-sm font-semibold text-white">Notifications</span>
                       {unreadCount > 0 && (
@@ -165,7 +165,7 @@ export function Navbar() {
                     </Avatar>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-[#0e0e14] border-white/[0.08]">
+                <DropdownMenuContent align="end" className="w-48 bg-card border-white/[0.08]">
                   <div className="px-3 py-2">
                     <p className="text-sm font-medium text-white truncate">{displayName}</p>
                     {twitterVerified && <p className="text-xs text-emerald-400 mt-0.5">✓ X Verified</p>}

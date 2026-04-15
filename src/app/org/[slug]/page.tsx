@@ -87,7 +87,7 @@ export default function OrgPage() {
 
   if (loading) {
     return (
-      <main className="min-h-[calc(100vh-4rem)] bg-[#080810] flex items-center justify-center">
+      <main className="min-h-[calc(100vh-4rem)] bg-background flex items-center justify-center">
         <p className="text-zinc-400">Loading...</p>
       </main>
     );
@@ -95,7 +95,7 @@ export default function OrgPage() {
 
   if (!org) {
     return (
-      <main className="min-h-[calc(100vh-4rem)] bg-[#080810] flex items-center justify-center">
+      <main className="min-h-[calc(100vh-4rem)] bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-white/90">
             Organization not found
@@ -113,10 +113,10 @@ export default function OrgPage() {
   }
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-[#080810] p-4">
+    <main className="min-h-[calc(100vh-4rem)] bg-background p-4">
       <div className="mx-auto max-w-3xl space-y-6">
         {/* Org Header */}
-        <div className="rounded-xl border border-white/[0.08] bg-[#0e0e14] p-6">
+        <div className="rounded-xl border border-white/[0.08] bg-card p-6">
           <div className="flex items-start gap-4">
             {org.logo_url ? (
               <img
@@ -227,7 +227,7 @@ export default function OrgPage() {
         </div>
 
         {/* Members */}
-        <div className="rounded-xl border border-white/[0.08] bg-[#0e0e14] p-6">
+        <div className="rounded-xl border border-white/[0.08] bg-card p-6">
           <h2 className="text-lg font-semibold text-white/90 mb-4">Members</h2>
           <div className="space-y-3">
             {org.members.map((member) => (
@@ -275,7 +275,7 @@ export default function OrgPage() {
             Active Intents
           </h2>
           {org.intents.length === 0 ? (
-            <div className="rounded-xl border border-white/[0.08] bg-[#0e0e14] p-6 text-center">
+            <div className="rounded-xl border border-white/[0.08] bg-card p-6 text-center">
               <p className="text-zinc-400">No active intents yet.</p>
             </div>
           ) : (

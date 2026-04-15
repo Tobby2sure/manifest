@@ -92,7 +92,7 @@ export function DealTracker({ intentId, connectionId, currentStatus, userId, par
   const Icon = currentStage.icon;
 
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-[#0f0f1a] p-4">
+    <div className="rounded-xl border border-white/[0.08] bg-surface-secondary p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-white/80">Deal Status</h3>
         <div className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${currentStage.color}`}>
@@ -120,7 +120,7 @@ export function DealTracker({ intentId, connectionId, currentStatus, userId, par
               className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full border transition-all duration-200 cursor-pointer
                 ${isActive ? "border-violet-500 bg-violet-500/20 scale-110" : ""}
                 ${isDone ? "border-emerald-500 bg-emerald-500/20" : ""}
-                ${!isActive && !isDone ? "border-white/10 bg-[#0a0a12] hover:border-white/20" : ""}
+                ${!isActive && !isDone ? "border-white/10 bg-surface-page hover:border-white/20" : ""}
               `}
               title={stage.label}
             >

@@ -83,13 +83,13 @@ export default function EventDetailPage({
 
   if (loading) {
     return (
-      <main className="min-h-[calc(100vh-4rem)] bg-[#0a0a12]">
+      <main className="min-h-[calc(100vh-4rem)] bg-surface-page">
         <div className="mx-auto max-w-4xl px-4 py-10">
           <div className="h-10 w-64 rounded bg-white/[0.06] animate-pulse mb-4" />
           <div className="h-6 w-96 rounded bg-white/[0.04] animate-pulse mb-8" />
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-20 rounded-xl bg-[#0f0f1a] animate-pulse border border-white/[0.06]" />
+              <div key={i} className="h-20 rounded-xl bg-surface-secondary animate-pulse border border-white/[0.06]" />
             ))}
           </div>
         </div>
@@ -99,14 +99,14 @@ export default function EventDetailPage({
 
   if (!event) {
     return (
-      <main className="min-h-[calc(100vh-4rem)] bg-[#0a0a12] flex items-center justify-center">
+      <main className="min-h-[calc(100vh-4rem)] bg-surface-page flex items-center justify-center">
         <p className="text-zinc-400">Event not found.</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-[#0a0a12]">
+    <main className="min-h-[calc(100vh-4rem)] bg-surface-page">
       <div className="mx-auto max-w-4xl px-4 py-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -201,7 +201,7 @@ export default function EventDetailPage({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: 0.1 + i * 0.05 }}
-                    className="rounded-xl border border-white/[0.06] bg-[#0f0f1a] p-4"
+                    className="rounded-xl border border-white/[0.06] bg-surface-secondary p-4"
                   >
                     <div className="flex items-center gap-3">
                       <Link href={`/profile/${intent.author.id}`}>
@@ -267,7 +267,7 @@ export default function EventDetailPage({
                   >
                     <Link
                       href={`/profile/${profile.id}`}
-                      className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-[#0f0f1a] p-3 hover:border-white/[0.12] transition-all"
+                      className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-surface-secondary p-3 hover:border-white/[0.12] transition-all"
                     >
                       <Avatar className="h-9 w-9 ring-1 ring-white/10">
                         {profile.avatar_url ? (

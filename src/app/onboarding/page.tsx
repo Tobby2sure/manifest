@@ -115,15 +115,15 @@ export default function OnboardingPage() {
 
   if (!user) {
     return (
-      <main className="min-h-[calc(100vh-4rem)] bg-[#0a0a12] flex items-center justify-center p-4">
+      <main className="min-h-[calc(100vh-4rem)] bg-surface-page flex items-center justify-center p-4">
         <div className="text-center max-w-sm">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center text-2xl font-bold text-white mx-auto mb-6 shadow-lg shadow-violet-500/20">
             M
           </div>
-          <h1 className="text-2xl font-bold text-[#F1F5F9] mb-2">
+          <h1 className="text-2xl font-bold text-text-heading mb-2">
             Welcome to Manifest
           </h1>
-          <p className="text-[#94A3B8] mb-8">
+          <p className="text-text-body mb-8">
             Sign in to declare your intents and connect with the Web3 ecosystem.
           </p>
           <button
@@ -132,14 +132,14 @@ export default function OnboardingPage() {
           >
             Sign In to Continue
           </button>
-          <p className="text-[#475569] text-xs mt-4">Email, X (Twitter), or wallet</p>
+          <p className="text-text-muted text-xs mt-4">Email, X (Twitter), or wallet</p>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-[#0a0a12] flex items-center justify-center p-4">
+    <main className="min-h-[calc(100vh-4rem)] bg-surface-page flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Progress dots */}
         <div className="flex items-center justify-center gap-3 mb-8">
@@ -166,7 +166,7 @@ export default function OnboardingPage() {
           ))}
         </div>
 
-        <div className="rounded-xl border border-white/[0.07] bg-[#0f0f1a] p-6 overflow-hidden">
+        <div className="rounded-xl border border-white/[0.07] bg-surface-secondary p-6 overflow-hidden">
           <AnimatePresence mode="wait" custom={direction}>
             {/* Step 0: Account Type */}
             {step === 0 && (
@@ -179,10 +179,10 @@ export default function OnboardingPage() {
                 exit="exit"
                 transition={{ duration: 0.3, ease }}
               >
-                <h2 className="text-xl font-bold text-[#F1F5F9] mb-1">
+                <h2 className="text-xl font-bold text-text-heading mb-1">
                   Welcome to Manifest
                 </h2>
-                <p className="text-sm text-[#94A3B8] mb-6">
+                <p className="text-sm text-text-body mb-6">
                   Choose your account type to get started.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
@@ -195,10 +195,10 @@ export default function OnboardingPage() {
                     }`}
                   >
                     <User
-                      className={`size-8 ${accountType === "individual" ? "text-violet-400" : "text-[#94A3B8]"}`}
+                      className={`size-8 ${accountType === "individual" ? "text-violet-400" : "text-text-body"}`}
                     />
                     <span
-                      className={`text-sm font-medium ${accountType === "individual" ? "text-violet-400" : "text-[#94A3B8]"}`}
+                      className={`text-sm font-medium ${accountType === "individual" ? "text-violet-400" : "text-text-body"}`}
                     >
                       Individual
                     </span>
@@ -212,10 +212,10 @@ export default function OnboardingPage() {
                     }`}
                   >
                     <Building2
-                      className={`size-8 ${accountType === "organization" ? "text-violet-400" : "text-[#94A3B8]"}`}
+                      className={`size-8 ${accountType === "organization" ? "text-violet-400" : "text-text-body"}`}
                     />
                     <span
-                      className={`text-sm font-medium ${accountType === "organization" ? "text-violet-400" : "text-[#94A3B8]"}`}
+                      className={`text-sm font-medium ${accountType === "organization" ? "text-violet-400" : "text-text-body"}`}
                     >
                       Organization
                     </span>
@@ -242,15 +242,15 @@ export default function OnboardingPage() {
                 exit="exit"
                 transition={{ duration: 0.3, ease }}
               >
-                <h2 className="text-xl font-bold text-[#F1F5F9] mb-1">
+                <h2 className="text-xl font-bold text-text-heading mb-1">
                   Your Details
                 </h2>
-                <p className="text-sm text-[#94A3B8] mb-6">
+                <p className="text-sm text-text-body mb-6">
                   Tell us about yourself.
                 </p>
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-[#94A3B8]" htmlFor="displayName">
+                    <Label className="text-text-body" htmlFor="displayName">
                       Display Name *
                     </Label>
                     <Input
@@ -262,7 +262,7 @@ export default function OnboardingPage() {
                     />
                   </div>
                   <div>
-                    <Label className="text-[#94A3B8]" htmlFor="bio">
+                    <Label className="text-text-body" htmlFor="bio">
                       Bio
                     </Label>
                     <Textarea
@@ -274,7 +274,7 @@ export default function OnboardingPage() {
                     />
                   </div>
                   <div>
-                    <Label className="text-[#94A3B8]" htmlFor="telegram">
+                    <Label className="text-text-body" htmlFor="telegram">
                       Telegram Handle
                     </Label>
                     <Input
@@ -286,7 +286,7 @@ export default function OnboardingPage() {
                     />
                   </div>
                   <div>
-                    <Label className="text-[#94A3B8]" htmlFor="email">
+                    <Label className="text-text-body" htmlFor="email">
                       Email
                     </Label>
                     <Input
@@ -327,15 +327,15 @@ export default function OnboardingPage() {
                 exit="exit"
                 transition={{ duration: 0.3, ease }}
               >
-                <h2 className="text-xl font-bold text-[#F1F5F9] mb-1">
+                <h2 className="text-xl font-bold text-text-heading mb-1">
                   Organization Details
                 </h2>
-                <p className="text-sm text-[#94A3B8] mb-6">
+                <p className="text-sm text-text-body mb-6">
                   Tell us about your organization.
                 </p>
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-[#94A3B8]" htmlFor="orgName">
+                    <Label className="text-text-body" htmlFor="orgName">
                       Organization Name
                     </Label>
                     <Input
@@ -347,7 +347,7 @@ export default function OnboardingPage() {
                     />
                   </div>
                   <div>
-                    <Label className="text-[#94A3B8]" htmlFor="orgWebsite">
+                    <Label className="text-text-body" htmlFor="orgWebsite">
                       Website
                     </Label>
                     <Input
@@ -359,7 +359,7 @@ export default function OnboardingPage() {
                     />
                   </div>
                   <div>
-                    <Label className="text-[#94A3B8]" htmlFor="orgLogo">
+                    <Label className="text-text-body" htmlFor="orgLogo">
                       Logo URL
                     </Label>
                     <Input
@@ -398,10 +398,10 @@ export default function OnboardingPage() {
                 exit="exit"
                 transition={{ duration: 0.3, ease }}
               >
-                <h2 className="text-xl font-bold text-[#F1F5F9] mb-1">
+                <h2 className="text-xl font-bold text-text-heading mb-1">
                   Connect X (Twitter)
                 </h2>
-                <p className="text-sm text-[#94A3B8] mb-6">
+                <p className="text-sm text-text-body mb-6">
                   Link your X account to post intents. This verifies your identity.
                 </p>
 
@@ -412,7 +412,7 @@ export default function OnboardingPage() {
                       <p className="text-sm font-medium text-emerald-400">
                         X Connected
                       </p>
-                      <p className="text-xs text-[#94A3B8]">
+                      <p className="text-xs text-text-body">
                         @{twitterUsername}
                       </p>
                     </div>

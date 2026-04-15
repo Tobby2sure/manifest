@@ -120,7 +120,7 @@ export default function NotificationsPage() {
 
   if (isLoading || loading) {
     return (
-      <main className="min-h-[calc(100vh-4rem)] bg-[#080810]">
+      <main className="min-h-[calc(100vh-4rem)] bg-background">
         <div className="mx-auto max-w-2xl px-4 py-8">
           <NotificationListSkeleton />
         </div>
@@ -131,7 +131,7 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-[#080810]">
+    <main className="min-h-[calc(100vh-4rem)] bg-background">
       <div className="mx-auto max-w-2xl px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -181,8 +181,8 @@ export default function NotificationsPage() {
                   onClick={() => handleMarkRead(notif)}
                   className={`w-full flex items-start gap-3 rounded-xl border p-4 text-left transition-colors ${
                     notif.read
-                      ? "border-white/[0.06] bg-[#0e0e14]/50"
-                      : "border-white/[0.08] bg-[#0e0e14]"
+                      ? "border-white/[0.06] bg-card/50"
+                      : "border-white/[0.08] bg-card"
                   }`}
                 >
                   <div

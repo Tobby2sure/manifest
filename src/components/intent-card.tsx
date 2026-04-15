@@ -175,7 +175,7 @@ export function IntentCard({
 
   return (
     <div
-      className={`group relative rounded-xl border-l-[3px] ${leftBorderColor} border border-white/[0.06] bg-gradient-to-br from-[#0f0f1a] to-[#0c0c16] p-5 transition-all duration-300 ease-out hover:border-white/[0.10] hover:scale-[1.01] hover:shadow-xl hover:shadow-black/30 card-glow-border ${isExpired ? "opacity-50 grayscale-[30%]" : ""}`}
+      className={`group relative rounded-xl border-l-[3px] ${leftBorderColor} border border-white/[0.06] bg-gradient-to-br from-surface-secondary to-[#0c0c16] p-5 transition-all duration-300 ease-out hover:border-white/[0.10] hover:scale-[1.01] hover:shadow-xl hover:shadow-black/30 card-glow-border ${isExpired ? "opacity-50 grayscale-[30%]" : ""}`}
     >
       {/* Type badge top-right */}
       <div className="absolute top-4 right-4">
@@ -197,7 +197,7 @@ export function IntentCard({
         </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <Link href={`/profile/${author.id}`} className="text-sm font-medium text-[#F1F5F9] truncate hover:text-violet-400 transition-colors duration-200 cursor-pointer">
+            <Link href={`/profile/${author.id}`} className="text-sm font-medium text-text-heading truncate hover:text-violet-400 transition-colors duration-200 cursor-pointer">
               {author.display_name ?? "Anonymous"}
             </Link>
             {author.twitter_verified && (
@@ -219,13 +219,13 @@ export function IntentCard({
           </div>
           <div className="flex items-center gap-1.5">
             {author.twitter_handle && (
-              <span className="text-xs text-[#475569]">
+              <span className="text-xs text-text-muted">
                 @{author.twitter_handle}
               </span>
             )}
             {intent.org_id && (
-              <span className="text-xs text-[#475569]">
-                · <Link href={`/org/${intent.org_id}`} className="hover:text-[#94A3B8] transition-colors duration-200 cursor-pointer">Org</Link>
+              <span className="text-xs text-text-muted">
+                · <Link href={`/org/${intent.org_id}`} className="hover:text-text-body transition-colors duration-200 cursor-pointer">Org</Link>
               </span>
             )}
           </div>
@@ -264,14 +264,14 @@ export function IntentCard({
           </span>
         )}
         {isExpired && (
-          <span className="inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium bg-zinc-500/20 text-[#475569]">
+          <span className="inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium bg-zinc-500/20 text-text-muted">
             Expired
           </span>
         )}
       </div>
 
       {/* Content */}
-      <p className="text-sm text-[#F1F5F9]/75 leading-[1.7] mb-3.5">
+      <p className="text-sm text-text-heading/75 leading-[1.7] mb-3.5">
         {displayContent}
         {intent.content.length > 200 && (
           <button
@@ -286,12 +286,12 @@ export function IntentCard({
       {/* Ecosystem/Sector tags */}
       <div className="flex flex-wrap gap-1.5 mb-3">
         {intent.ecosystem && (
-          <span className="inline-flex items-center rounded-md bg-white/[0.03] border border-white/[0.06] px-2.5 py-0.5 text-[11px] text-[#94A3B8] font-medium tracking-wide">
+          <span className="inline-flex items-center rounded-md bg-white/[0.03] border border-white/[0.06] px-2.5 py-0.5 text-[11px] text-text-body font-medium tracking-wide">
             {ECOSYSTEM_CONFIG[intent.ecosystem].label}
           </span>
         )}
         {intent.sector && (
-          <span className="inline-flex items-center rounded-md bg-white/[0.03] border border-white/[0.06] px-2.5 py-0.5 text-[11px] text-[#94A3B8] font-medium tracking-wide">
+          <span className="inline-flex items-center rounded-md bg-white/[0.03] border border-white/[0.06] px-2.5 py-0.5 text-[11px] text-text-body font-medium tracking-wide">
             {SECTOR_CONFIG[intent.sector].label}
           </span>
         )}
@@ -307,7 +307,7 @@ export function IntentCard({
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-3.5 border-t border-white/[0.05]">
-        <div className="flex items-center gap-3 text-xs text-[#475569]">
+        <div className="flex items-center gap-3 text-xs text-text-muted">
           <span className="flex items-center gap-1">
             <Clock className="size-3" />
             {timeRemaining} left
@@ -329,7 +329,7 @@ export function IntentCard({
             className={`flex items-center gap-1 rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs transition-all duration-200 cursor-pointer hover:bg-white/[0.04] ${
               interested
                 ? "text-red-400 hover:text-red-300"
-                : "text-[#475569] hover:text-[#94A3B8]"
+                : "text-text-muted hover:text-text-body"
             }`}
           >
             <Heart className={`size-3.5 ${interested ? "fill-current" : ""}`} />
@@ -343,7 +343,7 @@ export function IntentCard({
             className={`flex items-center gap-1 rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs transition-all duration-200 cursor-pointer hover:bg-white/[0.04] ${
               saved
                 ? "text-amber-400 hover:text-amber-300"
-                : "text-[#475569] hover:text-[#94A3B8]"
+                : "text-text-muted hover:text-text-body"
             }`}
           >
             {saved ? (
@@ -357,7 +357,7 @@ export function IntentCard({
           {/* Share */}
           <button
             onClick={handleShare}
-            className="flex items-center rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs text-[#475569] hover:text-[#94A3B8] hover:bg-white/[0.04] transition-all duration-200 cursor-pointer"
+            className="flex items-center rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs text-text-muted hover:text-text-body hover:bg-white/[0.04] transition-all duration-200 cursor-pointer"
           >
             <Share2 className="size-3.5" />
           </button>

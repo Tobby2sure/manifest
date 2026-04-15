@@ -20,7 +20,7 @@ export default function MyProfilePage() {
   }, [user, isLoading, isAuthenticated, router]);
 
   return (
-    <main className="min-h-screen bg-[#0a0a12] flex items-center justify-center">
+    <main className="min-h-screen bg-surface-page flex items-center justify-center">
       <div className="w-8 h-8 rounded-full border-2 border-violet-500 border-t-transparent animate-spin" />
     </main>
   );

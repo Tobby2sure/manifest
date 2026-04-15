@@ -106,7 +106,7 @@ export default function ApprovalsPage() {
 
   if (loading) {
     return (
-      <main className="min-h-[calc(100vh-4rem)] bg-[#080810] flex items-center justify-center">
+      <main className="min-h-[calc(100vh-4rem)] bg-background flex items-center justify-center">
         <p className="text-zinc-400">Loading...</p>
       </main>
     );
@@ -114,7 +114,7 @@ export default function ApprovalsPage() {
 
   if (!isAdmin) {
     return (
-      <main className="min-h-[calc(100vh-4rem)] bg-[#080810] flex items-center justify-center">
+      <main className="min-h-[calc(100vh-4rem)] bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-xl font-bold text-white/90">Access Denied</h1>
           <p className="text-zinc-400 mt-2">
@@ -131,7 +131,7 @@ export default function ApprovalsPage() {
   }
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-[#080810] p-4">
+    <main className="min-h-[calc(100vh-4rem)] bg-background p-4">
       <div className="mx-auto max-w-3xl space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-white/90">
@@ -145,7 +145,7 @@ export default function ApprovalsPage() {
         </div>
 
         {pending.length === 0 ? (
-          <div className="rounded-xl border border-white/[0.08] bg-[#0e0e14] p-12 text-center">
+          <div className="rounded-xl border border-white/[0.08] bg-card p-12 text-center">
             <Inbox className="size-8 mx-auto mb-3 text-zinc-500" />
             <p className="text-zinc-400">No pending approvals</p>
             <p className="text-xs text-zinc-500 mt-1">
@@ -158,7 +158,7 @@ export default function ApprovalsPage() {
             {pending.map((request) => (
               <div
                 key={request.id}
-                className="rounded-xl border border-white/[0.08] bg-[#0e0e14] p-5"
+                className="rounded-xl border border-white/[0.08] bg-card p-5"
               >
                 {/* Submitter info */}
                 <div className="flex items-center gap-2 mb-3">

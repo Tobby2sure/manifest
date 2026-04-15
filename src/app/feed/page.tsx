@@ -42,7 +42,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
   const { intents, total } = await getIntents(filters);
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-[#080810] relative">
+    <main className="min-h-[calc(100vh-4rem)] bg-background relative">
       <div className="noise-overlay" />
       <div className="hero-mesh absolute inset-x-0 top-0 h-80 pointer-events-none" />
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 py-8">

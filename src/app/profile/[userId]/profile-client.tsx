@@ -142,18 +142,18 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                 alt={profile.display_name ?? ""}
               />
             ) : null}
-            <AvatarFallback className="text-xl bg-[#0f0f1a]">
+            <AvatarFallback className="text-xl bg-surface-secondary">
               {initials}
             </AvatarFallback>
           </Avatar>
           {activity && activity.text === "Active now" && (
-            <span className="absolute bottom-0 right-0 size-3.5 rounded-full bg-emerald-400 border-2 border-[#0a0a12] animate-pulse-dot" />
+            <span className="absolute bottom-0 right-0 size-3.5 rounded-full bg-emerald-400 border-2 border-surface-page animate-pulse-dot" />
           )}
         </div>
 
         <div className="flex-1 text-center sm:text-left">
           <div className="flex items-center justify-center sm:justify-start gap-2">
-            <h1 className="text-2xl font-bold text-[#F1F5F9]">
+            <h1 className="text-2xl font-bold text-text-heading">
               {profile.display_name ?? "Anonymous"}
             </h1>
             {profile.twitter_verified && (
@@ -169,12 +169,12 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
             ))}
           </div>
           {profile.twitter_handle && (
-            <p className="text-sm text-[#94A3B8] mt-0.5">
+            <p className="text-sm text-text-body mt-0.5">
               @{profile.twitter_handle}
             </p>
           )}
           {profile.bio && (
-            <p className="text-sm text-[#F1F5F9]/70 mt-2 max-w-lg leading-relaxed">
+            <p className="text-sm text-text-heading/70 mt-2 max-w-lg leading-relaxed">
               {profile.bio}
             </p>
           )}
@@ -183,14 +183,14 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
           <div className="flex items-center justify-center sm:justify-start gap-5 mt-4">
             <div className="flex items-center gap-1.5 text-sm">
               <Zap className="size-3.5 text-violet-400" />
-              <span className="font-medium text-[#F1F5F9]">{intents.length}</span>
-              <span className="text-[#475569]">intents</span>
+              <span className="font-medium text-text-heading">{intents.length}</span>
+              <span className="text-text-muted">intents</span>
             </div>
             {profile.response_rate != null && (
               <div className="flex items-center gap-1.5 text-sm">
                 <TrendingUp className="size-3.5 text-emerald-400" />
-                <span className="font-medium text-[#F1F5F9]">{profile.response_rate}%</span>
-                <span className="text-[#475569]">response rate</span>
+                <span className="font-medium text-text-heading">{profile.response_rate}%</span>
+                <span className="text-text-muted">response rate</span>
               </div>
             )}
             {activity && (
@@ -208,7 +208,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
             </Badge>
           </div>
           {profile.wallet_address && (
-            <p className="text-xs text-[#475569] mt-2 font-mono truncate max-w-xs">
+            <p className="text-xs text-text-muted mt-2 font-mono truncate max-w-xs">
               {profile.wallet_address}
             </p>
           )}
@@ -234,8 +234,8 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
               onClick={() => setActiveTab(tab.key)}
               className={`relative px-4 py-2.5 text-sm font-medium transition-colors duration-200 cursor-pointer flex items-center gap-1.5 ${
                 activeTab === tab.key
-                  ? "text-[#F1F5F9]"
-                  : "text-[#475569] hover:text-[#94A3B8]"
+                  ? "text-text-heading"
+                  : "text-text-muted hover:text-text-body"
               }`}
             >
               <tab.icon className="size-3.5" />
@@ -278,7 +278,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-[#94A3B8]">
+              <div className="text-center py-12 text-text-body">
                 <p>No active intents.</p>
               </div>
             )}
@@ -298,7 +298,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-40 animate-pulse rounded-xl bg-[#0f0f1a] border border-white/[0.07]"
+                    className="h-40 animate-pulse rounded-xl bg-surface-secondary border border-white/[0.07]"
                   />
                 ))}
               </div>
@@ -316,7 +316,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                       initial={{ opacity: 0, y: 16 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: Math.min(i * 0.04, 0.2), ease }}
-                      className="rounded-xl border border-white/[0.07] bg-[#0f0f1a] overflow-hidden"
+                      className="rounded-xl border border-white/[0.07] bg-surface-secondary overflow-hidden"
                     >
                       <div className="p-4 border-b border-white/[0.06]">
                         <div className="flex items-center justify-between mb-2">
@@ -348,10 +348,10 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                 })}
               </div>
             ) : (
-              <div className="text-center py-12 text-[#94A3B8]">
-                <Handshake className="size-6 mx-auto mb-2 text-[#475569]" />
+              <div className="text-center py-12 text-text-body">
+                <Handshake className="size-6 mx-auto mb-2 text-text-muted" />
                 <p>No connections yet.</p>
-                <p className="text-xs mt-1 text-[#475569]">
+                <p className="text-xs mt-1 text-text-muted">
                   Accepted connection requests will appear here with deal tracking.
                 </p>
               </div>
@@ -372,7 +372,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-48 animate-pulse rounded-xl bg-[#0f0f1a] border border-white/[0.07]"
+                    className="h-48 animate-pulse rounded-xl bg-surface-secondary border border-white/[0.07]"
                   />
                 ))}
               </div>
@@ -394,10 +394,10 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-[#94A3B8]">
-                <Bookmark className="size-6 mx-auto mb-2 text-[#475569]" />
+              <div className="text-center py-12 text-text-body">
+                <Bookmark className="size-6 mx-auto mb-2 text-text-muted" />
                 <p>No saved intents yet.</p>
-                <p className="text-xs mt-1 text-[#475569]">
+                <p className="text-xs mt-1 text-text-muted">
                   Bookmark intents from the feed to save them here.
                 </p>
               </div>
@@ -416,7 +416,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
             {loadingEndorsements ? (
               <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-24 animate-pulse rounded-xl bg-[#0f0f1a] border border-white/[0.07]" />
+                  <div key={i} className="h-24 animate-pulse rounded-xl bg-surface-secondary border border-white/[0.07]" />
                 ))}
               </div>
             ) : endorsements.length > 0 ? (
@@ -427,7 +427,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: Math.min(i * 0.04, 0.2), ease }}
-                    className="rounded-xl border border-white/[0.06] bg-[#0f0f1a] p-4"
+                    className="rounded-xl border border-white/[0.06] bg-surface-secondary p-4"
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <Link href={`/profile/${endorsement.endorser_id}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -439,7 +439,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                             {endorsement.endorser.display_name?.[0]?.toUpperCase() ?? "?"}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-sm font-medium text-[#F1F5F9]">
+                        <span className="text-sm font-medium text-text-heading">
                           {endorsement.endorser.display_name ?? "Anonymous"}
                         </span>
                       </Link>
@@ -447,17 +447,17 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                         <CheckCircle className="size-3.5 text-emerald-400" />
                       )}
                     </div>
-                    <p className="text-sm text-[#F1F5F9]/70 leading-relaxed">
+                    <p className="text-sm text-text-heading/70 leading-relaxed">
                       &ldquo;{endorsement.content}&rdquo;
                     </p>
                   </motion.div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-[#94A3B8]">
-                <MessageSquare className="size-6 mx-auto mb-2 text-[#475569]" />
+              <div className="text-center py-12 text-text-body">
+                <MessageSquare className="size-6 mx-auto mb-2 text-text-muted" />
                 <p>No endorsements yet.</p>
-                <p className="text-xs mt-1 text-[#475569]">
+                <p className="text-xs mt-1 text-text-muted">
                   Endorsements appear when partners leave feedback after a deal.
                 </p>
               </div>
@@ -473,14 +473,14 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3, ease }}
           >
-            <div className="rounded-xl border border-white/[0.07] bg-[#0f0f1a] p-5">
+            <div className="rounded-xl border border-white/[0.07] bg-surface-secondary p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Award className="size-5 text-amber-400" />
-                <h2 className="text-base font-medium text-[#F1F5F9]">
+                <h2 className="text-base font-medium text-text-heading">
                   Proof of Intent NFTs
                 </h2>
               </div>
-              <p className="text-sm text-[#94A3B8] mb-4">
+              <p className="text-sm text-text-body mb-4">
                 {intents.length} intent{intents.length !== 1 ? "s" : ""} posted
                 {profile.wallet_address && (
                   <>
@@ -515,7 +515,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                         >
                           {config.label}
                         </span>
-                        <p className="text-xs text-[#94A3B8] mt-1.5 line-clamp-2">
+                        <p className="text-xs text-text-body mt-1.5 line-clamp-2">
                           {intent.content}
                         </p>
                         {intent.nft_tx_hash && profile.wallet_address && (
@@ -534,7 +534,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-[#475569]">
+                <p className="text-sm text-text-muted">
                   No NFTs minted yet. Post an intent to earn your first badge.
                 </p>
               )}

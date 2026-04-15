@@ -49,7 +49,7 @@ export function ViewContactDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm bg-[#0e0e14] border-white/[0.08]">
+      <DialogContent className="sm:max-w-sm bg-card border-white/[0.08]">
         <DialogHeader>
           <DialogTitle>Contact Details</DialogTitle>
           <DialogDescription>
