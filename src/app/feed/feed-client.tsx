@@ -235,8 +235,8 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
         </div>
       )}
 
-      {/* Search + Sort bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 mb-5">
+      {/* Search + Sort bar — rendered inside the grid area below on desktop */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 mb-5 lg:hidden">
         <div className="relative flex-1 group">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-text-muted transition-colors duration-200 group-focus-within:text-violet-400" />
           <input
@@ -470,6 +470,39 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
 
         {/* Intent grid */}
         <div className="flex-1 min-w-0">
+          {/* Search + Sort bar — desktop (aligned with card grid) */}
+          <div className="hidden lg:flex flex-row items-center gap-2.5 mb-5">
+            <div className="relative flex-1 group">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-text-muted transition-colors duration-200 group-focus-within:text-violet-400" />
+              <input
+                type="text"
+                placeholder="Search intents by keyword, project, or ecosystem..."
+                value={searchValue}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="w-full h-11 rounded-xl border border-white/8 bg-white/3 backdrop-blur-sm pl-10 pr-9 text-sm text-text-heading outline-none focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 focus:bg-white/6 placeholder:text-text-muted/70 transition-all duration-300"
+              />
+              {searchValue && (
+                <button
+                  onClick={() => handleSearchChange("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-white cursor-pointer transition-colors duration-200"
+                >
+                  <X className="size-3.5" />
+                </button>
+              )}
+            </div>
+            <select
+              value={activeSort}
+              onChange={(e) => updateFilter("sort", e.target.value === "newest" ? null : e.target.value)}
+              className="h-11 rounded-xl border border-white/8 bg-white/3 backdrop-blur-sm px-3.5 text-sm text-text-heading outline-none cursor-pointer hover:border-white/12 transition-all duration-200"
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Result count */}
           <div className="flex items-center justify-between mb-4">
             <p className="text-xs text-text-muted">

@@ -2,6 +2,7 @@
 
 import { useUser } from '@/lib/hooks/use-user';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useRef, useEffect, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { INTENT_TYPE_CONFIG } from '@/lib/types/database';
@@ -54,6 +55,17 @@ function CountUp({ target, suffix }: { target: number; suffix: string }) {
 export default function HomePage() {
   const { isAuthenticated: authenticated, isLoading } = useUser();
   const ready = !isLoading;
+  const router = useRouter();
+
+  useEffect(() => {
+    if (ready && authenticated) {
+      router.replace('/feed');
+    }
+  }, [ready, authenticated, router]);
+
+  if (!ready || authenticated) {
+    return <main className="min-h-screen bg-surface-page" />;
+  }
 
   return (
     <main className="min-h-screen bg-surface-page">
