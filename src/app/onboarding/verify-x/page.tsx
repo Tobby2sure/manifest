@@ -50,7 +50,7 @@ export default function VerifyXPage() {
     return (
       <main className="min-h-[calc(100vh-4rem)] bg-surface-page flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <div className="rounded-2xl border border-white/[0.08] bg-surface-secondary p-8 text-center">
+          <div className="rounded-2xl border border-white/8 bg-surface-secondary p-8 text-center">
             <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="size-7 text-emerald-400" />
             </div>
@@ -73,8 +73,8 @@ export default function VerifyXPage() {
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-surface-page flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="rounded-2xl border border-white/[0.08] bg-surface-secondary p-8">
-          <div className="w-14 h-14 rounded-2xl bg-[#1a1a2e] border border-white/[0.08] flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-white/70">
+        <div className="rounded-2xl border border-white/8 bg-surface-secondary p-8">
+          <div className="w-14 h-14 rounded-2xl bg-[#1a1a2e] border border-white/8 flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-white/70">
             𝕏
           </div>
           <h2 className="text-2xl font-bold text-white text-center mb-2">Verify your X account</h2>

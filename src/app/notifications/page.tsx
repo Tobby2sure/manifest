@@ -181,8 +181,8 @@ export default function NotificationsPage() {
                   onClick={() => handleMarkRead(notif)}
                   className={`w-full flex items-start gap-3 rounded-xl border p-4 text-left transition-colors ${
                     notif.read
-                      ? "border-white/[0.06] bg-card/50"
-                      : "border-white/[0.08] bg-card"
+                      ? "border-white/6 bg-card/50"
+                      : "border-white/8 bg-card"
                   }`}
                 >
                   <div

@@ -77,7 +77,7 @@ export function RequestConnectionDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-full inset-x-0 bottom-0 top-auto left-0 translate-x-0 translate-y-0 rounded-t-2xl rounded-b-none sm:inset-auto sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:max-w-md bg-card border-white/[0.08]">
+      <DialogContent className="max-w-full inset-x-0 bottom-0 top-auto left-0 translate-x-0 translate-y-0 rounded-t-2xl rounded-b-none sm:inset-auto sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:max-w-md bg-card border-white/8">
         <DialogHeader>
           <DialogTitle>Request Connection</DialogTitle>
           <DialogDescription>
@@ -102,7 +102,7 @@ export function RequestConnectionDialog({
         ) : (
           <div className="space-y-4 mt-2">
             {/* Intent summary */}
-            <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] p-3">
+            <div className="rounded-lg bg-white/3 border border-white/6 p-3">
               <div className="flex items-center gap-2 mb-1">
                 <span
                   className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium ${typeConfig.color}`}

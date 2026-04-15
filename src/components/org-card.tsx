@@ -21,7 +21,7 @@ export function OrgCard({
   return (
     <Link
       href={`/org/${slug}`}
-      className="block rounded-xl border border-white/[0.08] bg-card p-4 hover:border-white/20 transition-colors"
+      className="block rounded-xl border border-white/8 bg-card p-4 hover:border-white/20 transition-colors"
     >
       <div className="flex items-center gap-3">
         {logo_url ? (

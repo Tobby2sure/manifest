@@ -65,7 +65,7 @@ export default function InvitePage() {
   if (!org) {
     return (
       <main className="min-h-[calc(100vh-4rem)] bg-background flex items-center justify-center p-4">
-        <div className="rounded-xl border border-white/[0.08] bg-card p-6 text-center max-w-md w-full">
+        <div className="rounded-xl border border-white/8 bg-card p-6 text-center max-w-md w-full">
           <h2 className="text-xl font-bold text-white/90 mb-2">
             Invalid Invite
           </h2>
@@ -87,7 +87,7 @@ export default function InvitePage() {
 
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-background flex items-center justify-center p-4">
-      <div className="rounded-xl border border-white/[0.08] bg-card p-6 max-w-md w-full">
+      <div className="rounded-xl border border-white/8 bg-card p-6 max-w-md w-full">
         <div className="flex items-center gap-4 mb-6">
           {org.logo_url ? (
             <img

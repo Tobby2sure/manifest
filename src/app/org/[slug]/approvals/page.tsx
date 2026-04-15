@@ -145,7 +145,7 @@ export default function ApprovalsPage() {
         </div>
 
         {pending.length === 0 ? (
-          <div className="rounded-xl border border-white/[0.08] bg-card p-12 text-center">
+          <div className="rounded-xl border border-white/8 bg-card p-12 text-center">
             <Inbox className="size-8 mx-auto mb-3 text-zinc-500" />
             <p className="text-zinc-400">No pending approvals</p>
             <p className="text-xs text-zinc-500 mt-1">
@@ -158,7 +158,7 @@ export default function ApprovalsPage() {
             {pending.map((request) => (
               <div
                 key={request.id}
-                className="rounded-xl border border-white/[0.08] bg-card p-5"
+                className="rounded-xl border border-white/8 bg-card p-5"
               >
                 {/* Submitter info */}
                 <div className="flex items-center gap-2 mb-3">
@@ -183,7 +183,7 @@ export default function ApprovalsPage() {
                 </div>
 
                 {/* Intent preview */}
-                <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4 mb-4">
+                <div className="rounded-lg border border-white/6 bg-white/3 p-4 mb-4">
                   <span className="inline-flex items-center rounded-full bg-violet-500/10 border border-violet-500/20 px-2 py-0.5 text-xs text-violet-400 font-medium mb-2">
                     {request.intent?.type}
                   </span>

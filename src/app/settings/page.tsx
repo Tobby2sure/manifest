@@ -79,10 +79,10 @@ export default function SettingsPage() {
     return (
       <main className="min-h-[calc(100vh-4rem)] bg-background">
         <div className="mx-auto max-w-lg px-4 py-8">
-          <div className="h-8 w-32 rounded bg-white/[0.06] animate-pulse mb-8" />
+          <div className="h-8 w-32 rounded bg-white/6 animate-pulse mb-8" />
           <div className="space-y-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-16 rounded-xl bg-card animate-pulse border border-white/[0.08]" />
+              <div key={i} className="h-16 rounded-xl bg-card animate-pulse border border-white/8" />
             ))}
           </div>
         </div>
@@ -108,7 +108,7 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-bold text-white/90 mb-8">Settings</h1>
 
         {/* Profile */}
-        <section className="rounded-xl border border-white/[0.08] bg-card p-5 mb-6">
+        <section className="rounded-xl border border-white/8 bg-card p-5 mb-6">
           <h2 className="text-base font-medium text-white/90 mb-4">Profile</h2>
           <div className="space-y-4">
             <div>
@@ -163,9 +163,9 @@ export default function SettingsPage() {
         </section>
 
         {/* Connected Accounts */}
-        <section className="rounded-xl border border-white/[0.08] bg-card p-5 mb-6">
+        <section className="rounded-xl border border-white/8 bg-card p-5 mb-6">
           <h2 className="text-base font-medium text-white/90 mb-4">Connected Accounts</h2>
-          <div className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+          <div className="flex items-center gap-3 rounded-xl border border-white/6 bg-white/3 p-4">
             {profile.twitter_verified ? (
               <>
                 {profile.avatar_url && (
@@ -199,9 +199,9 @@ export default function SettingsPage() {
 
         {/* Wallet */}
         {walletAddress && (
-          <section className="rounded-xl border border-white/[0.08] bg-card p-5 mb-6">
+          <section className="rounded-xl border border-white/8 bg-card p-5 mb-6">
             <h2 className="text-base font-medium text-white/90 mb-4">My Wallet</h2>
-            <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+            <div className="flex items-center gap-2 rounded-xl border border-white/6 bg-white/3 p-4">
               <span className="text-sm text-zinc-300 font-mono truncate flex-1">
                 {walletAddress}
               </span>
@@ -224,7 +224,7 @@ export default function SettingsPage() {
         )}
 
         {/* Developer */}
-        <section className="rounded-xl border border-white/[0.08] bg-card p-5 mb-6">
+        <section className="rounded-xl border border-white/8 bg-card p-5 mb-6">
           <h2 className="text-base font-medium text-white/90 mb-4 flex items-center gap-2">
             <Key className="size-4 text-violet-400" />
             Developer
@@ -235,7 +235,7 @@ export default function SettingsPage() {
             <Label className="text-zinc-300 text-sm">API Key</Label>
             {apiKeyInfo && !apiKey ? (
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-xs text-zinc-400 font-mono bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2 flex-1">
+                <span className="text-xs text-zinc-400 font-mono bg-white/3 border border-white/6 rounded-lg px-3 py-2 flex-1">
                   ••••••••••••••••
                 </span>
                 <Button
@@ -297,7 +297,7 @@ export default function SettingsPage() {
             {webhooks.length > 0 && (
               <div className="space-y-2 mt-3 mb-4">
                 {webhooks.map((wh) => (
-                  <div key={wh.id} className="flex items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
+                  <div key={wh.id} className="flex items-center gap-2 rounded-lg border border-white/6 bg-white/3 px-3 py-2.5">
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-zinc-300 font-mono truncate">{wh.url}</p>
                       <p className="text-[10px] text-zinc-500 mt-0.5">{wh.events.join(', ')}</p>
@@ -318,7 +318,7 @@ export default function SettingsPage() {
             )}
 
             {/* Create webhook form */}
-            <div className="mt-3 space-y-3 rounded-lg border border-white/[0.06] bg-white/[0.02] p-3">
+            <div className="mt-3 space-y-3 rounded-lg border border-white/6 bg-white/3 p-3">
               <Input
                 value={webhookUrl}
                 onChange={(e) => setWebhookUrl(e.target.value)}

@@ -135,7 +135,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
         className="flex flex-col sm:flex-row items-center sm:items-start gap-5 mb-8"
       >
         <div className="relative group">
-          <Avatar size="lg" className="size-20 shrink-0 ring-2 ring-white/[0.07] group-hover:ring-violet-500/40 transition-all duration-300">
+          <Avatar size="lg" className="size-20 shrink-0 ring-2 ring-white/8 group-hover:ring-violet-500/40 transition-all duration-300">
             {profile.avatar_url ? (
               <AvatarImage
                 src={profile.avatar_url}
@@ -201,7 +201,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
           </div>
 
           <div className="flex items-center justify-center sm:justify-start gap-2 mt-3 flex-wrap">
-            <Badge variant="outline" className="text-xs border-white/[0.07]">
+            <Badge variant="outline" className="text-xs border-white/8">
               {profile.account_type === "organization"
                 ? "Organization"
                 : "Individual"}
@@ -216,7 +216,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
 
         {isOwn && (
           <Link href="/settings" className="shrink-0">
-            <Button variant="outline" size="sm" className="w-full sm:w-auto border-white/[0.07] hover:border-white/[0.12] cursor-pointer transition-all duration-200">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto border-white/8 hover:border-white/12 cursor-pointer transition-all duration-200">
               <Edit className="size-3.5 mr-1.5" />
               Edit Profile
             </Button>
@@ -225,7 +225,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
       </motion.div>
 
       {/* Tabs with animated underline */}
-      <div className="relative mb-6 border-b border-white/[0.06]">
+      <div className="relative mb-6 border-b border-white/6">
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
           {visibleTabs.map((tab) => (
             <button
@@ -298,7 +298,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-40 animate-pulse rounded-xl bg-surface-secondary border border-white/[0.07]"
+                    className="h-40 animate-pulse rounded-xl bg-surface-secondary border border-white/8"
                   />
                 ))}
               </div>
@@ -316,9 +316,9 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                       initial={{ opacity: 0, y: 16 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: Math.min(i * 0.04, 0.2), ease }}
-                      className="rounded-xl border border-white/[0.07] bg-surface-secondary overflow-hidden"
+                      className="rounded-xl border border-white/8 bg-surface-secondary overflow-hidden"
                     >
-                      <div className="p-4 border-b border-white/[0.06]">
+                      <div className="p-4 border-b border-white/6">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             {intentConfig && (
@@ -372,7 +372,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-48 animate-pulse rounded-xl bg-surface-secondary border border-white/[0.07]"
+                    className="h-48 animate-pulse rounded-xl bg-surface-secondary border border-white/8"
                   />
                 ))}
               </div>
@@ -416,7 +416,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
             {loadingEndorsements ? (
               <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-24 animate-pulse rounded-xl bg-surface-secondary border border-white/[0.07]" />
+                  <div key={i} className="h-24 animate-pulse rounded-xl bg-surface-secondary border border-white/8" />
                 ))}
               </div>
             ) : endorsements.length > 0 ? (
@@ -427,7 +427,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: Math.min(i * 0.04, 0.2), ease }}
-                    className="rounded-xl border border-white/[0.06] bg-surface-secondary p-4"
+                    className="rounded-xl border border-white/6 bg-surface-secondary p-4"
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <Link href={`/profile/${endorsement.endorser_id}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -473,7 +473,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3, ease }}
           >
-            <div className="rounded-xl border border-white/[0.07] bg-surface-secondary p-5">
+            <div className="rounded-xl border border-white/8 bg-surface-secondary p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Award className="size-5 text-amber-400" />
                 <h2 className="text-base font-medium text-text-heading">
@@ -508,7 +508,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: Math.min(i * 0.04, 0.2), ease }}
-                        className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 hover:border-white/[0.1] transition-all duration-200"
+                        className="rounded-lg border border-white/6 bg-white/3 p-3 hover:border-white/12 transition-all duration-200"
                       >
                         <span
                           className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium ${config.color}`}

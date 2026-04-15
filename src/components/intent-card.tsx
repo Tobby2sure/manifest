@@ -175,7 +175,7 @@ export function IntentCard({
 
   return (
     <div
-      className={`group relative rounded-xl border-l-[3px] ${leftBorderColor} border border-white/[0.06] bg-gradient-to-br from-surface-secondary to-[#0c0c16] p-5 transition-all duration-300 ease-out hover:border-white/[0.10] hover:scale-[1.01] hover:shadow-xl hover:shadow-black/30 card-glow-border ${isExpired ? "opacity-50 grayscale-[30%]" : ""}`}
+      className={`group relative rounded-xl border-l-[3px] ${leftBorderColor} border border-white/6 bg-gradient-to-br from-surface-secondary to-[#0c0c16] p-5 transition-all duration-300 ease-out hover:border-white/12 hover:scale-[1.01] hover:shadow-xl hover:shadow-black/30 card-glow-border ${isExpired ? "opacity-50 grayscale-[30%]" : ""}`}
     >
       {/* Type badge top-right */}
       <div className="absolute top-4 right-4">
@@ -286,12 +286,12 @@ export function IntentCard({
       {/* Ecosystem/Sector tags */}
       <div className="flex flex-wrap gap-1.5 mb-3">
         {intent.ecosystem && (
-          <span className="inline-flex items-center rounded-md bg-white/[0.03] border border-white/[0.06] px-2.5 py-0.5 text-[11px] text-text-body font-medium tracking-wide">
+          <span className="inline-flex items-center rounded-md bg-white/3 border border-white/6 px-2.5 py-0.5 text-[11px] text-text-body font-medium tracking-wide">
             {ECOSYSTEM_CONFIG[intent.ecosystem].label}
           </span>
         )}
         {intent.sector && (
-          <span className="inline-flex items-center rounded-md bg-white/[0.03] border border-white/[0.06] px-2.5 py-0.5 text-[11px] text-text-body font-medium tracking-wide">
+          <span className="inline-flex items-center rounded-md bg-white/3 border border-white/6 px-2.5 py-0.5 text-[11px] text-text-body font-medium tracking-wide">
             {SECTOR_CONFIG[intent.sector].label}
           </span>
         )}
@@ -306,7 +306,7 @@ export function IntentCard({
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-3.5 border-t border-white/[0.05]">
+      <div className="flex items-center justify-between pt-3.5 border-t border-white/6">
         <div className="flex items-center gap-3 text-xs text-text-muted">
           <span className="flex items-center gap-1">
             <Clock className="size-3" />
@@ -328,7 +328,7 @@ export function IntentCard({
             disabled={!currentUserId || isPending}
             aria-pressed={interested}
             aria-label={`Interest${interestCount > 0 ? ` (${interestCount})` : ""}`}
-            className={`flex items-center gap-1 rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs transition-all duration-200 cursor-pointer hover:bg-white/[0.04] ${
+            className={`flex items-center gap-1 rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs transition-all duration-200 cursor-pointer hover:bg-white/4 ${
               interested
                 ? "text-red-400 hover:text-red-300"
                 : "text-text-muted hover:text-text-body"
@@ -344,7 +344,7 @@ export function IntentCard({
             disabled={!currentUserId || isPending}
             aria-pressed={saved}
             aria-label={`Save${saveCount > 0 ? ` (${saveCount})` : ""}`}
-            className={`flex items-center gap-1 rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs transition-all duration-200 cursor-pointer hover:bg-white/[0.04] ${
+            className={`flex items-center gap-1 rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs transition-all duration-200 cursor-pointer hover:bg-white/4 ${
               saved
                 ? "text-amber-400 hover:text-amber-300"
                 : "text-text-muted hover:text-text-body"
@@ -362,7 +362,7 @@ export function IntentCard({
           <button
             onClick={handleShare}
             aria-label="Share"
-            className="flex items-center rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs text-text-muted hover:text-text-body hover:bg-white/[0.04] transition-all duration-200 cursor-pointer"
+            className="flex items-center rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs text-text-muted hover:text-text-body hover:bg-white/4 transition-all duration-200 cursor-pointer"
           >
             <Share2 className="size-3.5" />
           </button>

@@ -244,7 +244,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
             placeholder="Search intents by keyword, project, or ecosystem..."
             value={searchValue}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full h-11 rounded-xl border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm pl-10 pr-9 text-sm text-text-heading outline-none focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 focus:bg-white/[0.05] placeholder:text-text-muted/70 transition-all duration-300"
+            className="w-full h-11 rounded-xl border border-white/8 bg-white/3 backdrop-blur-sm pl-10 pr-9 text-sm text-text-heading outline-none focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 focus:bg-white/6 placeholder:text-text-muted/70 transition-all duration-300"
           />
           {searchValue && (
             <button
@@ -258,7 +258,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
         <select
           value={activeSort}
           onChange={(e) => updateFilter("sort", e.target.value === "newest" ? null : e.target.value)}
-          className="h-11 rounded-xl border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm px-3.5 text-sm text-text-heading outline-none cursor-pointer hover:border-white/[0.12] transition-all duration-200"
+          className="h-11 rounded-xl border border-white/8 bg-white/3 backdrop-blur-sm px-3.5 text-sm text-text-heading outline-none cursor-pointer hover:border-white/12 transition-all duration-200"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -270,7 +270,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
           variant="ghost"
           size="sm"
           onClick={() => setShowSidebar(!showSidebar)}
-          className={`text-text-body lg:hidden cursor-pointer h-11 rounded-xl ${showSidebar ? "bg-white/[0.06] text-violet-400" : "hover:bg-white/[0.04]"}`}
+          className={`text-text-body lg:hidden cursor-pointer h-11 rounded-xl ${showSidebar ? "bg-white/6 text-violet-400" : "hover:bg-white/4"}`}
         >
           <Filter className="size-4" />
         </Button>
@@ -284,9 +284,9 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
             {/* Intent Type */}
             <div>
               <h3 className="text-[11px] font-semibold text-text-heading/40 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <span className="h-px flex-1 bg-gradient-to-r from-white/[0.06] to-transparent" />
+                <span className="h-px flex-1 bg-gradient-to-r from-white/6 to-transparent" />
                 Intent Type
-                <span className="h-px flex-1 bg-gradient-to-l from-white/[0.06] to-transparent" />
+                <span className="h-px flex-1 bg-gradient-to-l from-white/6 to-transparent" />
               </h3>
               <div className="space-y-0.5 max-h-64 overflow-y-auto scrollbar-hide">
                 {INTENT_TYPES.map((type) => {
@@ -295,7 +295,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                     <label
                       key={type}
                       className={`flex items-center gap-2.5 cursor-pointer group rounded-lg px-2.5 py-1.5 transition-all duration-200 ${
-                        activeType === type ? 'bg-white/[0.04]' : 'hover:bg-white/[0.02]'
+                        activeType === type ? 'bg-white/4' : 'hover:bg-white/3'
                       }`}
                     >
                       <input
@@ -320,16 +320,16 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
             {/* Ecosystem */}
             <div>
               <h3 className="text-[11px] font-semibold text-text-heading/40 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <span className="h-px flex-1 bg-gradient-to-r from-white/[0.06] to-transparent" />
+                <span className="h-px flex-1 bg-gradient-to-r from-white/6 to-transparent" />
                 Ecosystem
-                <span className="h-px flex-1 bg-gradient-to-l from-white/[0.06] to-transparent" />
+                <span className="h-px flex-1 bg-gradient-to-l from-white/6 to-transparent" />
               </h3>
               <div className="space-y-0.5 max-h-48 overflow-y-auto scrollbar-hide">
                 {Object.entries(ECOSYSTEM_CONFIG).map(([key, config]) => (
                   <label
                     key={key}
                     className={`flex items-center gap-2.5 cursor-pointer group rounded-lg px-2.5 py-1.5 transition-all duration-200 ${
-                      activeEcosystem === key ? 'bg-white/[0.04]' : 'hover:bg-white/[0.02]'
+                      activeEcosystem === key ? 'bg-white/4' : 'hover:bg-white/3'
                     }`}
                   >
                     <input
@@ -364,8 +364,8 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                     updateFilter("ecosystem", customEcosystem.trim().toLowerCase());
                   }
                 }}
-                className={`mt-2 w-full h-8 rounded-lg border bg-white/[0.03] px-2.5 text-xs text-text-heading outline-none placeholder:text-text-muted/60 transition-all duration-200 focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/10 ${
-                  isCustomEcosystem ? 'border-violet-500/30 bg-white/[0.05]' : 'border-white/[0.07]'
+                className={`mt-2 w-full h-8 rounded-lg border bg-white/3 px-2.5 text-xs text-text-heading outline-none placeholder:text-text-muted/60 transition-all duration-200 focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/10 ${
+                  isCustomEcosystem ? 'border-violet-500/30 bg-white/6' : 'border-white/8'
                 }`}
               />
             </div>
@@ -373,16 +373,16 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
             {/* Sector */}
             <div>
               <h3 className="text-[11px] font-semibold text-text-heading/40 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <span className="h-px flex-1 bg-gradient-to-r from-white/[0.06] to-transparent" />
+                <span className="h-px flex-1 bg-gradient-to-r from-white/6 to-transparent" />
                 Sector
-                <span className="h-px flex-1 bg-gradient-to-l from-white/[0.06] to-transparent" />
+                <span className="h-px flex-1 bg-gradient-to-l from-white/6 to-transparent" />
               </h3>
               <div className="space-y-0.5 max-h-48 overflow-y-auto scrollbar-hide">
                 {Object.entries(SECTOR_CONFIG).map(([key, config]) => (
                   <label
                     key={key}
                     className={`flex items-center gap-2.5 cursor-pointer group rounded-lg px-2.5 py-1.5 transition-all duration-200 ${
-                      activeSector === key ? 'bg-white/[0.04]' : 'hover:bg-white/[0.02]'
+                      activeSector === key ? 'bg-white/4' : 'hover:bg-white/3'
                     }`}
                   >
                     <input
@@ -417,8 +417,8 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                     updateFilter("sector", customSector.trim().toLowerCase());
                   }
                 }}
-                className={`mt-2 w-full h-8 rounded-lg border bg-white/[0.03] px-2.5 text-xs text-text-heading outline-none placeholder:text-text-muted/60 transition-all duration-200 focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/10 ${
-                  isCustomSector ? 'border-violet-500/30 bg-white/[0.05]' : 'border-white/[0.07]'
+                className={`mt-2 w-full h-8 rounded-lg border bg-white/3 px-2.5 text-xs text-text-heading outline-none placeholder:text-text-muted/60 transition-all duration-200 focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/10 ${
+                  isCustomSector ? 'border-violet-500/30 bg-white/6' : 'border-white/8'
                 }`}
               />
             </div>
@@ -426,16 +426,16 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
             {/* Priority */}
             <div>
               <h3 className="text-[11px] font-semibold text-text-heading/40 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <span className="h-px flex-1 bg-gradient-to-r from-white/[0.06] to-transparent" />
+                <span className="h-px flex-1 bg-gradient-to-r from-white/6 to-transparent" />
                 Priority
-                <span className="h-px flex-1 bg-gradient-to-l from-white/[0.06] to-transparent" />
+                <span className="h-px flex-1 bg-gradient-to-l from-white/6 to-transparent" />
               </h3>
               <div className="space-y-0.5">
                 {PRIORITY_OPTIONS.map((p) => (
                   <label
                     key={p}
                     className={`flex items-center gap-2.5 cursor-pointer group rounded-lg px-2.5 py-1.5 transition-all duration-200 ${
-                      activePriority === p ? 'bg-white/[0.04]' : 'hover:bg-white/[0.02]'
+                      activePriority === p ? 'bg-white/4' : 'hover:bg-white/3'
                     }`}
                   >
                     <input
@@ -524,7 +524,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                       variant="outline"
                       onClick={loadMore}
                       disabled={loadingMore}
-                      className="text-text-body border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.03] transition-all duration-300 cursor-pointer rounded-xl px-6"
+                      className="text-text-body border-white/8 hover:border-white/12 hover:bg-white/3 transition-all duration-300 cursor-pointer rounded-xl px-6"
                     >
                       {loadingMore ? (
                         <>
@@ -554,7 +554,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                   <div className="absolute top-1/3 left-1/3 w-48 h-48 rounded-full bg-emerald-500/[0.03] blur-3xl" />
                 </div>
                 <div className="relative">
-                  <div className="size-20 rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.08] flex items-center justify-center mb-5 mx-auto">
+                  <div className="size-20 rounded-2xl bg-gradient-to-br from-white/6 to-white/3 border border-white/8 flex items-center justify-center mb-5 mx-auto">
                     <SlidersHorizontal className="size-8 text-text-muted" />
                   </div>
                   <h3 className="text-xl font-semibold text-text-heading/80">

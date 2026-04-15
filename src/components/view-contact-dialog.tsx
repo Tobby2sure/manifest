@@ -49,7 +49,7 @@ export function ViewContactDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm bg-card border-white/[0.08]">
+      <DialogContent className="sm:max-w-sm bg-card border-white/8">
         <DialogHeader>
           <DialogTitle>Contact Details</DialogTitle>
           <DialogDescription>
@@ -64,7 +64,7 @@ export function ViewContactDialog({
         ) : contact ? (
           <div className="space-y-3 mt-2">
             {contact.telegram_handle && (
-              <div className="flex items-center justify-between rounded-lg bg-white/[0.03] border border-white/[0.06] p-3">
+              <div className="flex items-center justify-between rounded-lg bg-white/3 border border-white/6 p-3">
                 <div className="flex items-center gap-2">
                   <MessageCircle className="size-4 text-blue-400" />
                   <div>
@@ -90,7 +90,7 @@ export function ViewContactDialog({
               </div>
             )}
             {contact.email && (
-              <div className="flex items-center justify-between rounded-lg bg-white/[0.03] border border-white/[0.06] p-3">
+              <div className="flex items-center justify-between rounded-lg bg-white/3 border border-white/6 p-3">
                 <div className="flex items-center gap-2">
                   <Mail className="size-4 text-emerald-400" />
                   <div>

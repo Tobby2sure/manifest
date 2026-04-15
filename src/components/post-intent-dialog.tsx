@@ -170,7 +170,7 @@ export function PostIntentDialog({
   if (!twitterVerified) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md bg-card border-white/[0.08]">
+        <DialogContent className="sm:max-w-md bg-card border-white/8">
           <DialogHeader>
             <DialogTitle>Connect X to Post</DialogTitle>
             <DialogDescription>
@@ -203,7 +203,7 @@ export function PostIntentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-card border-white/[0.08] max-h-[85vh] sm:max-h-[90vh] overflow-y-auto fixed inset-x-0 bottom-0 top-auto left-0 translate-x-0 translate-y-0 max-w-full rounded-t-2xl rounded-b-none sm:inset-auto sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:max-w-lg w-full">
+      <DialogContent className="bg-card border-white/8 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto fixed inset-x-0 bottom-0 top-auto left-0 translate-x-0 translate-y-0 max-w-full rounded-t-2xl rounded-b-none sm:inset-auto sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:max-w-lg w-full">
         <DialogHeader>
           <DialogTitle>Post an Intent</DialogTitle>
           <DialogDescription>
@@ -304,7 +304,7 @@ export function PostIntentDialog({
             {currentTemplate.hints.map((hint) => (
               <span
                 key={hint}
-                className="inline-flex items-center rounded-full bg-white/[0.04] border border-white/[0.06] px-2.5 py-0.5 text-xs text-zinc-500"
+                className="inline-flex items-center rounded-full bg-white/4 border border-white/6 px-2.5 py-0.5 text-xs text-zinc-500"
               >
                 {hint}
               </span>

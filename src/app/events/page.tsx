@@ -44,7 +44,7 @@ export default function EventsPage() {
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="h-28 rounded-xl bg-surface-secondary animate-pulse border border-white/[0.06]"
+                className="h-28 rounded-xl bg-surface-secondary animate-pulse border border-white/6"
               />
             ))}
           </div>
@@ -62,7 +62,7 @@ export default function EventsPage() {
                 transition={{ duration: 0.4, delay: i * 0.08 }}
               >
                 <Link href={`/events/${event.slug}`}>
-                  <div className="group rounded-xl border border-white/[0.06] bg-gradient-to-br from-surface-secondary to-[#0c0c16] p-5 transition-all duration-300 hover:border-white/[0.12] hover:shadow-xl hover:shadow-violet-500/5">
+                  <div className="group rounded-xl border border-white/6 bg-gradient-to-br from-surface-secondary to-[#0c0c16] p-5 transition-all duration-300 hover:border-white/12 hover:shadow-xl hover:shadow-violet-500/5">
                     <div className="flex items-start justify-between">
                       <div>
                         <h2 className="text-lg font-semibold text-white/90 group-hover:text-violet-400 transition-colors">

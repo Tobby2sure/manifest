@@ -166,7 +166,7 @@ export default function OnboardingPage() {
           ))}
         </div>
 
-        <div className="rounded-xl border border-white/[0.07] bg-surface-secondary p-6 overflow-hidden">
+        <div className="rounded-xl border border-white/8 bg-surface-secondary p-6 overflow-hidden">
           <AnimatePresence mode="wait" custom={direction}>
             {/* Step 0: Account Type */}
             {step === 0 && (
@@ -191,7 +191,7 @@ export default function OnboardingPage() {
                     className={`flex flex-col items-center gap-2 rounded-xl border p-5 transition-all duration-200 cursor-pointer ${
                       accountType === "individual"
                         ? "border-violet-500/50 bg-violet-500/10"
-                        : "border-white/[0.07] hover:border-white/20"
+                        : "border-white/8 hover:border-white/20"
                     }`}
                   >
                     <User
@@ -208,7 +208,7 @@ export default function OnboardingPage() {
                     className={`flex flex-col items-center gap-2 rounded-xl border p-5 transition-all duration-200 cursor-pointer ${
                       accountType === "organization"
                         ? "border-violet-500/50 bg-violet-500/10"
-                        : "border-white/[0.07] hover:border-white/20"
+                        : "border-white/8 hover:border-white/20"
                     }`}
                   >
                     <Building2
@@ -258,7 +258,7 @@ export default function OnboardingPage() {
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       placeholder="Your name"
-                      className="mt-1.5 bg-white/5 border-white/[0.07] focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200"
+                      className="mt-1.5 bg-white/5 border-white/8 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200"
                     />
                   </div>
                   <div>
@@ -270,7 +270,7 @@ export default function OnboardingPage() {
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
                       placeholder="What are you building?"
-                      className="mt-1.5 bg-white/5 border-white/[0.07] focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200"
+                      className="mt-1.5 bg-white/5 border-white/8 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200"
                     />
                   </div>
                   <div>
@@ -282,7 +282,7 @@ export default function OnboardingPage() {
                       value={telegram}
                       onChange={(e) => setTelegram(e.target.value)}
                       placeholder="your_handle"
-                      className="mt-1.5 bg-white/5 border-white/[0.07] focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200"
+                      className="mt-1.5 bg-white/5 border-white/8 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200"
                     />
                   </div>
                   <div>
@@ -295,7 +295,7 @@ export default function OnboardingPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="mt-1.5 bg-white/5 border-white/[0.07] focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200"
+                      className="mt-1.5 bg-white/5 border-white/8 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200"
                     />
                   </div>
                 </div>
@@ -343,7 +343,7 @@ export default function OnboardingPage() {
                       value={orgName}
                       onChange={(e) => setOrgName(e.target.value)}
                       placeholder="Acme Protocol"
-                      className="mt-1.5 bg-white/5 border-white/[0.07] focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200"
+                      className="mt-1.5 bg-white/5 border-white/8 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200"
                     />
                   </div>
                   <div>
@@ -355,7 +355,7 @@ export default function OnboardingPage() {
                       value={orgWebsite}
                       onChange={(e) => setOrgWebsite(e.target.value)}
                       placeholder="https://acme.xyz"
-                      className="mt-1.5 bg-white/5 border-white/[0.07] focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200"
+                      className="mt-1.5 bg-white/5 border-white/8 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200"
                     />
                   </div>
                   <div>
@@ -367,7 +367,7 @@ export default function OnboardingPage() {
                       value={orgLogo}
                       onChange={(e) => setOrgLogo(e.target.value)}
                       placeholder="https://acme.xyz/logo.png"
-                      className="mt-1.5 bg-white/5 border-white/[0.07] focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200"
+                      className="mt-1.5 bg-white/5 border-white/8 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200"
                     />
                   </div>
                 </div>
@@ -421,7 +421,7 @@ export default function OnboardingPage() {
                   <Button
                     onClick={() => setShowAuthFlow(true)}
                     variant="outline"
-                    className="w-full border-white/[0.07] hover:border-violet-500/30 transition-all duration-200 cursor-pointer"
+                    className="w-full border-white/8 hover:border-violet-500/30 transition-all duration-200 cursor-pointer"
                   >
                     <Link2 className="size-4 mr-2" />
                     Connect X Account

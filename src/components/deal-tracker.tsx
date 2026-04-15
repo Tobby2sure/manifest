@@ -92,7 +92,7 @@ export function DealTracker({ intentId, connectionId, currentStatus, userId, par
   const Icon = currentStage.icon;
 
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-surface-secondary p-4">
+    <div className="rounded-xl border border-white/8 bg-surface-secondary p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-white/80">Deal Status</h3>
         <div className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${currentStage.color}`}>

@@ -116,7 +116,7 @@ export default function OrgPage() {
     <main className="min-h-[calc(100vh-4rem)] bg-background p-4">
       <div className="mx-auto max-w-3xl space-y-6">
         {/* Org Header */}
-        <div className="rounded-xl border border-white/[0.08] bg-card p-6">
+        <div className="rounded-xl border border-white/8 bg-card p-6">
           <div className="flex items-start gap-4">
             {org.logo_url ? (
               <img
@@ -172,7 +172,7 @@ export default function OrgPage() {
 
           {/* Admin: Generate invite */}
           {isAdmin && (
-            <div className="mt-4 pt-4 border-t border-white/[0.06]">
+            <div className="mt-4 pt-4 border-t border-white/6">
               {inviteCode ? (
                 <div className="flex items-center gap-2">
                   <code className="flex-1 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-zinc-300 truncate">
@@ -210,7 +210,7 @@ export default function OrgPage() {
 
           {/* Non-member: Join */}
           {isAuthenticated && !isMember && (
-            <div className="mt-4 pt-4 border-t border-white/[0.06]">
+            <div className="mt-4 pt-4 border-t border-white/6">
               <p className="text-sm text-zinc-400 mb-2">
                 Have an invite code? Use it to join this organization.
               </p>
@@ -227,7 +227,7 @@ export default function OrgPage() {
         </div>
 
         {/* Members */}
-        <div className="rounded-xl border border-white/[0.08] bg-card p-6">
+        <div className="rounded-xl border border-white/8 bg-card p-6">
           <h2 className="text-lg font-semibold text-white/90 mb-4">Members</h2>
           <div className="space-y-3">
             {org.members.map((member) => (
@@ -275,7 +275,7 @@ export default function OrgPage() {
             Active Intents
           </h2>
           {org.intents.length === 0 ? (
-            <div className="rounded-xl border border-white/[0.08] bg-card p-6 text-center">
+            <div className="rounded-xl border border-white/8 bg-card p-6 text-center">
               <p className="text-zinc-400">No active intents yet.</p>
             </div>
           ) : (

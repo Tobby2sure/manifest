@@ -85,11 +85,11 @@ export default function EventDetailPage({
     return (
       <main className="min-h-[calc(100vh-4rem)] bg-surface-page">
         <div className="mx-auto max-w-4xl px-4 py-10">
-          <div className="h-10 w-64 rounded bg-white/[0.06] animate-pulse mb-4" />
-          <div className="h-6 w-96 rounded bg-white/[0.04] animate-pulse mb-8" />
+          <div className="h-10 w-64 rounded bg-white/6 animate-pulse mb-4" />
+          <div className="h-6 w-96 rounded bg-white/4 animate-pulse mb-8" />
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-20 rounded-xl bg-surface-secondary animate-pulse border border-white/[0.06]" />
+              <div key={i} className="h-20 rounded-xl bg-surface-secondary animate-pulse border border-white/6" />
             ))}
           </div>
         </div>
@@ -201,7 +201,7 @@ export default function EventDetailPage({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: 0.1 + i * 0.05 }}
-                    className="rounded-xl border border-white/[0.06] bg-surface-secondary p-4"
+                    className="rounded-xl border border-white/6 bg-surface-secondary p-4"
                   >
                     <div className="flex items-center gap-3">
                       <Link href={`/profile/${intent.author.id}`}>
@@ -267,7 +267,7 @@ export default function EventDetailPage({
                   >
                     <Link
                       href={`/profile/${profile.id}`}
-                      className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-surface-secondary p-3 hover:border-white/[0.12] transition-all"
+                      className="flex items-center gap-3 rounded-xl border border-white/6 bg-surface-secondary p-3 hover:border-white/12 transition-all"
                     >
                       <Avatar className="h-9 w-9 ring-1 ring-white/10">
                         {profile.avatar_url ? (

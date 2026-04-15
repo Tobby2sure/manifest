@@ -60,7 +60,7 @@ export function Navbar() {
     : (user?.verifiedCredentials?.find((c: any) => c.oauthProvider === 'email')?.oauthUsername ?? dynamicUser?.email ?? 'User');
 
   return (
-    <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'border-b border-white/[0.08] bg-surface-page/90 backdrop-blur-xl' : 'bg-transparent'}`}>
+    <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'border-b border-white/8 bg-surface-page/90 backdrop-blur-xl' : 'bg-transparent'}`}>
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
@@ -117,8 +117,8 @@ export function Navbar() {
                 </Button>
                 {/* Click preview panel */}
                 {notifOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-white/[0.08] bg-card shadow-2xl shadow-black/50 z-50 overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+                  <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-white/8 bg-card shadow-2xl shadow-black/50 z-50 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-white/6">
                       <span className="text-sm font-semibold text-white">Notifications</span>
                       {unreadCount > 0 && (
                         <span className="text-xs text-violet-400">{unreadCount} unread</span>
@@ -131,7 +131,7 @@ export function Navbar() {
                     ) : (
                       <div>
                         {notifications.slice(0, 4).map(n => (
-                          <div key={n.id} className={`flex items-start gap-3 px-4 py-3 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors ${!n.read ? 'bg-violet-500/[0.04]' : ''}`}>
+                          <div key={n.id} className={`flex items-start gap-3 px-4 py-3 border-b border-white/4 hover:bg-white/3 transition-colors ${!n.read ? 'bg-violet-500/[0.04]' : ''}`}>
                             <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${!n.read ? 'bg-violet-500/20' : 'bg-white/5'}`}>
                               {n.type === 'connection_request' && <MessageSquare className="size-3.5 text-blue-400" />}
                               {n.type === 'request_accepted' && <CheckCircle className="size-3.5 text-emerald-400" />}
@@ -167,19 +167,19 @@ export function Navbar() {
                     </Avatar>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-card border-white/[0.08]">
+                <DropdownMenuContent align="end" className="w-48 bg-card border-white/8">
                   <div className="px-3 py-2">
                     <p className="text-sm font-medium text-white truncate">{displayName}</p>
                     {twitterVerified && <p className="text-xs text-emerald-400 mt-0.5">✓ X Verified</p>}
                   </div>
-                  <DropdownMenuSeparator className="bg-white/[0.08]" />
+                  <DropdownMenuSeparator className="bg-white/8" />
                   <DropdownMenuItem onClick={() => window.location.href = '/profile/me'} className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
                     <User className="h-4 w-4" />My Profile
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => window.location.href = '/settings'} className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
                     <Settings className="h-4 w-4" />Settings
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-white/[0.08]" />
+                  <DropdownMenuSeparator className="bg-white/8" />
                   <DropdownMenuItem onClick={() => handleLogOut()} className="flex items-center gap-2 cursor-pointer text-red-400 hover:text-red-300">
                     <LogOut className="h-4 w-4" />Sign Out
                   </DropdownMenuItem>

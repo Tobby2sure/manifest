@@ -134,7 +134,7 @@ export default function HomePage() {
       </section>
 
       {/* Animated stat strip */}
-      <div className="border-y border-white/[0.07] bg-white/[0.02]">
+      <div className="border-y border-white/8 bg-white/3">
         <div className="mx-auto max-w-5xl px-4 py-6">
           <div className="flex items-center justify-center gap-8 sm:gap-16 text-center">
             {STATS.map((stat, i) => (
@@ -172,7 +172,7 @@ export default function HomePage() {
             >
               <div className="relative mb-5">
                 <span className="absolute -top-2 -right-2 text-xs font-bold text-violet-400/60">{step.num}</span>
-                <div className="size-16 rounded-2xl bg-surface-secondary border border-white/[0.07] flex items-center justify-center group-hover:border-violet-500/30 group-hover:bg-violet-500/5 transition-all duration-200">
+                <div className="size-16 rounded-2xl bg-surface-secondary border border-white/8 flex items-center justify-center group-hover:border-violet-500/30 group-hover:bg-violet-500/5 transition-all duration-200">
                   <step.icon className="size-7 text-violet-400" />
                 </div>
               </div>
@@ -184,7 +184,7 @@ export default function HomePage() {
       </section>
 
       {/* Intent type showcase */}
-      <section className="border-t border-white/[0.07] bg-white/[0.01]">
+      <section className="border-t border-white/8 bg-white/3">
         <div className="mx-auto max-w-5xl px-4 py-20 sm:py-28">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -211,7 +211,7 @@ export default function HomePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: i * 0.04, ease }}
-                  className="shrink-0 snap-start rounded-xl border border-white/[0.07] bg-surface-secondary p-4 w-56 hover:border-white/[0.12] hover:scale-[1.02] transition-all duration-200 cursor-pointer"
+                  className="shrink-0 snap-start rounded-xl border border-white/8 bg-surface-secondary p-4 w-56 hover:border-white/12 hover:scale-[1.02] transition-all duration-200 cursor-pointer"
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`size-2 rounded-full ${config.color.split(' ')[0].replace('/20', '')}`} />
@@ -228,7 +228,7 @@ export default function HomePage() {
       </section>
 
       {/* Trust strip */}
-      <div className="border-y border-white/[0.07] bg-white/[0.02]">
+      <div className="border-y border-white/8 bg-white/3">
         <div className="mx-auto max-w-5xl px-4 py-5">
           <p className="text-center text-xs sm:text-sm text-text-muted tracking-wide">
             Verified via <span className="text-text-body">X</span> · Built on <span className="text-text-body">Base</span> · <span className="text-text-body">Open source</span>
@@ -237,7 +237,7 @@ export default function HomePage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.07]">
+      <footer className="border-t border-white/8">
         <div className="mx-auto max-w-5xl px-4 py-10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="size-6 rounded-lg bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center text-[10px] font-bold text-white">
