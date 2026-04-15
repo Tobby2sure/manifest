@@ -1,6 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { mintOnboardingNFT } from "@/lib/mint";
 import type { Profile, AccountType } from "@/lib/types/database";
 
 export async function getProfile(userId: string): Promise<Profile | null> {
@@ -28,6 +29,20 @@ export async function upsertProfile(input: {
   twitter_verified?: boolean;
   wallet_address?: string;
 }): Promise<Profile> {
+  // Input validation
+  if (!input.display_name || input.display_name.trim().length < 1 || input.display_name.length > 100) {
+    throw new Error("Display name must be 1-100 characters");
+  }
+  if (input.bio && input.bio.length > 500) {
+    throw new Error("Bio must be 500 characters or fewer");
+  }
+  if (input.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email)) {
+    throw new Error("Invalid email format");
+  }
+  if (input.telegram_handle && !/^[a-zA-Z0-9_]{1,32}$/.test(input.telegram_handle)) {
+    throw new Error("Invalid Telegram handle");
+  }
+
   const supabase = createAdminClient();
 
   const { data, error } = await supabase
@@ -54,7 +69,23 @@ export async function upsertProfile(input: {
     throw new Error(error.message);
   }
 
-  return data as Profile;
+  const profile = data as Profile;
+
+  // Mint onboarding NFT in the background if wallet is present
+  if (profile.wallet_address) {
+    mintOnboardingNFT(profile.wallet_address)
+      .then(async (txHash) => {
+        if (txHash) {
+          await supabase
+            .from("profiles")
+            .update({ onboarding_nft_tx: txHash })
+            .eq("id", profile.id);
+        }
+      })
+      .catch((err) => console.error("[onboarding-nft] mint failed:", err));
+  }
+
+  return profile;
 }
 
 export async function updateProfile(

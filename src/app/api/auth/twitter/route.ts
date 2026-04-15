@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-const CLIENT_ID = process.env.TWITTER_CLIENT_ID!;
-const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/twitter/callback`;
+function getConfig() {
+  return {
+    clientId: process.env.TWITTER_CLIENT_ID!,
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/twitter/callback`,
+  };
+}
 
 // Generate PKCE code verifier and challenge
 function generateCodeVerifier(): string {
@@ -34,10 +38,11 @@ export async function GET(request: NextRequest) {
   const codeChallenge = await generateCodeChallenge(codeVerifier);
   const state = `${userId}:${crypto.randomUUID()}`;
 
+  const { clientId, redirectUri } = getConfig();
   const params = new URLSearchParams({
     response_type: "code",
-    client_id: CLIENT_ID,
-    redirect_uri: REDIRECT_URI,
+    client_id: clientId,
+    redirect_uri: redirectUri,
     scope: "tweet.read users.read",
     state,
     code_challenge: codeChallenge,

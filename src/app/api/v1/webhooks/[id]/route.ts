@@ -47,7 +47,8 @@ export async function DELETE(
     .eq("user_id", userId);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[webhooks] delete error:", error.message);
+    return NextResponse.json({ error: "Failed to delete webhook" }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

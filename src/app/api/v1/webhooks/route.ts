@@ -46,7 +46,8 @@ export async function GET(req: NextRequest) {
     .order("created_at", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[webhooks] list error:", error.message);
+    return NextResponse.json({ error: "Failed to list webhooks" }, { status: 500 });
   }
 
   return NextResponse.json({ data: data ?? [] });
@@ -75,7 +76,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    new URL(body.url);
+    const parsed = new URL(body.url);
+    if (parsed.protocol !== "https:") {
+      return NextResponse.json({ error: "Webhook URL must use HTTPS" }, { status: 400 });
+    }
   } catch {
     return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
   }
@@ -98,7 +102,8 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[webhooks] create error:", error.message);
+    return NextResponse.json({ error: "Failed to create webhook" }, { status: 500 });
   }
 
   // Return secret only on creation
