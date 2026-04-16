@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { upsertProfile } from "@/app/actions/profiles";
 import type { AccountType } from "@/lib/types/database";
 import { useUser } from "@/lib/hooks/use-user";
+import { useQueryClient } from "@tanstack/react-query";
 import { usePostHog } from "posthog-js/react";
 import { CheckCircle, ArrowRight, ArrowLeft, User, Building2, Link2 } from "lucide-react";
 
@@ -22,6 +23,7 @@ export default function OnboardingPage() {
   const { isLoading, isAuthenticated: authenticated, user, profile } = useUser();
   const { setShowAuthFlow, primaryWallet } = useDynamicContext();
   const posthog = usePostHog();
+  const queryClient = useQueryClient();
 
   // Redirect existing users who already completed onboarding
   useEffect(() => {
@@ -109,6 +111,8 @@ export default function OnboardingPage() {
         twitter_verified: hasTwitter,
         wallet_address: walletAddress,
       });
+      // Invalidate profile query so ProfileGuard sees the new profile
+      await queryClient.invalidateQueries({ queryKey: ['user-profile', user.userId] });
       router.push("/onboarding/verify-x");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save profile");
@@ -467,8 +471,12 @@ export default function OnboardingPage() {
                         twitter_verified: false,
                         wallet_address: primaryWallet?.address ?? undefined,
                       });
+                      // Invalidate profile query so ProfileGuard sees the new profile
+                      await queryClient.invalidateQueries({ queryKey: ['user-profile', user.userId] });
                       router.push("/feed");
-                    } catch { router.push("/feed"); }
+                    } catch (e) {
+                      setError(e instanceof Error ? e.message : "Failed to save profile");
+                    }
                     finally { setSubmitting(false); }
                   }}
                   className="w-full mt-2 text-sm text-zinc-500 hover:text-zinc-400 transition-colors cursor-pointer"
