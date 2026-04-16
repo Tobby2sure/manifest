@@ -2,11 +2,12 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { getSessionUserId } from "@/lib/auth";
 
 export async function toggleInterest(
-  intentId: string,
-  userId: string
+  intentId: string
 ): Promise<boolean> {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
 
   const { data: existing } = await supabase
@@ -43,7 +44,8 @@ export async function getIntentInterests(intentId: string): Promise<number> {
   return count ?? 0;
 }
 
-export async function getUserInterestedIds(userId: string): Promise<string[]> {
+export async function getUserInterestedIds(): Promise<string[]> {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
 
   const { data, error } = await supabase

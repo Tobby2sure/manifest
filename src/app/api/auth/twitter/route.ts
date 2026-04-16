@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createHmac } from "crypto";
 
 function getConfig() {
   return {
@@ -29,14 +29,33 @@ async function generateCodeChallenge(verifier: string): Promise<string> {
 }
 
 export async function GET(request: NextRequest) {
-  const userId = request.nextUrl.searchParams.get("userId");
+  // Derive userId from the dynamic_auth cookie (same JWT decode as src/lib/auth.ts)
+  let userId: string | null = null;
+  const authCookie = request.cookies.get("dynamic_auth")?.value;
+  if (authCookie) {
+    try {
+      const parts = authCookie.split(".");
+      if (parts.length === 3) {
+        const payload = JSON.parse(
+          Buffer.from(parts[1], "base64url").toString()
+        );
+        userId = payload.sub ?? payload.userId ?? null;
+      }
+    } catch {
+      // Invalid JWT
+    }
+  }
+
   if (!userId) {
-    return NextResponse.redirect(new URL("/onboarding/verify-x?error=no_user", request.url));
+    return NextResponse.redirect(new URL("/onboarding/verify-x?error=not_authenticated", request.url));
   }
 
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = await generateCodeChallenge(codeVerifier);
-  const state = `${userId}:${crypto.randomUUID()}`;
+  const nonce = crypto.randomUUID();
+  const secret = process.env.CRON_SECRET || "dev-secret";
+  const signature = createHmac("sha256", secret).update(`${userId}:${nonce}`).digest("hex");
+  const state = `${userId}:${nonce}:${signature}`;
 
   const { clientId, redirectUri } = getConfig();
   const params = new URLSearchParams({

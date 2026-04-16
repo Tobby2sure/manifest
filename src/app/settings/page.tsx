@@ -56,7 +56,7 @@ export default function SettingsPage() {
     if (!profile) return;
     setSaving(true);
     try {
-      await updateProfile(profile.id, {
+      await updateProfile({
         display_name: displayName || undefined,
         bio: bio || undefined,
         telegram_handle: telegram || undefined,

@@ -10,20 +10,18 @@ import { useUser } from "@/lib/hooks/use-user";
  * never completed profile creation (e.g., failed embedded wallet setup).
  */
 export function ProfileGuard() {
-  const { isLoading, isAuthenticated, profile } = useUser();
+  const { isLoading, isAuthenticated, profile, isProfileLoading, profileError } = useUser();
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || isProfileLoading) return;
     if (!isAuthenticated) return;
     if (profile) return;
-
-    // Don't redirect if already on onboarding
+    if (profileError) return; // Don't redirect on network errors
     if (pathname.startsWith("/onboarding")) return;
-
     router.replace("/onboarding");
-  }, [isLoading, isAuthenticated, profile, pathname, router]);
+  }, [isLoading, isProfileLoading, isAuthenticated, profile, profileError, pathname, router]);
 
   return null;
 }

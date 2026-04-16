@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle, Users, FileText } from "lucide-react";
 
@@ -25,9 +26,11 @@ export function OrgCard({
     >
       <div className="flex items-center gap-3">
         {logo_url ? (
-          <img
+          <Image
             src={logo_url}
             alt={name}
+            width={40}
+            height={40}
             className="size-10 rounded-lg object-cover"
           />
         ) : (

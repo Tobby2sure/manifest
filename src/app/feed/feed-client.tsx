@@ -27,7 +27,7 @@ import type {
 import { getIntents } from "@/app/actions/intents";
 import { getUserSavedIds } from "@/app/actions/saved";
 import { getUserInterestedIds } from "@/app/actions/interests";
-import { getViewCounts, recordView } from "@/app/actions/views";
+import { getViewCounts, recordViews } from "@/app/actions/views";
 import { getBlockedUserIds } from "@/app/actions/moderation";
 import {
   Plus,
@@ -126,9 +126,9 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
   useEffect(() => {
     if (!profile?.id) return;
     Promise.all([
-      getUserSavedIds(profile.id),
-      getUserInterestedIds(profile.id),
-      getBlockedUserIds(profile.id),
+      getUserSavedIds(),
+      getUserInterestedIds(),
+      getBlockedUserIds(),
     ]).then(([saved, interested, blocked]) => {
       setSavedIds(new Set(saved));
       setInterestedIds(new Set(interested));
@@ -149,8 +149,8 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
     const otherIntentIds = allIntents
       .filter((i) => i.author_id !== profile.id)
       .map((i) => i.id);
-    for (const id of otherIntentIds) {
-      recordView(id, profile.id).catch(() => {});
+    if (otherIntentIds.length > 0) {
+      recordViews(otherIntentIds).catch(() => {});
     }
   }, [profile?.id, allIntents]);
 
@@ -633,7 +633,6 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
               if (!open) setConnectIntent(null);
             }}
             intent={connectIntent}
-            senderId={profile.id}
           />
           <ViewContactDialog
             open={!!viewContactIntent}
@@ -641,7 +640,6 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
               if (!open) setViewContactIntent(null);
             }}
             connectionId={null}
-            userId={profile.id}
           />
         </>
       )}

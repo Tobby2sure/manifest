@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -88,9 +89,11 @@ export default function InvitePage() {
       <div className="rounded-xl border border-white/8 bg-card p-6 max-w-md w-full">
         <div className="flex items-center gap-4 mb-6">
           {org.logo_url ? (
-            <img
+            <Image
               src={org.logo_url}
               alt={org.name}
+              width={56}
+              height={56}
               className="size-14 rounded-xl object-cover"
             />
           ) : (

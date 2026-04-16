@@ -62,12 +62,16 @@ function getActivityIndicator(lastActiveAt: string | null) {
   return null;
 }
 
-// Extract base color name from config color string for left border
-function getBorderColor(colorStr: string): string {
-  const match = colorStr.match(/text-(\w+)-400/);
-  if (!match) return "border-violet-500/50";
-  return `border-${match[1]}-500/50`;
-}
+const BORDER_COLORS: Record<string, string> = {
+  partnership: "border-blue-500/50",
+  investment: "border-green-500/50",
+  integration: "border-purple-500/50",
+  hiring: "border-yellow-500/50",
+  "co-marketing": "border-pink-500/50",
+  grant: "border-emerald-500/50",
+  "ecosystem-support": "border-cyan-500/50",
+  "beta-testers": "border-orange-500/50",
+};
 
 interface IntentCardProps {
   intent: IntentWithAuthor;
@@ -137,7 +141,7 @@ export function IntentCard({
 
   const activity = getActivityIndicator(author.last_active_at ?? null);
   const lifecycle = LIFECYCLE_STYLES[intent.lifecycle_status];
-  const leftBorderColor = getBorderColor(typeConfig.color);
+  const leftBorderColor = BORDER_COLORS[intent.type] ?? "border-violet-500/50";
 
   const handleShare = () => {
     const truncated =
@@ -161,7 +165,7 @@ export function IntentCard({
     setSaveCount((c) => (wasSaved ? c - 1 : c + 1));
     startTransition(async () => {
       try {
-        await toggleSave(intent.id, currentUserId);
+        await toggleSave(intent.id);
       } catch {
         setSaved(wasSaved);
         setSaveCount((c) => (wasSaved ? c + 1 : c - 1));
@@ -176,7 +180,7 @@ export function IntentCard({
     setInterestCount((c) => (wasInterested ? c - 1 : c + 1));
     startTransition(async () => {
       try {
-        await toggleInterest(intent.id, currentUserId);
+        await toggleInterest(intent.id);
       } catch {
         setInterested(wasInterested);
         setInterestCount((c) => (wasInterested ? c + 1 : c - 1));
@@ -300,12 +304,12 @@ export function IntentCard({
       <div className="flex flex-wrap gap-1.5 mb-3">
         {intent.ecosystem && (
           <span className="inline-flex items-center rounded-md bg-white/3 border border-white/6 px-2.5 py-0.5 text-[11px] text-text-body font-medium tracking-wide">
-            {ECOSYSTEM_CONFIG[intent.ecosystem].label}
+            {ECOSYSTEM_CONFIG[intent.ecosystem]?.label ?? intent.ecosystem}
           </span>
         )}
         {intent.sector && (
           <span className="inline-flex items-center rounded-md bg-white/3 border border-white/6 px-2.5 py-0.5 text-[11px] text-text-body font-medium tracking-wide">
-            {SECTOR_CONFIG[intent.sector].label}
+            {SECTOR_CONFIG[intent.sector]?.label ?? intent.sector}
           </span>
         )}
       </div>
@@ -355,7 +359,7 @@ export function IntentCard({
               onClick={() => {
                 startTransition(async () => {
                   try {
-                    await retryIntentMint(intent.id, currentUserId);
+                    await retryIntentMint(intent.id);
                     toast.success("Mint retry queued");
                   } catch (e) {
                     toast.error(e instanceof Error ? e.message : "Retry failed");
@@ -434,7 +438,7 @@ export function IntentCard({
                         setShowMenu(false);
                         startTransition(async () => {
                           try {
-                            await blockUser(currentUserId, intent.author_id);
+                            await blockUser(intent.author_id);
                             toast.success("User blocked");
                           } catch {
                             toast.error("Failed to block user");
@@ -497,7 +501,6 @@ export function IntentCard({
         <ReportDialog
           open={reportOpen}
           onOpenChange={setReportOpen}
-          reporterId={currentUserId}
           reportedUserId={intent.author_id}
           reportedIntentId={intent.id}
         />

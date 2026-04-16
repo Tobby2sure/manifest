@@ -75,7 +75,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
   useEffect(() => {
     if (activeTab === "saved" && isOwn && savedIntents.length === 0) {
       setLoadingSaved(true);
-      getSavedIntents(profile.id).then((data) => {
+      getSavedIntents().then((data) => {
         setSavedIntents(data);
         setLoadingSaved(false);
       });
@@ -86,7 +86,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
   useEffect(() => {
     if (activeTab === "connections" && isOwn && connections.length === 0) {
       setLoadingConnections(true);
-      getAcceptedConnections(profile.id).then((data) => {
+      getAcceptedConnections().then((data) => {
         setConnections(data);
         setLoadingConnections(false);
       });
@@ -350,7 +350,6 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
                           intentId={conn.intent_id}
                           connectionId={conn.id}
                           currentStatus={conn.lifecycle_status}
-                          userId={profile.id}
                         />
                       </div>
                     </motion.div>

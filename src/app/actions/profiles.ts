@@ -3,6 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mintOnboardingNFT } from "@/lib/mint";
 import { trackServerEvent } from "@/lib/posthog";
+import { getSessionUserId } from "@/lib/auth";
 import type { Profile, AccountType } from "@/lib/types/database";
 
 export async function getProfile(userId: string): Promise<Profile | null> {
@@ -30,6 +31,10 @@ export async function upsertProfile(input: {
   twitter_verified?: boolean;
   wallet_address?: string;
 }): Promise<Profile> {
+  // Session authorization
+  const sessionId = await getSessionUserId();
+  if (input.id !== sessionId) throw new Error("Not authorized");
+
   // Input validation
   if (!input.display_name || input.display_name.trim().length < 1 || input.display_name.length > 100) {
     throw new Error("Display name must be 1-100 characters");
@@ -127,7 +132,6 @@ export async function upsertProfile(input: {
 }
 
 export async function updateProfile(
-  userId: string,
   updates: {
     display_name?: string;
     bio?: string;
@@ -138,6 +142,7 @@ export async function updateProfile(
     twitter_verified?: boolean;
   }
 ): Promise<Profile> {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
 
   const { data, error } = await supabase
@@ -167,7 +172,8 @@ export async function isTwitterVerified(userId: string): Promise<boolean> {
   return (data as { twitter_verified: boolean }).twitter_verified;
 }
 
-export async function calculateResponseRate(userId: string): Promise<number> {
+export async function calculateResponseRate(): Promise<number> {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
 
   const { count: total } = await supabase

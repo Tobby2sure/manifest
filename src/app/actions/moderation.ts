@@ -2,11 +2,12 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { getSessionUserId } from "@/lib/auth";
 
 export async function blockUser(
-  blockerId: string,
   blockedUserId: string
 ): Promise<void> {
+  const blockerId = await getSessionUserId();
   if (blockerId === blockedUserId) {
     throw new Error("Cannot block yourself");
   }
@@ -25,9 +26,9 @@ export async function blockUser(
 }
 
 export async function unblockUser(
-  blockerId: string,
   blockedUserId: string
 ): Promise<void> {
+  const blockerId = await getSessionUserId();
   const supabase = createAdminClient();
 
   const { error } = await supabase
@@ -40,7 +41,8 @@ export async function unblockUser(
   revalidatePath("/feed");
 }
 
-export async function getBlockedUserIds(userId: string): Promise<string[]> {
+export async function getBlockedUserIds(): Promise<string[]> {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
 
   const { data } = await supabase
@@ -72,17 +74,17 @@ export async function isBlocked(
 }
 
 export async function reportUser(input: {
-  reporterId: string;
   reportedUserId?: string;
   reportedIntentId?: string;
   reportedConnectionId?: string;
   reason: string;
   details?: string;
 }): Promise<void> {
+  const reporterId = await getSessionUserId();
   const supabase = createAdminClient();
 
   const { error } = await supabase.from("reports").insert({
-    reporter_id: input.reporterId,
+    reporter_id: reporterId,
     reported_user_id: input.reportedUserId ?? null,
     reported_intent_id: input.reportedIntentId ?? null,
     reported_connection_id: input.reportedConnectionId ?? null,

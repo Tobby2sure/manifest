@@ -219,7 +219,6 @@ export default function HomePage() {
           <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x">
             {INTENT_TYPES.map((type, i) => {
               const config = INTENT_TYPE_CONFIG[type];
-              const dotColor = config.color.replace(/bg-(\w+)-500\/20.*/, '$1');
               return (
                 <motion.div
                   key={type}
@@ -229,9 +228,9 @@ export default function HomePage() {
                   transition={{ duration: 0.4, delay: i * 0.04, ease }}
                   className="shrink-0 snap-start rounded-xl border border-white/8 bg-surface-secondary p-4 w-56 hover:border-white/12 hover:scale-[1.02] transition-all duration-200 cursor-pointer"
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`size-2 rounded-full ${config.color.split(' ')[0].replace('/20', '')}`} />
-                    <span className={`text-xs font-medium ${config.color.split(' ')[1]}`}>
+                  <div className={`flex items-center gap-2 mb-2 ${config.color.split(' ')[1] ?? ''}`}>
+                    <span className="size-2 rounded-full bg-current" />
+                    <span className="text-xs font-medium">
                       {config.label}
                     </span>
                   </div>

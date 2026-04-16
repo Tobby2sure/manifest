@@ -3,21 +3,22 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { trackServerEvent } from "@/lib/posthog";
+import { getSessionUserId } from "@/lib/auth";
 import type { Endorsement, EndorsementWithAuthor } from "@/lib/types/database";
 
 export async function createEndorsement(input: {
   intentId: string;
-  endorserId: string;
   endorseeId: string;
   content: string;
 }): Promise<Endorsement> {
+  const endorserId = await getSessionUserId();
   const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("endorsements")
     .insert({
       intent_id: input.intentId,
-      endorser_id: input.endorserId,
+      endorser_id: endorserId,
       endorsee_id: input.endorseeId,
       content: input.content,
     })
@@ -26,7 +27,7 @@ export async function createEndorsement(input: {
 
   if (error) throw new Error(error.message);
 
-  trackServerEvent(input.endorserId, "endorsement_given", {
+  trackServerEvent(endorserId, "endorsement_given", {
     endorseeId: input.endorseeId,
     intentId: input.intentId,
   });

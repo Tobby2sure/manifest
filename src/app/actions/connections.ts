@@ -6,6 +6,7 @@ import { notifyAsync } from "@/app/actions/notifications";
 import { checkConnectionRateLimit } from "@/lib/rate-limit";
 import { isBlocked } from "@/app/actions/moderation";
 import { trackServerEvent } from "@/lib/posthog";
+import { getSessionUserId } from "@/lib/auth";
 import type {
   ConnectionRequest,
   ConnectionWithIntent,
@@ -14,10 +15,11 @@ import type {
 
 export async function sendConnectionRequest(
   intentId: string,
-  senderId: string,
   receiverId: string,
   pitchMessage: string
 ): Promise<ConnectionRequest> {
+  const senderId = await getSessionUserId();
+
   // Rate limit: 10 connection requests per sender per day
   await checkConnectionRateLimit(senderId);
 
@@ -59,9 +61,9 @@ export async function sendConnectionRequest(
 }
 
 export async function getContactDetails(
-  connectionId: string,
-  userId: string
+  connectionId: string
 ): Promise<{ telegram_handle: string | null; email: string | null } | null> {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
 
   // First verify the request is accepted and the user is involved
@@ -93,9 +95,9 @@ export async function getContactDetails(
 
 export async function updateConnectionLifecycle(
   connectionId: string,
-  newStatus: IntentLifecycleStatus,
-  userId: string
+  newStatus: IntentLifecycleStatus
 ): Promise<void> {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
 
   // Verify user is a party to this accepted connection
@@ -128,9 +130,8 @@ export async function updateConnectionLifecycle(
   revalidatePath(`/profile/${userId}`);
 }
 
-export async function getAcceptedConnections(
-  userId: string
-): Promise<ConnectionWithIntent[]> {
+export async function getAcceptedConnections(): Promise<ConnectionWithIntent[]> {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
 
   const { data, error } = await supabase

@@ -30,6 +30,8 @@ export function useUser() {
     user: user ?? null,
     profile: query.data ?? null,
     isLoading: !sdkHasLoaded,
+    isProfileLoading: query.isLoading,
+    profileError: query.error ?? null,
     isAuthenticated: !!user,
     twitterHandle: twitterAccount?.oauthUsername ?? null,
     twitterVerified: !!twitterAccount || !!(query.data as any)?.twitter_verified,
