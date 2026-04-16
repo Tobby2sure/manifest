@@ -30,7 +30,7 @@ export default function VerifyXPage() {
     if (!user?.userId) return;
     setIsLoading(true);
     // Direct Twitter OAuth — no Dynamic dependency
-    window.location.href = `/api/auth/twitter?userId=${user.userId}`;
+    window.location.href = `/api/auth/twitter`;
   };
 
   if (!isAuthenticated) {
