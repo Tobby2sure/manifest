@@ -1,7 +1,7 @@
 "use client";
 
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,13 @@ export default function OnboardingPage() {
   const { isLoading, isAuthenticated: authenticated, user, profile } = useUser();
   const { setShowAuthFlow, primaryWallet } = useDynamicContext();
   const posthog = usePostHog();
+
+  // Redirect existing users who already completed onboarding
+  useEffect(() => {
+    if (!isLoading && authenticated && profile?.display_name) {
+      router.replace("/feed");
+    }
+  }, [isLoading, authenticated, profile, router]);
 
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
