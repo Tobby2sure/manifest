@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { deliverIntentWebhooks } from "@/lib/webhooks";
 import { mintProofOfIntent } from "@/lib/nft";
+import { trackServerEvent } from "@/lib/posthog";
 import type {
   Intent,
   IntentWithAuthor,
@@ -107,6 +108,17 @@ export async function createIntent(input: {
     .select("*", { count: "exact", head: true });
   const isFounding = (intentCount ?? 0) < 100;
 
+  // Determine initial mint status
+  const { data: authorProfile } = await supabase
+    .from("profiles")
+    .select("wallet_address")
+    .eq("id", input.authorId)
+    .single();
+
+  const hasWallet = !!authorProfile?.wallet_address;
+  const mintConfigured = !!(process.env.PROOF_OF_INTENT_CONTRACT && process.env.DEPLOYER_PRIVATE_KEY);
+  const initialMintStatus = (!hasWallet || !mintConfigured) ? "skipped" : "pending";
+
   const { data, error } = await supabase
     .from("intents")
     .insert({
@@ -120,6 +132,8 @@ export async function createIntent(input: {
       expires_at: expiresAt.toISOString(),
       lifecycle_status: "active",
       is_founding: isFounding,
+      mint_status: initialMintStatus,
+      mint_attempts: 0,
     })
     .select()
     .single();
@@ -128,32 +142,51 @@ export async function createIntent(input: {
     throw new Error(error.message);
   }
 
-  // Mint Proof of Intent NFT (fire-and-forget, non-blocking)
-  const mintIntent = async () => {
-    try {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("wallet_address")
-        .eq("id", input.authorId)
-        .single();
+  // Mint Proof of Intent NFT (non-blocking, with status tracking)
+  if (initialMintStatus === "pending" && authorProfile?.wallet_address) {
+    const intentId = data.id;
+    const walletAddress = authorProfile.wallet_address;
+    (async () => {
+      try {
+        await supabase
+          .from("intents")
+          .update({ mint_attempts: 1 })
+          .eq("id", intentId);
 
-      if (profile?.wallet_address) {
-        const result = await mintProofOfIntent(profile.wallet_address, data.id);
+        const result = await mintProofOfIntent(walletAddress, intentId);
         if (result) {
           await supabase
             .from("intents")
             .update({
               nft_token_id: result.tokenId,
               nft_tx_hash: result.txHash,
+              mint_status: "success",
             })
-            .eq("id", data.id);
+            .eq("id", intentId);
+        } else {
+          await supabase
+            .from("intents")
+            .update({ mint_status: "skipped" })
+            .eq("id", intentId);
         }
+      } catch (e) {
+        console.error("[NFT] Mint failed for intent:", intentId, e);
+        await supabase
+          .from("intents")
+          .update({ mint_status: "failed" })
+          .eq("id", intentId)
+          .then(() => {});
       }
-    } catch (e) {
-      console.error("[NFT] Mint failed for intent:", data.id, e);
-    }
-  };
-  mintIntent();
+    })();
+  }
+
+  // Track event
+  trackServerEvent(input.authorId, "intent_posted", {
+    type: input.type,
+    ecosystem: input.ecosystem,
+    sector: input.sector,
+    is_founding: isFounding,
+  });
 
   // Fire webhooks (fire-and-forget)
   deliverIntentWebhooks(data as Intent);
@@ -188,6 +221,39 @@ export async function getFoundingBadgeRemaining(): Promise<number> {
     .select("*", { count: "exact", head: true });
 
   return Math.max(0, 100 - (count ?? 0));
+}
+
+export async function retryIntentMint(
+  intentId: string,
+  userId: string
+): Promise<void> {
+  const supabase = createAdminClient();
+
+  const { data: intent } = await supabase
+    .from("intents")
+    .select("author_id, mint_status, mint_attempts")
+    .eq("id", intentId)
+    .single();
+
+  if (!intent || intent.author_id !== userId) {
+    throw new Error("Not authorized");
+  }
+
+  if (intent.mint_status === "success") {
+    throw new Error("NFT already minted");
+  }
+
+  if ((intent.mint_attempts ?? 0) >= 5) {
+    throw new Error("Maximum retry attempts reached");
+  }
+
+  await supabase
+    .from("intents")
+    .update({ mint_status: "pending" })
+    .eq("id", intentId);
+
+  revalidatePath("/feed");
+  revalidatePath(`/profile/${userId}`);
 }
 
 export async function updateIntentLifecycle(

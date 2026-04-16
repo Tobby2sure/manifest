@@ -85,7 +85,11 @@ export default function VerifyXPage() {
           {error && (
             <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-3 mb-6 text-sm text-red-400">
               <AlertCircle className="size-4 shrink-0" />
-              {error === "access_denied" ? "Authorization was cancelled." : `Something went wrong (${error}). ${detail ? `Detail: ${detail}` : "Try again."}`}
+              {error === "access_denied"
+                ? "Authorization was cancelled."
+                : error === "twitter_already_linked"
+                ? "This X account is already linked to another Manifest profile."
+                : `Something went wrong (${error}). ${detail ? `Detail: ${detail}` : "Try again."}`}
             </div>
           )}
 

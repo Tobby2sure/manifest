@@ -3,6 +3,7 @@
 import { DynamicContextProvider, DynamicWidget } from "@dynamic-labs/sdk-react-core";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { PostHogProviderWrapper } from "@/components/posthog-provider";
 import { useState } from "react";
 
 const DYNAMIC_ENV_ID = process.env.NEXT_PUBLIC_DYNAMIC_ENV_ID!;
@@ -44,11 +45,13 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       }}
     >
       <QueryClientProvider client={queryClient}>
-        {/* DynamicWidget must be mounted for setShowAuthFlow modal to render — hidden */}
-        <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0, pointerEvents: 'none' }}>
-          <DynamicWidget />
-        </div>
-        {children}
+        <PostHogProviderWrapper>
+          {/* DynamicWidget must be mounted for setShowAuthFlow modal to render — hidden */}
+          <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0, pointerEvents: 'none' }}>
+            <DynamicWidget />
+          </div>
+          {children}
+        </PostHogProviderWrapper>
       </QueryClientProvider>
     </DynamicContextProvider>
   );

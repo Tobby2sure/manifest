@@ -6,6 +6,15 @@ import type { Intent } from "@/lib/types/database";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://manifest.build";
 
+/** Returns ISO week string like "2026-W16" for deduplication. */
+function getIsoWeek(date: Date): string {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+}
+
 /**
  * Compile and send weekly digest emails to all users with email addresses.
  * Includes the 7 most interesting open intents from the past week.
@@ -78,9 +87,21 @@ export async function sendWeeklyDigest(): Promise<number> {
 
   if (!profiles || profiles.length === 0) return 0;
 
+  const digestWeek = getIsoWeek(new Date());
   let sent = 0;
+
   for (const profile of profiles as Array<{ id: string; email: string; display_name: string | null }>) {
     if (!profile.email) continue;
+
+    // Idempotency: skip if already sent this week
+    const { data: alreadySent } = await supabase
+      .from("digest_sends")
+      .select("id")
+      .eq("user_id", profile.id)
+      .eq("digest_week", digestWeek)
+      .maybeSingle();
+
+    if (alreadySent) continue;
 
     const subject = `This week on Manifest: ${newIntentCount} new intents`;
 
@@ -90,7 +111,14 @@ export async function sendWeeklyDigest(): Promise<number> {
       html,
     });
 
-    if (success) sent++;
+    if (success) {
+      await supabase
+        .from("digest_sends")
+        .insert({ user_id: profile.id, digest_week: digestWeek })
+        .select()
+        .maybeSingle();
+      sent++;
+    }
   }
 
   return sent;

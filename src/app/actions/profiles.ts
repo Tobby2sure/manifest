@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mintOnboardingNFT } from "@/lib/mint";
+import { trackServerEvent } from "@/lib/posthog";
 import type { Profile, AccountType } from "@/lib/types/database";
 
 export async function getProfile(userId: string): Promise<Profile | null> {
@@ -71,18 +72,51 @@ export async function upsertProfile(input: {
 
   const profile = data as Profile;
 
-  // Mint onboarding NFT in the background if wallet is present
-  if (profile.wallet_address) {
-    mintOnboardingNFT(profile.wallet_address)
-      .then(async (txHash) => {
+  trackServerEvent(profile.id, "signup_completed", {
+    account_type: profile.account_type,
+    twitter_verified: profile.twitter_verified,
+    has_wallet: !!profile.wallet_address,
+  });
+
+  // Mint onboarding NFT in the background if wallet is present and not already minted
+  if (profile.wallet_address && !profile.onboarding_nft_tx) {
+    const profileId = profile.id;
+    const walletAddress = profile.wallet_address;
+    (async () => {
+      try {
+        await supabase
+          .from("profiles")
+          .update({ onboarding_mint_status: "pending", onboarding_mint_attempts: 1 })
+          .eq("id", profileId);
+
+        const txHash = await mintOnboardingNFT(walletAddress);
         if (txHash) {
           await supabase
             .from("profiles")
-            .update({ onboarding_nft_tx: txHash })
-            .eq("id", profile.id);
+            .update({ onboarding_nft_tx: txHash, onboarding_mint_status: "success" })
+            .eq("id", profileId);
+        } else {
+          await supabase
+            .from("profiles")
+            .update({ onboarding_mint_status: "skipped" })
+            .eq("id", profileId);
         }
-      })
-      .catch((err) => console.error("[onboarding-nft] mint failed:", err));
+      } catch (err) {
+        console.error("[onboarding-nft] mint failed:", err);
+        await supabase
+          .from("profiles")
+          .update({ onboarding_mint_status: "failed" })
+          .eq("id", profileId)
+          .then(() => {});
+      }
+    })();
+  } else if (!profile.wallet_address) {
+    // No wallet — mark as skipped
+    supabase
+      .from("profiles")
+      .update({ onboarding_mint_status: "skipped" })
+      .eq("id", profile.id)
+      .then(() => {});
   }
 
   return profile;

@@ -7,6 +7,7 @@ import { useRef, useEffect, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { INTENT_TYPE_CONFIG } from '@/lib/types/database';
 import type { IntentType } from '@/lib/types/database';
+import { getLandingStats, type LandingStats } from '@/app/actions/stats';
 import { ArrowRight, Shield, Search, Handshake, ExternalLink, CheckCircle } from 'lucide-react';
 
 const STEPS = [
@@ -18,12 +19,6 @@ const STEPS = [
 const INTENT_TYPES: IntentType[] = [
   'partnership', 'investment', 'integration', 'hiring',
   'co-marketing', 'grant', 'ecosystem-support', 'beta-testers',
-];
-
-const STATS = [
-  { value: 500, suffix: '+', label: 'intents' },
-  { value: 200, suffix: '+', label: 'builders' },
-  { value: 12, suffix: '', label: 'ecosystems' },
 ];
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -56,12 +51,17 @@ export default function HomePage() {
   const { isAuthenticated: authenticated, isLoading } = useUser();
   const ready = !isLoading;
   const router = useRouter();
+  const [stats, setStats] = useState<LandingStats | null>(null);
 
   useEffect(() => {
     if (ready && authenticated) {
       router.replace('/feed');
     }
   }, [ready, authenticated, router]);
+
+  useEffect(() => {
+    getLandingStats().then(setStats).catch(() => {});
+  }, []);
 
   if (!ready || authenticated) {
     return <main className="min-h-screen bg-surface-page" />;
@@ -137,21 +137,33 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Animated stat strip */}
-      <div className="border-y border-white/8 bg-white/3">
-        <div className="mx-auto max-w-5xl px-4 py-6">
-          <div className="flex items-center justify-center gap-8 sm:gap-16 text-center">
-            {STATS.map((stat, i) => (
-              <div key={i} className="flex items-center gap-2">
+      {/* Animated stat strip — only shown when numbers are meaningful */}
+      {stats && (
+        <div className="border-y border-white/8 bg-white/3">
+          <div className="mx-auto max-w-5xl px-4 py-6">
+            <div className="flex items-center justify-center gap-8 sm:gap-16 text-center">
+              <div className="flex items-center gap-2">
                 <span className="text-2xl sm:text-3xl font-bold text-text-heading">
-                  <CountUp target={stat.value} suffix={stat.suffix} />
+                  <CountUp target={stats.intents} suffix="" />
                 </span>
-                <span className="text-sm text-text-muted">{stat.label}</span>
+                <span className="text-sm text-text-muted">intents</span>
               </div>
-            ))}
+              <div className="flex items-center gap-2">
+                <span className="text-2xl sm:text-3xl font-bold text-text-heading">
+                  <CountUp target={stats.builders} suffix="" />
+                </span>
+                <span className="text-sm text-text-muted">builders</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl sm:text-3xl font-bold text-text-heading">
+                  <CountUp target={stats.ecosystems} suffix="" />
+                </span>
+                <span className="text-sm text-text-muted">ecosystems</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* How it works */}
       <section className="mx-auto max-w-5xl px-4 py-20 sm:py-28">

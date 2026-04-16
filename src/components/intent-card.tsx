@@ -14,18 +14,27 @@ import {
   BookmarkCheck,
   Heart,
   Shield,
+  MoreHorizontal,
+  Ban,
+  Flag,
+  Loader2,
+  ExternalLink as ExternalLinkIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type {
   IntentWithAuthor,
   ConnectionRequestStatus,
+  MintStatus,
 } from "@/lib/types/database";
 import { INTENT_TYPE_CONFIG, ECOSYSTEM_CONFIG, SECTOR_CONFIG } from "@/lib/types/database";
 import { toggleSave } from "@/app/actions/saved";
-
+import { retryIntentMint } from "@/app/actions/intents";
+import { blockUser } from "@/app/actions/moderation";
 import { OrgBadge } from "@/components/org-badge";
+import { ReportDialog } from "@/components/report-dialog";
 import { toggleInterest } from "@/app/actions/interests";
+import { toast } from "sonner";
 
 const PRIORITY_STYLES: Record<string, string> = {
   Urgent: "bg-red-500/20 text-red-400",
@@ -95,6 +104,8 @@ export function IntentCard({
   const [saveCount, setSaveCount] = useState(initialSaveCount);
   const [interestCount, setInterestCount] = useState(initialInterestCount);
   const [isPending, startTransition] = useTransition();
+  const [showMenu, setShowMenu] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const typeConfig = INTENT_TYPE_CONFIG[intent.type];
   const isOwn = currentUserId === intent.author_id;
@@ -319,6 +330,41 @@ export function IntentCard({
               {viewCount} {viewCount === 1 ? "view" : "views"}
             </span>
           )}
+          {isOwn && intent.mint_status === "pending" && (
+            <span className="flex items-center gap-1 text-amber-400/70">
+              <Loader2 className="size-3 animate-spin" />
+              Minting...
+            </span>
+          )}
+          {isOwn && intent.mint_status === "success" && intent.nft_tx_hash && (
+            <a
+              href={`https://basescan.org/tx/${intent.nft_tx_hash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-emerald-400/70 hover:text-emerald-400 transition-colors"
+            >
+              <CheckCircle className="size-3" />
+              Minted
+              <ExternalLinkIcon className="size-2.5" />
+            </a>
+          )}
+          {isOwn && intent.mint_status === "failed" && currentUserId && (
+            <button
+              onClick={() => {
+                startTransition(async () => {
+                  try {
+                    await retryIntentMint(intent.id, currentUserId);
+                    toast.success("Mint retry queued");
+                  } catch (e) {
+                    toast.error(e instanceof Error ? e.message : "Retry failed");
+                  }
+                });
+              }}
+              className="flex items-center gap-1 text-red-400/70 hover:text-red-400 transition-colors cursor-pointer text-xs"
+            >
+              Mint failed — Retry
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-0.5">
@@ -367,6 +413,53 @@ export function IntentCard({
             <Share2 className="size-3.5" />
           </button>
 
+          {/* Block / Report menu */}
+          {!isOwn && currentUserId && (
+            <div className="relative">
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                aria-label="More options"
+                className="flex items-center rounded-lg px-2 py-1.5 min-w-[44px] min-h-[44px] justify-center text-xs text-text-muted hover:text-text-body hover:bg-white/4 transition-all duration-200 cursor-pointer"
+              >
+                <MoreHorizontal className="size-3.5" />
+              </button>
+              {showMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+                  <div className="absolute right-0 bottom-full mb-1 z-50 w-40 rounded-lg border border-white/8 bg-surface-secondary shadow-xl py-1">
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        startTransition(async () => {
+                          try {
+                            await blockUser(currentUserId, intent.author_id);
+                            toast.success("User blocked");
+                          } catch {
+                            toast.error("Failed to block user");
+                          }
+                        });
+                      }}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-text-body hover:bg-white/5 cursor-pointer transition-colors"
+                    >
+                      <Ban className="size-3.5" />
+                      Block
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        setReportOpen(true);
+                      }}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-400 hover:bg-white/5 cursor-pointer transition-colors"
+                    >
+                      <Flag className="size-3.5" />
+                      Report
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Connect / Pending / View Contact */}
           {!isOwn && !requestStatus && intent.lifecycle_status === "active" && (
             <Button
@@ -397,6 +490,16 @@ export function IntentCard({
         </div>
       </div>
 
+      {/* Report dialog */}
+      {currentUserId && (
+        <ReportDialog
+          open={reportOpen}
+          onOpenChange={setReportOpen}
+          reporterId={currentUserId}
+          reportedUserId={intent.author_id}
+          reportedIntentId={intent.id}
+        />
+      )}
     </div>
   );
 }
