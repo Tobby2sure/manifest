@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useUser } from "@/lib/hooks/use-user";
@@ -118,9 +119,11 @@ export default function OrgPage() {
         <div className="rounded-xl border border-white/8 bg-card p-6">
           <div className="flex items-start gap-4">
             {org.logo_url ? (
-              <img
+              <Image
                 src={org.logo_url}
                 alt={org.name}
+                width={64}
+                height={64}
                 className="size-16 rounded-xl object-cover"
               />
             ) : (
@@ -235,9 +238,11 @@ export default function OrgPage() {
                 className="flex items-center gap-3"
               >
                 {member.profiles.avatar_url ? (
-                  <img
+                  <Image
                     src={member.profiles.avatar_url}
                     alt=""
+                    width={32}
+                    height={32}
                     className="size-8 rounded-full object-cover"
                   />
                 ) : (

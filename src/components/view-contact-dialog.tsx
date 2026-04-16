@@ -16,14 +16,12 @@ interface ViewContactDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   connectionId: string | null;
-  userId: string;
 }
 
 export function ViewContactDialog({
   open,
   onOpenChange,
   connectionId,
-  userId,
 }: ViewContactDialogProps) {
   const [contact, setContact] = useState<{
     telegram_handle: string | null;
@@ -35,11 +33,11 @@ export function ViewContactDialog({
   useEffect(() => {
     if (open && connectionId) {
       setLoading(true);
-      getContactDetails(connectionId, userId)
+      getContactDetails(connectionId)
         .then(setContact)
         .finally(() => setLoading(false));
     }
-  }, [open, connectionId, userId]);
+  }, [open, connectionId]);
 
   function copyToClipboard(text: string, field: string) {
     navigator.clipboard.writeText(text);

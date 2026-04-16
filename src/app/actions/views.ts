@@ -1,11 +1,12 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getOptionalSessionUserId } from "@/lib/auth";
 
 export async function recordView(
-  intentId: string,
-  viewerId: string | null
+  intentId: string
 ): Promise<void> {
+  const viewerId = await getOptionalSessionUserId();
   const supabase = createAdminClient();
 
   // Deduplicate: one view per viewer per intent
@@ -24,6 +25,32 @@ export async function recordView(
     intent_id: intentId,
     viewer_id: viewerId,
   });
+}
+
+export async function recordViews(intentIds: string[]): Promise<void> {
+  const viewerId = await getOptionalSessionUserId();
+  if (!viewerId || intentIds.length === 0) return;
+
+  const supabase = createAdminClient();
+
+  // Check which intents already have views from this user
+  const { data: existing } = await supabase
+    .from("intent_views")
+    .select("intent_id")
+    .eq("viewer_id", viewerId)
+    .in("intent_id", intentIds);
+
+  const existingSet = new Set((existing ?? []).map((r: { intent_id: string }) => r.intent_id));
+  const newIds = intentIds.filter((id) => !existingSet.has(id));
+
+  if (newIds.length === 0) return;
+
+  const rows = newIds.map((intentId) => ({
+    intent_id: intentId,
+    viewer_id: viewerId,
+  }));
+
+  await supabase.from("intent_views").insert(rows);
 }
 
 export async function getViewCount(intentId: string): Promise<number> {

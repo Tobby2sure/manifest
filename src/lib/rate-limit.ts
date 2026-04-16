@@ -27,7 +27,12 @@ function getRateLimiter(): Ratelimit | null {
  */
 export async function checkConnectionRateLimit(senderId: string): Promise<void> {
   const limiter = getRateLimiter();
-  if (!limiter) return;
+  if (!limiter) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("Rate limiting is not configured. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.");
+    }
+    return;
+  }
 
   const { success, remaining, reset } = await limiter.limit(senderId);
 

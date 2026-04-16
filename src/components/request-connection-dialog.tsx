@@ -21,14 +21,12 @@ interface RequestConnectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   intent: IntentWithAuthor | null;
-  senderId: string;
 }
 
 export function RequestConnectionDialog({
   open,
   onOpenChange,
   intent,
-  senderId,
 }: RequestConnectionDialogProps) {
   const [pitch, setPitch] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -54,7 +52,6 @@ export function RequestConnectionDialog({
     try {
       await sendConnectionRequest(
         intent!.id,
-        senderId,
         intent!.author_id,
         pitch
       );

@@ -121,7 +121,6 @@ export function PostIntentDialog({
       const finalEcosystem = ecosystem === "other" ? (customEcosystem.trim().toLowerCase() || null) : (ecosystem || null);
       const finalSector = sector === "other" ? (customSector.trim().toLowerCase() || null) : (sector || null);
       const intent = await createIntent({
-        authorId: userId,
         orgId: selectedOrgId || undefined,
         type: intentType,
         content,

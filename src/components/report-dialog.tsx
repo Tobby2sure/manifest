@@ -25,7 +25,6 @@ const REASONS = [
 interface ReportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  reporterId: string;
   reportedUserId?: string;
   reportedIntentId?: string;
   reportedConnectionId?: string;
@@ -34,7 +33,6 @@ interface ReportDialogProps {
 export function ReportDialog({
   open,
   onOpenChange,
-  reporterId,
   reportedUserId,
   reportedIntentId,
   reportedConnectionId,
@@ -48,7 +46,6 @@ export function ReportDialog({
     setSubmitting(true);
     try {
       await reportUser({
-        reporterId,
         reportedUserId,
         reportedIntentId,
         reportedConnectionId,

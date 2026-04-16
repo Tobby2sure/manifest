@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { deliverIntentWebhooks } from "@/lib/webhooks";
 import { mintProofOfIntent } from "@/lib/nft";
 import { trackServerEvent } from "@/lib/posthog";
+import { getSessionUserId } from "@/lib/auth";
 import type {
   Intent,
   IntentWithAuthor,
@@ -88,7 +89,6 @@ export async function getIntent(id: string): Promise<IntentWithAuthor | null> {
 }
 
 export async function createIntent(input: {
-  authorId: string;
   orgId?: string;
   type: IntentType;
   content: string;
@@ -98,6 +98,7 @@ export async function createIntent(input: {
   durationDays: number;
 }): Promise<Intent> {
   const supabase = createAdminClient();
+  const authorId = await getSessionUserId();
 
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + input.durationDays);
@@ -112,7 +113,7 @@ export async function createIntent(input: {
   const { data: authorProfile } = await supabase
     .from("profiles")
     .select("wallet_address")
-    .eq("id", input.authorId)
+    .eq("id", authorId)
     .single();
 
   const hasWallet = !!authorProfile?.wallet_address;
@@ -122,7 +123,7 @@ export async function createIntent(input: {
   const { data, error } = await supabase
     .from("intents")
     .insert({
-      author_id: input.authorId,
+      author_id: authorId,
       org_id: input.orgId ?? null,
       type: input.type,
       content: input.content,
@@ -181,7 +182,7 @@ export async function createIntent(input: {
   }
 
   // Track event
-  trackServerEvent(input.authorId, "intent_posted", {
+  trackServerEvent(authorId, "intent_posted", {
     type: input.type,
     ecosystem: input.ecosystem,
     sector: input.sector,
@@ -224,9 +225,9 @@ export async function getFoundingBadgeRemaining(): Promise<number> {
 }
 
 export async function retryIntentMint(
-  intentId: string,
-  userId: string
+  intentId: string
 ): Promise<void> {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
 
   const { data: intent } = await supabase
@@ -258,9 +259,9 @@ export async function retryIntentMint(
 
 export async function updateIntentLifecycle(
   intentId: string,
-  status: IntentLifecycleStatus,
-  userId: string
+  status: IntentLifecycleStatus
 ): Promise<Intent> {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
 
   // Verify the user is the author or a connected party

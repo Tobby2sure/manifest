@@ -46,12 +46,11 @@ interface DealTrackerProps {
   intentId: string;
   connectionId?: string;
   currentStatus: IntentLifecycleStatus;
-  userId: string;
   partnerId?: string | null;
   onStatusChange?: (status: IntentLifecycleStatus) => void;
 }
 
-export function DealTracker({ intentId, connectionId, currentStatus, userId, partnerId, onStatusChange }: DealTrackerProps) {
+export function DealTracker({ intentId, connectionId, currentStatus, partnerId, onStatusChange }: DealTrackerProps) {
   const [status, setStatus] = useState(currentStatus);
   const [loading, setLoading] = useState(false);
   const [showEndorsementPrompt, setShowEndorsementPrompt] = useState(false);
@@ -66,9 +65,9 @@ export function DealTracker({ intentId, connectionId, currentStatus, userId, par
     setLoading(true);
     try {
       if (connectionId) {
-        await updateConnectionLifecycle(connectionId, newStatus, userId);
+        await updateConnectionLifecycle(connectionId, newStatus);
       } else {
-        await updateIntentLifecycle(intentId, newStatus, userId);
+        await updateIntentLifecycle(intentId, newStatus);
       }
       setStatus(newStatus);
       onStatusChange?.(newStatus);
@@ -201,7 +200,6 @@ export function DealTracker({ intentId, connectionId, currentStatus, userId, par
                       try {
                         await createEndorsement({
                           intentId,
-                          endorserId: userId,
                           endorseeId: partnerId,
                           content: endorsementText,
                         });

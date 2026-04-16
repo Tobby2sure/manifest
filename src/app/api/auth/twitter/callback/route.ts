@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHmac } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 function getAppUrl(): string {
@@ -33,7 +34,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${appUrl}/onboarding/verify-x?error=invalid_state`);
   }
 
-  const userId = state.split(":")[0];
+  // Verify HMAC signature on state
+  const [userId, nonce, signature] = state.split(":");
+  const secret = process.env.CRON_SECRET || "dev-secret";
+  const expected = createHmac("sha256", secret).update(`${userId}:${nonce}`).digest("hex");
+  if (signature !== expected) {
+    return NextResponse.redirect(`${appUrl}/onboarding/verify-x?error=invalid_state`);
+  }
+
   if (!userId) {
     return NextResponse.redirect(`${appUrl}/onboarding/verify-x?error=no_user`);
   }

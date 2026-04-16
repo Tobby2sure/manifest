@@ -4,9 +4,6 @@ import { Toaster } from 'sonner';
 import ClientProviders from '@/components/client-providers';
 import { Navbar } from '@/components/navbar';
 
-// Force all routes dynamic
-export const dynamic = 'force-dynamic';
-
 export const metadata: Metadata = {
   title: { default: 'Manifest', template: '%s | Manifest' },
   description: "Web3 intent board — declare what you're building toward and find the people who make it real.",

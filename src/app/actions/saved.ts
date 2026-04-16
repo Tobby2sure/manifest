@@ -2,12 +2,13 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { getSessionUserId } from "@/lib/auth";
 import type { IntentWithAuthor } from "@/lib/types/database";
 
 export async function toggleSave(
-  intentId: string,
-  userId: string
+  intentId: string
 ): Promise<boolean> {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
 
   // Check if already saved
@@ -33,9 +34,8 @@ export async function toggleSave(
   }
 }
 
-export async function getSavedIntents(
-  userId: string
-): Promise<IntentWithAuthor[]> {
+export async function getSavedIntents(): Promise<IntentWithAuthor[]> {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
 
   const { data, error } = await supabase
@@ -54,7 +54,8 @@ export async function getSavedIntents(
     .filter(Boolean) as IntentWithAuthor[];
 }
 
-export async function getUserSavedIds(userId: string): Promise<string[]> {
+export async function getUserSavedIds(): Promise<string[]> {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
 
   const { data, error } = await supabase
