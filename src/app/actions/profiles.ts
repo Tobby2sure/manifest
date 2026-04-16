@@ -40,8 +40,12 @@ export async function upsertProfile(input: {
   if (input.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email)) {
     throw new Error("Invalid email format");
   }
-  if (input.telegram_handle && !/^[a-zA-Z0-9_]{1,32}$/.test(input.telegram_handle)) {
-    throw new Error("Invalid Telegram handle");
+  if (input.telegram_handle) {
+    // Strip leading @ if present
+    input.telegram_handle = input.telegram_handle.replace(/^@/, "");
+    if (!/^[a-zA-Z0-9_]{1,32}$/.test(input.telegram_handle)) {
+      throw new Error("Invalid Telegram handle");
+    }
   }
 
   const supabase = createAdminClient();
