@@ -2,11 +2,11 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hashApiKey } from "@/lib/api-auth";
+import { getSessionUserId } from "@/lib/auth";
 import { randomBytes } from "crypto";
 
-export async function getUserApiKey(
-  userId: string
-): Promise<{ id: string; name: string; created_at: string } | null> {
+export async function getUserApiKey(): Promise<{ id: string; name: string; created_at: string } | null> {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("api_keys")
@@ -14,13 +14,12 @@ export async function getUserApiKey(
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
   return data;
 }
 
-export async function generateApiKey(
-  userId: string
-): Promise<{ key: string; id: string }> {
+export async function generateApiKey(): Promise<{ key: string; id: string }> {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
 
   // Delete existing keys for this user
@@ -44,7 +43,8 @@ export async function generateApiKey(
   return { key: rawKey, id: data.id };
 }
 
-export async function getUserWebhooks(userId: string) {
+export async function getUserWebhooks() {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("webhook_subscriptions")
@@ -56,11 +56,8 @@ export async function getUserWebhooks(userId: string) {
   return data ?? [];
 }
 
-export async function createWebhook(
-  userId: string,
-  url: string,
-  events: string[]
-) {
+export async function createWebhook(url: string, events: string[]) {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
   const secret = randomBytes(32).toString("hex");
 
@@ -81,7 +78,8 @@ export async function createWebhook(
   return { ...data, secret };
 }
 
-export async function deleteWebhook(userId: string, webhookId: string) {
+export async function deleteWebhook(webhookId: string) {
+  const userId = await getSessionUserId();
   const supabase = createAdminClient();
   const { error } = await supabase
     .from("webhook_subscriptions")

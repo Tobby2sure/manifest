@@ -44,13 +44,13 @@ export default function SettingsPage() {
   }, [profile]);
 
   useEffect(() => {
-    if (user?.userId) {
-      getUserApiKey(user.userId).then((k) => {
+    if (user?.userId && profile) {
+      getUserApiKey().then((k) => {
         if (k) setApiKeyInfo(k);
-      });
-      getUserWebhooks(user.userId).then(setWebhooks);
+      }).catch(() => {});
+      getUserWebhooks().then(setWebhooks).catch(() => {});
     }
-  }, [user?.userId]);
+  }, [user?.userId, profile]);
 
   async function handleSave() {
     if (!profile) return;
@@ -95,6 +95,17 @@ export default function SettingsPage() {
       <main className="min-h-[calc(100vh-4rem)] bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-zinc-400">Sign in to access settings.</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <main className="min-h-[calc(100vh-4rem)] bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-zinc-400 mb-4">Complete onboarding to access settings.</p>
+          <Button onClick={() => router.push('/onboarding')}>Go to Onboarding</Button>
         </div>
       </main>
     );
@@ -242,7 +253,7 @@ export default function SettingsPage() {
                   variant="outline"
                   size="sm"
                   onClick={async () => {
-                    const { key } = await generateApiKey(profile.id);
+                    const { key } = await generateApiKey();
                     setApiKey(key);
                     setShowKey(true);
                     toast.success('New API key generated');
@@ -272,7 +283,7 @@ export default function SettingsPage() {
                 <Button
                   size="sm"
                   onClick={async () => {
-                    const { key } = await generateApiKey(profile.id);
+                    const { key } = await generateApiKey();
                     setApiKey(key);
                     setShowKey(true);
                     toast.success('API key generated');
@@ -304,7 +315,7 @@ export default function SettingsPage() {
                     </div>
                     <button
                       onClick={async () => {
-                        await deleteWebhook(profile.id, wh.id);
+                        await deleteWebhook(wh.id);
                         setWebhooks((prev) => prev.filter((w) => w.id !== wh.id));
                         toast.success('Webhook deleted');
                       }}
@@ -363,7 +374,7 @@ export default function SettingsPage() {
                 onClick={async () => {
                   setCreatingWebhook(true);
                   try {
-                    const wh = await createWebhook(profile.id, webhookUrl, webhookEvents);
+                    const wh = await createWebhook(webhookUrl, webhookEvents);
                     setWebhooks((prev) => [wh, ...prev]);
                     setWebhookUrl('');
                     toast.success('Webhook created. Secret: ' + wh.secret);
