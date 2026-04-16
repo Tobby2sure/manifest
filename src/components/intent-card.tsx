@@ -255,11 +255,13 @@ export function IntentCard({
       {/* Priority + Lifecycle badges */}
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <span className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium ${PRIORITY_STYLES[intent.priority]}`}>
-          {intent.priority === "Urgent" && (
-            <span className="relative mr-1">
+          {intent.priority === "Urgent" ? (
+            <span className="relative mr-1.5">
               <span className="absolute inset-0 size-2 rounded-full bg-red-400 animate-ping" />
               <span className="relative size-2 rounded-full bg-red-400 inline-block" />
             </span>
+          ) : (
+            <span className={`size-1.5 rounded-full mr-1.5 ${intent.priority === "Active" ? "bg-amber-400" : "bg-emerald-400"}`} />
           )}
           {intent.priority}
         </span>

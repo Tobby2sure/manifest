@@ -231,34 +231,34 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
 
   return (
     <>
-      {/* Header */}
+      {/* Verify nudge — compact chip, not a full-width banner */}
       {isAuthenticated && !profile?.twitter_verified && !twitterVerified && (
-        <div className="mb-6 flex justify-end">
-          <Button
-            variant="outline"
+        <div className="mb-3 flex justify-end">
+          <button
             onClick={() => router.push('/onboarding/verify-x')}
-            className="border-violet-500/30 text-violet-300 hover:bg-violet-500/10 hover:border-violet-500/50 w-full sm:w-auto cursor-pointer transition-all"
+            className="inline-flex items-center gap-1.5 rounded-full border border-violet-500/25 bg-violet-500/8 px-3 py-1.5 text-xs font-medium text-violet-300 hover:bg-violet-500/15 hover:border-violet-500/40 cursor-pointer transition-all duration-200"
           >
-            𝕏 Verify to Post
-          </Button>
+            <span className="text-sm leading-none">𝕏</span>
+            Verify to Post
+          </button>
         </div>
       )}
 
-      {/* Search + Sort bar — rendered inside the grid area below on desktop */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 mb-5 lg:hidden">
-        <div className="relative flex-1 group">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-text-muted transition-colors duration-200 group-focus-within:text-violet-400" />
+      {/* Search + Sort + Filter — single compact row on mobile */}
+      <div className="flex flex-row items-center gap-2 mb-4 lg:hidden">
+        <div className="relative flex-1 min-w-0 group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-text-muted transition-colors duration-200 group-focus-within:text-violet-400" />
           <input
             type="text"
-            placeholder="Search intents by keyword, project, or ecosystem..."
+            placeholder="Search intents..."
             value={searchValue}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full h-11 rounded-xl border border-white/8 bg-white/3 backdrop-blur-sm pl-10 pr-9 text-sm text-text-heading outline-none focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 focus:bg-white/6 placeholder:text-text-muted/70 transition-all duration-300"
+            className="w-full h-10 rounded-xl border border-white/8 bg-white/3 backdrop-blur-sm pl-9 pr-8 text-sm text-text-heading outline-none focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 focus:bg-white/6 placeholder:text-text-muted/70 transition-all duration-300"
           />
           {searchValue && (
             <button
               onClick={() => handleSearchChange("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-white cursor-pointer transition-colors duration-200"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-white cursor-pointer transition-colors duration-200"
             >
               <X className="size-3.5" />
             </button>
@@ -267,7 +267,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
         <select
           value={activeSort}
           onChange={(e) => updateFilter("sort", e.target.value === "newest" ? null : e.target.value)}
-          className="h-11 rounded-xl border border-white/8 bg-white/3 backdrop-blur-sm px-3.5 text-sm text-text-heading outline-none cursor-pointer hover:border-white/12 transition-all duration-200"
+          className="h-10 shrink-0 rounded-xl border border-white/8 bg-white/3 backdrop-blur-sm px-3 text-sm text-text-heading outline-none cursor-pointer hover:border-white/12 transition-all duration-200"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -279,7 +279,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
           variant="ghost"
           size="sm"
           onClick={() => setShowSidebar(!showSidebar)}
-          className={`text-text-body lg:hidden cursor-pointer h-11 rounded-xl ${showSidebar ? "bg-white/6 text-violet-400" : "hover:bg-white/4"}`}
+          className={`shrink-0 text-text-body lg:hidden cursor-pointer h-10 w-10 rounded-xl p-0 ${showSidebar ? "bg-white/6 text-violet-400" : "hover:bg-white/4"}`}
         >
           <Filter className="size-4" />
         </Button>
