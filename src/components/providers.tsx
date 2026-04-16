@@ -23,15 +23,14 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         // Embedded wallets: enable in Dynamic Labs dashboard → Embedded Wallets → Enable
         events: {
           onAuthSuccess: async ({ user }) => {
-            // Only redirect to onboarding if truly new AND no profile exists
-            if (!user.newUser) return;
+            // Always check for profile — Dynamic may not reliably set newUser
+            // (e.g., after failed embedded wallet setup or retry)
             try {
               const res = await fetch(`/api/check-profile?userId=${user.userId}`);
               const data = await res.json();
               if (!data.exists) {
                 window.location.href = '/onboarding';
               } else {
-                // Returning user — go to feed if not already there
                 const current = window.location.pathname;
                 if (current === '/' || current.startsWith('/onboarding')) {
                   window.location.href = '/feed';
