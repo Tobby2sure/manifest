@@ -28,6 +28,7 @@ import { getIntents } from "@/app/actions/intents";
 import { getUserSavedIds } from "@/app/actions/saved";
 import { getUserInterestedIds } from "@/app/actions/interests";
 import { getViewCounts, recordView } from "@/app/actions/views";
+import { getBlockedUserIds } from "@/app/actions/moderation";
 import {
   Plus,
   SlidersHorizontal,
@@ -107,9 +108,10 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
   // Filter transition
   const [filterKey, setFilterKey] = useState(0);
 
-  // User saved/interested state
+  // User saved/interested/blocked state
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [interestedIds, setInterestedIds] = useState<Set<string>>(new Set());
+  const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
   const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
 
   // Reset intents when initialIntents change (URL navigation)
@@ -120,15 +122,17 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
     setFilterKey((k) => k + 1);
   }, [initialIntents, total, initialFilters.page]);
 
-  // Load user saved/interested states
+  // Load user saved/interested/blocked states
   useEffect(() => {
     if (!profile?.id) return;
     Promise.all([
       getUserSavedIds(profile.id),
       getUserInterestedIds(profile.id),
-    ]).then(([saved, interested]) => {
+      getBlockedUserIds(profile.id),
+    ]).then(([saved, interested, blocked]) => {
       setSavedIds(new Set(saved));
       setInterestedIds(new Set(interested));
+      setBlockedIds(new Set(blocked));
     });
   }, [profile?.id]);
 
@@ -219,6 +223,11 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
 
   const canPost = isAuthenticated && (profile?.twitter_verified || twitterVerified);
   const hasActiveFilters = activeType || activeEcosystem || activeSector || activePriority || searchValue;
+
+  // Filter out intents from blocked users
+  const visibleIntents = blockedIds.size > 0
+    ? allIntents.filter((i) => !blockedIds.has(i.author_id))
+    : allIntents;
 
   return (
     <>
@@ -506,14 +515,14 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
           {/* Result count */}
           <div className="flex items-center justify-between mb-4">
             <p className="text-xs text-text-muted">
-              <span className="text-text-heading/60 font-medium tabular-nums">{allIntents.length}</span>
+              <span className="text-text-heading/60 font-medium tabular-nums">{visibleIntents.length}</span>
               {' '}of <span className="tabular-nums">{total}</span> intents
             </p>
             {isPending && <Loader2 className="size-3.5 text-violet-400 animate-spin" />}
           </div>
 
           <AnimatePresence mode="wait">
-            {allIntents.length > 0 ? (
+            {visibleIntents.length > 0 ? (
               <motion.div
                 key={filterKey}
                 initial={{ opacity: 0 }}
@@ -522,7 +531,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                 transition={{ duration: 0.2 }}
               >
                 <div className="grid gap-5 sm:grid-cols-2">
-                  {allIntents.map((intent, i) => (
+                  {visibleIntents.map((intent, i) => (
                     <motion.div
                       key={intent.id}
                       initial={{ opacity: 0, y: 16 }}

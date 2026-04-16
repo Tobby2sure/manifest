@@ -55,6 +55,8 @@ export type AccountType = "individual" | "organization";
 
 export type ConnectionRequestStatus = "pending" | "accepted" | "declined";
 
+export type MintStatus = "pending" | "success" | "failed" | "skipped";
+
 // ── Interfaces ──
 
 export interface Profile {
@@ -64,6 +66,7 @@ export interface Profile {
   twitter_handle: string | null;
   twitter_id: string | null;
   twitter_verified: boolean;
+  twitter_verified_at: string | null;
   wallet_address: string | null;
   telegram_handle: string | null;
   email: string | null;
@@ -71,6 +74,9 @@ export interface Profile {
   avatar_url: string | null;
   last_active_at: string | null;
   response_rate: number | null;
+  onboarding_nft_tx: string | null;
+  onboarding_mint_status: MintStatus;
+  onboarding_mint_attempts: number;
   created_at: string;
   updated_at: string;
 }
@@ -110,6 +116,8 @@ export interface Intent {
   closed_reason: IntentClosedReason | null;
   nft_token_id: string | null;
   nft_tx_hash: string | null;
+  mint_status: MintStatus;
+  mint_attempts: number;
   is_founding: boolean;
   created_at: string;
   updated_at: string;
@@ -205,6 +213,25 @@ export interface Endorsement {
 
 export interface EndorsementWithAuthor extends Endorsement {
   endorser: Profile;
+}
+
+export interface BlockedUser {
+  id: string;
+  blocker_id: string;
+  blocked_user_id: string;
+  created_at: string;
+}
+
+export interface Report {
+  id: string;
+  reporter_id: string;
+  reported_user_id: string | null;
+  reported_intent_id: string | null;
+  reported_connection_id: string | null;
+  reason: string;
+  details: string | null;
+  status: string;
+  created_at: string;
 }
 
 // ── Feed / Filter types ──

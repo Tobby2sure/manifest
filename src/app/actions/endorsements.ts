@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { trackServerEvent } from "@/lib/posthog";
 import type { Endorsement, EndorsementWithAuthor } from "@/lib/types/database";
 
 export async function createEndorsement(input: {
@@ -24,6 +25,11 @@ export async function createEndorsement(input: {
     .single();
 
   if (error) throw new Error(error.message);
+
+  trackServerEvent(input.endorserId, "endorsement_given", {
+    endorseeId: input.endorseeId,
+    intentId: input.intentId,
+  });
 
   revalidatePath(`/profile/${input.endorseeId}`);
   return data as Endorsement;

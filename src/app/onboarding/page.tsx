@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { upsertProfile } from "@/app/actions/profiles";
 import type { AccountType } from "@/lib/types/database";
 import { useUser } from "@/lib/hooks/use-user";
+import { usePostHog } from "posthog-js/react";
 import { CheckCircle, ArrowRight, ArrowLeft, User, Building2, Link2 } from "lucide-react";
 
 const STEP_LABELS = ["Account Type", "Your Details", "Organization"];
@@ -20,6 +21,7 @@ export default function OnboardingPage() {
   const router = useRouter();
   const { isLoading, isAuthenticated: authenticated, user, profile } = useUser();
   const { setShowAuthFlow, primaryWallet } = useDynamicContext();
+  const posthog = usePostHog();
 
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
@@ -56,6 +58,7 @@ export default function OnboardingPage() {
 
   function nextStep() {
     setDirection(1);
+    posthog?.capture("onboarding_step_completed", { step: currentStepIndex() });
     if (step === 0) {
       setStep(1);
     } else if (step === 1) {

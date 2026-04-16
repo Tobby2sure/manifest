@@ -3,6 +3,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { notifyAsync } from "@/app/actions/notifications";
+import { checkConnectionRateLimit } from "@/lib/rate-limit";
+import { isBlocked } from "@/app/actions/moderation";
+import { trackServerEvent } from "@/lib/posthog";
 import type {
   ConnectionRequest,
   ConnectionWithIntent,
@@ -15,6 +18,14 @@ export async function sendConnectionRequest(
   receiverId: string,
   pitchMessage: string
 ): Promise<ConnectionRequest> {
+  // Rate limit: 10 connection requests per sender per day
+  await checkConnectionRateLimit(senderId);
+
+  // Block check: prevent pitches between blocked users
+  if (await isBlocked(senderId, receiverId)) {
+    throw new Error("Unable to send this connection request");
+  }
+
   const supabase = createAdminClient();
 
   const { data, error } = await supabase
@@ -32,6 +43,8 @@ export async function sendConnectionRequest(
   if (error) {
     throw new Error(error.message);
   }
+
+  trackServerEvent(senderId, "connection_sent", { intentId, receiverId });
 
   const { getProfile } = await import("@/app/actions/profiles");
   const senderProfile = await getProfile(senderId);

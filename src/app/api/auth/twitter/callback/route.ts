@@ -105,12 +105,33 @@ export async function GET(request: NextRequest) {
 
     // Save to Supabase
     const supabase = createAdminClient();
+
+    // Check if this twitter_id is already linked to another profile
+    if (twitterId) {
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("twitter_id", twitterId)
+        .neq("id", userId)
+        .maybeSingle();
+
+      if (existing) {
+        const response = NextResponse.redirect(
+          `${appUrl}/onboarding/verify-x?error=twitter_already_linked`
+        );
+        response.cookies.delete("twitter_code_verifier");
+        response.cookies.delete("twitter_state");
+        return response;
+      }
+    }
+
     const { error: dbError } = await supabase
       .from("profiles")
       .update({
         twitter_handle: twitterHandle,
         twitter_id: twitterId,
         twitter_verified: true,
+        twitter_verified_at: new Date().toISOString(),
       })
       .eq("id", userId);
 
