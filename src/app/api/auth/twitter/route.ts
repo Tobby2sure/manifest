@@ -29,20 +29,17 @@ async function generateCodeChallenge(verifier: string): Promise<string> {
 }
 
 export async function GET(request: NextRequest) {
-  // Derive userId from the dynamic_auth cookie (same JWT decode as src/lib/auth.ts)
+  // Read userId from our signed manifest_session cookie
   let userId: string | null = null;
-  const authCookie = request.cookies.get("dynamic_auth")?.value;
-  if (authCookie) {
-    try {
-      const parts = authCookie.split(".");
-      if (parts.length === 3) {
-        const payload = JSON.parse(
-          Buffer.from(parts[1], "base64url").toString()
-        );
-        userId = payload.sub ?? payload.userId ?? null;
-      }
-    } catch {
-      // Invalid JWT
+  const sessionCookie = request.cookies.get("manifest_session")?.value;
+  if (sessionCookie) {
+    const lastColon = sessionCookie.lastIndexOf(":");
+    if (lastColon !== -1) {
+      const id = sessionCookie.slice(0, lastColon);
+      const sig = sessionCookie.slice(lastColon + 1);
+      const secret = process.env.CRON_SECRET || "manifest-session-secret";
+      const expected = createHmac("sha256", secret).update(id).digest("hex");
+      if (sig === expected) userId = id;
     }
   }
 

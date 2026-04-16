@@ -24,9 +24,15 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         // Embedded wallets: enable in Dynamic Labs dashboard → Embedded Wallets → Enable
         events: {
           onAuthSuccess: async ({ user }) => {
-            // Always check for profile — Dynamic may not reliably set newUser
-            // (e.g., after failed embedded wallet setup or retry)
             try {
+              // Set our own httpOnly session cookie so server actions can authenticate
+              await fetch("/api/auth/session", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: user.userId }),
+              });
+
+              // Check if profile exists
               const res = await fetch(`/api/check-profile?userId=${user.userId}`);
               const data = await res.json();
               if (!data.exists) {
@@ -40,6 +46,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             } catch (e) {
               console.error("Failed to check profile:", e);
             }
+          },
+          onLogout: async () => {
+            await fetch("/api/auth/session", { method: "DELETE" }).catch(() => {});
           },
         },
       }}

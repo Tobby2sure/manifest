@@ -1,56 +1,37 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { createHmac } from "crypto";
+
+const SECRET = process.env.CRON_SECRET || "manifest-session-secret";
 
 /**
- * Try to extract a userId from a JWT cookie value.
+ * Verify our signed manifest_session cookie.
  */
-function extractUserIdFromJwt(value: string): string | null {
-  try {
-    const parts = value.split(".");
-    if (parts.length !== 3) return null;
-    const payload = JSON.parse(
-      Buffer.from(parts[1], "base64url").toString()
-    );
-    return payload.sub ?? payload.userId ?? null;
-  } catch {
-    return null;
-  }
+function verifySessionCookie(value: string): string | null {
+  const lastColon = value.lastIndexOf(":");
+  if (lastColon === -1) return null;
+
+  const userId = value.slice(0, lastColon);
+  const signature = value.slice(lastColon + 1);
+  const expected = createHmac("sha256", SECRET).update(userId).digest("hex");
+
+  if (signature !== expected) return null;
+  return userId;
 }
 
 /**
- * Known Dynamic Labs cookie names — varies by SDK version.
- * We also scan all cookies for JWTs as a fallback.
- */
-const DYNAMIC_COOKIE_NAMES = [
-  "dynamic_auth",
-  "dynamic_authenticated_user",
-  "dynamic_auth_token",
-];
-
-/**
- * Get the authenticated user's ID from the Dynamic Labs session cookie.
- * For use in server actions where NextRequest is not available.
+ * Get the authenticated user's ID from the manifest_session cookie.
+ * This cookie is set by POST /api/auth/session after Dynamic auth.
  * Throws if no valid session exists.
  */
 export async function getSessionUserId(): Promise<string> {
   const cookieStore = await cookies();
+  const session = cookieStore.get("manifest_session")?.value;
 
-  // Try known cookie names first
-  for (const name of DYNAMIC_COOKIE_NAMES) {
-    const value = cookieStore.get(name)?.value;
-    if (value) {
-      const userId = extractUserIdFromJwt(value);
-      if (userId) return userId;
-    }
-  }
-
-  // Fallback: scan all cookies for a JWT containing a userId
-  for (const cookie of cookieStore.getAll()) {
-    if (cookie.value.includes(".") && cookie.value.length > 50) {
-      const userId = extractUserIdFromJwt(cookie.value);
-      if (userId) return userId;
-    }
+  if (session) {
+    const userId = verifySessionCookie(session);
+    if (userId) return userId;
   }
 
   throw new Error("Not authenticated");
