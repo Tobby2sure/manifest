@@ -68,7 +68,6 @@ export async function sendWeeklyDigest(): Promise<number> {
     .select("*", { count: "exact", head: true })
     .gte("created_at", oneWeekAgo.toISOString());
 
-  // Build HTML
   const html = buildDigestHtml(ranked, newIntentCount ?? 0, newConnectionCount ?? 0);
 
   // Get all users with email addresses

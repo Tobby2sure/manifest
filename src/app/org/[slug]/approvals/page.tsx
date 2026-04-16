@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle, XCircle, Inbox } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 interface PendingRequest {
   id: string;
@@ -40,8 +41,7 @@ interface PendingRequest {
 }
 
 export default function ApprovalsPage() {
-  const params = useParams();
-  const slug = params.slug as string;
+  const { slug } = useParams<{ slug: string }>();
   const { profile } = useUser();
   const [orgId, setOrgId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -68,7 +68,7 @@ export default function ApprovalsPage() {
 
       if (admin) {
         getPendingOrgApprovals(org.id)
-          .then((data) => setPending(data as unknown as PendingRequest[]))
+          .then((data) => setPending(data as PendingRequest[]))
           .finally(() => setLoading(false));
       } else {
         setLoading(false);
@@ -83,7 +83,7 @@ export default function ApprovalsPage() {
       await approveOrgIntent(requestId, profile.id);
       setPending((prev) => prev.filter((r) => r.id !== requestId));
     } catch {
-      // ignore
+      toast.error("Failed to approve intent");
     } finally {
       setProcessing(null);
     }
@@ -98,7 +98,7 @@ export default function ApprovalsPage() {
       setRejectingId(null);
       setRejectReason("");
     } catch {
-      // ignore
+      toast.error("Failed to reject intent");
     } finally {
       setProcessing(null);
     }

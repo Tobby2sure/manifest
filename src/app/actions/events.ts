@@ -1,24 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-
-export interface ManifestEvent {
-  id: string;
-  name: string;
-  slug: string;
-  location: string | null;
-  start_date: string;
-  end_date: string;
-  website: string | null;
-  created_at: string;
-}
-
-export interface EventAttendee {
-  id: string;
-  event_id: string;
-  user_id: string;
-  created_at: string;
-}
+import type { ManifestEvent } from "@/lib/types/database";
 
 export async function getEvents(): Promise<
   (ManifestEvent & { attendee_count: number })[]

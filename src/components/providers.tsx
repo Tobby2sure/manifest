@@ -24,7 +24,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           onAuthSuccess: async ({ user }) => {
             // Only redirect to onboarding if truly new AND no profile exists
             if (!user.newUser) return;
-            // Check if profile already exists before redirecting
             try {
               const res = await fetch(`/api/check-profile?userId=${user.userId}`);
               const data = await res.json();
@@ -37,8 +36,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                   window.location.href = '/feed';
                 }
               }
-            } catch {
-              // Fallback: don't redirect if check fails
+            } catch (e) {
+              console.error("Failed to check profile:", e);
             }
           },
         },
@@ -54,4 +53,3 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     </DynamicContextProvider>
   );
 }
-// cache bust Sat Mar 28 21:17:25 WAT 2026

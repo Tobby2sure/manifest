@@ -48,9 +48,10 @@ export async function getSavedIntents(
     throw new Error(error.message);
   }
 
-  return (data ?? [])
-    .map((row: Record<string, unknown>) => row.intents)
-    .filter(Boolean) as unknown as IntentWithAuthor[];
+  // Supabase infers intents(*) as any[] without a typed DB; the FK is actually many-to-one
+  return ((data ?? []) as unknown as { intents: IntentWithAuthor | null }[])
+    .map((row) => row.intents)
+    .filter(Boolean) as IntentWithAuthor[];
 }
 
 export async function getUserSavedIds(userId: string): Promise<string[]> {

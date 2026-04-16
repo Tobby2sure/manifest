@@ -18,7 +18,7 @@ interface InviteOrg {
 }
 
 export default function InvitePage() {
-  const params = useParams();
+  const { code } = useParams<{ code: string }>();
   const router = useRouter();
   const { handleLogOut, setShowAuthFlow } = useDynamicContext();
   const { isAuthenticated } = useUser();
@@ -28,8 +28,6 @@ export default function InvitePage() {
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-
-  const code = params.code as string;
 
   useEffect(() => {
     validateInvite(code)

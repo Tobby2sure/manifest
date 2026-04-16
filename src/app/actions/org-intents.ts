@@ -2,8 +2,8 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { notifyAsync } from "@/app/actions/notifications";
 import type {
-  IntentLifecycleStatus,
   Organization,
 } from "@/lib/types/database";
 
@@ -28,34 +28,25 @@ export async function submitIntentForOrgApproval(
   const { error: updateError } = await supabase
     .from("intents")
     .update({
-      lifecycle_status: "pending_org_approval" as IntentLifecycleStatus,
+      lifecycle_status: "pending_org_approval",
     })
     .eq("id", intentId);
 
   if (updateError) throw new Error(updateError.message);
 
-  // Notify org admins
-  try {
-    const { createNotification } = await import("@/app/actions/notifications");
-    const { getProfile } = await import("@/app/actions/profiles");
-
-    const { data: admins } = await supabase
-      .from("org_members")
-      .select("profile_id")
-      .eq("org_id", orgId)
-      .eq("role", "admin");
-
-    const submitter = await getProfile(submittedBy);
-
-    for (const admin of admins ?? []) {
-      await createNotification(admin.profile_id, "org_approval_request", {
-        intentId,
-        orgId,
-        submitterName: submitter?.display_name ?? "Someone",
-      });
-    }
-  } catch {
-    // Non-fatal
+  const { getProfile } = await import("@/app/actions/profiles");
+  const { data: admins } = await supabase
+    .from("org_members")
+    .select("profile_id")
+    .eq("org_id", orgId)
+    .eq("role", "admin");
+  const submitter = await getProfile(submittedBy);
+  for (const admin of admins ?? []) {
+    notifyAsync(admin.profile_id, "org_approval_request", {
+      intentId,
+      orgId,
+      submitterName: submitter?.display_name ?? "Someone",
+    });
   }
 
   revalidatePath("/feed");
@@ -102,21 +93,15 @@ export async function approveOrgIntent(requestId: string, adminId: string) {
   const { error: updateIntent } = await supabase
     .from("intents")
     .update({
-      lifecycle_status: "active" as IntentLifecycleStatus,
+      lifecycle_status: "active",
     })
     .eq("id", request.intent_id);
 
   if (updateIntent) throw new Error(updateIntent.message);
 
-  // Notify submitter
-  try {
-    const { createNotification } = await import("@/app/actions/notifications");
-    await createNotification(request.submitted_by, "org_intent_approved", {
-      intentId: request.intent_id,
-    });
-  } catch {
-    // Non-fatal
-  }
+  notifyAsync(request.submitted_by, "org_intent_approved", {
+    intentId: request.intent_id,
+  });
 
   revalidatePath("/feed");
 }
@@ -151,22 +136,16 @@ export async function rejectOrgIntent(
   const { error: updateIntent } = await supabase
     .from("intents")
     .update({
-      lifecycle_status: "closed" as IntentLifecycleStatus,
+      lifecycle_status: "closed",
     })
     .eq("id", request.intent_id);
 
   if (updateIntent) throw new Error(updateIntent.message);
 
-  // Notify submitter
-  try {
-    const { createNotification } = await import("@/app/actions/notifications");
-    await createNotification(request.submitted_by, "org_intent_rejected", {
-      intentId: request.intent_id,
-      reason,
-    });
-  } catch {
-    // Non-fatal
-  }
+  notifyAsync(request.submitted_by, "org_intent_rejected", {
+    intentId: request.intent_id,
+    reason,
+  });
 
   revalidatePath("/feed");
 }
@@ -183,6 +162,7 @@ export async function getUserOrgs(
 
   if (error) throw new Error(error.message);
 
+  // Double cast needed: Supabase infers organizations(*) as any[] but the FK is many-to-one
   return (data ?? []) as unknown as Array<{
     role: string;
     organizations: Organization;

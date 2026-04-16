@@ -2,9 +2,9 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { notifyAsync } from "@/app/actions/notifications";
 import type {
   ConnectionRequest,
-  ConnectionRequestStatus,
   ConnectionWithIntent,
   IntentLifecycleStatus,
 } from "@/lib/types/database";
@@ -24,7 +24,7 @@ export async function sendConnectionRequest(
       sender_id: senderId,
       receiver_id: receiverId,
       pitch_message: pitchMessage,
-      status: "pending" as ConnectionRequestStatus,
+      status: "pending",
     })
     .select()
     .single();
@@ -33,99 +33,16 @@ export async function sendConnectionRequest(
     throw new Error(error.message);
   }
 
-  // Notify the intent owner about the connection request
-  try {
-    const { createNotification } = await import("@/app/actions/notifications");
-    const { getProfile } = await import("@/app/actions/profiles");
-    const senderProfile = await getProfile(senderId);
-    await createNotification(receiverId, "connection_request", {
-      senderName: senderProfile?.display_name ?? "Someone",
-      intentId,
-      senderId,
-    });
-  } catch {
-    // Non-fatal
-  }
+  const { getProfile } = await import("@/app/actions/profiles");
+  const senderProfile = await getProfile(senderId);
+  notifyAsync(receiverId, "connection_request", {
+    senderName: senderProfile?.display_name ?? "Someone",
+    intentId,
+    senderId,
+  });
 
   revalidatePath("/feed");
   return data as ConnectionRequest;
-}
-
-export async function respondToRequest(
-  requestId: string,
-  status: "accepted" | "declined"
-): Promise<ConnectionRequest> {
-  const supabase = createAdminClient();
-
-  const updatePayload: Record<string, string> = { status };
-  if (status === "accepted") {
-    updatePayload.lifecycle_status = "active";
-  }
-
-  const { data, error } = await supabase
-    .from("connection_requests")
-    .update(updatePayload)
-    .eq("id", requestId)
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  // Notify the sender about the response
-  try {
-    const { createNotification } = await import("@/app/actions/notifications");
-    const { getProfile } = await import("@/app/actions/profiles");
-    const req = data as ConnectionRequest;
-    const receiverProfile = await getProfile(req.receiver_id);
-    const notifType = status === "accepted" ? "request_accepted" : "request_declined";
-    await createNotification(req.sender_id, notifType, {
-      intentId: req.intent_id,
-      receiverName: receiverProfile?.display_name ?? "Someone",
-    });
-  } catch {
-    // Non-fatal
-  }
-
-  revalidatePath("/feed");
-  return data as ConnectionRequest;
-}
-
-export async function getConnectionRequests(
-  userId: string
-): Promise<ConnectionRequest[]> {
-  const supabase = createAdminClient();
-
-  const { data, error } = await supabase
-    .from("connection_requests")
-    .select("*")
-    .eq("receiver_id", userId)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return (data ?? []) as ConnectionRequest[];
-}
-
-export async function getMyRequests(
-  userId: string
-): Promise<ConnectionRequest[]> {
-  const supabase = createAdminClient();
-
-  const { data, error } = await supabase
-    .from("connection_requests")
-    .select("*")
-    .eq("sender_id", userId)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return (data ?? []) as ConnectionRequest[];
 }
 
 export async function getContactDetails(
@@ -159,23 +76,6 @@ export async function getContactDetails(
   if (profileError || !profile) return null;
 
   return profile as { telegram_handle: string | null; email: string | null };
-}
-
-export async function getRequestForIntent(
-  intentId: string,
-  senderId: string
-): Promise<ConnectionRequest | null> {
-  const supabase = createAdminClient();
-
-  const { data, error } = await supabase
-    .from("connection_requests")
-    .select("*")
-    .eq("intent_id", intentId)
-    .eq("sender_id", senderId)
-    .maybeSingle();
-
-  if (error) return null;
-  return (data as ConnectionRequest) ?? null;
 }
 
 export async function updateConnectionLifecycle(

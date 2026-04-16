@@ -1,36 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { validateApiKey } from "@/lib/api-auth";
+import { getAuthUserId } from "@/lib/api-auth";
 import { randomBytes } from "crypto";
 
 export const dynamic = "force-dynamic";
-
-async function getAuthUserId(req: NextRequest): Promise<string | null> {
-  // Try API key first
-  const apiKey = req.headers.get("x-api-key");
-  if (apiKey) {
-    return validateApiKey(apiKey);
-  }
-
-  // Try Dynamic session cookie
-  const cookie = req.cookies.get("dynamic_auth")?.value;
-  if (cookie) {
-    try {
-      // Dynamic auth cookie contains a JWT — extract user ID from payload
-      const parts = cookie.split(".");
-      if (parts.length === 3) {
-        const payload = JSON.parse(
-          Buffer.from(parts[1], "base64url").toString()
-        );
-        return payload.sub ?? payload.userId ?? null;
-      }
-    } catch {
-      // Invalid cookie
-    }
-  }
-
-  return null;
-}
 
 export async function GET(req: NextRequest) {
   const userId = await getAuthUserId(req);

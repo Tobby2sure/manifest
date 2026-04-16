@@ -15,6 +15,7 @@ import {
   Check,
 } from "lucide-react";
 import type { IntentWithAuthor } from "@/lib/types/database";
+import { toast } from "sonner";
 
 interface OrgData {
   id: string;
@@ -41,7 +42,7 @@ interface OrgData {
 }
 
 export default function OrgPage() {
-  const params = useParams();
+  const { slug } = useParams<{ slug: string }>();
   const router = useRouter();
   const { isAuthenticated } = useUser();
   const { profile } = useUser();
@@ -50,8 +51,6 @@ export default function OrgPage() {
   const [inviteCode, setInviteCode] = useState("");
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
-
-  const slug = params.slug as string;
 
   useEffect(() => {
     getOrg(slug)
@@ -71,7 +70,7 @@ export default function OrgPage() {
       const invite = await generateInviteCode(org.id, profile.id);
       setInviteCode(invite.code);
     } catch {
-      // ignore
+      toast.error("Failed to generate invite code");
     } finally {
       setGenerating(false);
     }

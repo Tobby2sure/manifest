@@ -129,14 +129,6 @@ export async function isTwitterVerified(userId: string): Promise<boolean> {
   return (data as { twitter_verified: boolean }).twitter_verified;
 }
 
-export async function updateLastActive(userId: string): Promise<void> {
-  const supabase = createAdminClient();
-  await supabase
-    .from("profiles")
-    .update({ last_active_at: new Date().toISOString() })
-    .eq("id", userId);
-}
-
 export async function calculateResponseRate(userId: string): Promise<number> {
   const supabase = createAdminClient();
 

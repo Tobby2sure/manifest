@@ -1,32 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { validateApiKey } from "@/lib/api-auth";
+import { getAuthUserId } from "@/lib/api-auth";
 
 export const dynamic = "force-dynamic";
-
-async function getAuthUserId(req: NextRequest): Promise<string | null> {
-  const apiKey = req.headers.get("x-api-key");
-  if (apiKey) {
-    return validateApiKey(apiKey);
-  }
-
-  const cookie = req.cookies.get("dynamic_auth")?.value;
-  if (cookie) {
-    try {
-      const parts = cookie.split(".");
-      if (parts.length === 3) {
-        const payload = JSON.parse(
-          Buffer.from(parts[1], "base64url").toString()
-        );
-        return payload.sub ?? payload.userId ?? null;
-      }
-    } catch {
-      // Invalid cookie
-    }
-  }
-
-  return null;
-}
 
 export async function DELETE(
   req: NextRequest,

@@ -41,21 +41,6 @@ export async function getEndorsementsForUser(
     .order("created_at", { ascending: false });
 
   if (error) return [];
-  return (data ?? []) as unknown as EndorsementWithAuthor[];
+  return (data ?? []) as EndorsementWithAuthor[];
 }
 
-export async function getEndorsementForIntent(
-  intentId: string,
-  endorserId: string
-): Promise<Endorsement | null> {
-  const supabase = createAdminClient();
-
-  const { data } = await supabase
-    .from("endorsements")
-    .select("*")
-    .eq("intent_id", intentId)
-    .eq("endorser_id", endorserId)
-    .maybeSingle();
-
-  return (data as Endorsement) ?? null;
-}

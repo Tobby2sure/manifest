@@ -7,7 +7,6 @@ import type {
   Ecosystem,
   Sector,
   IntentPriority,
-  IntentLifecycleStatus,
 } from "@/lib/types/database";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +27,7 @@ export async function GET(req: NextRequest) {
   let query = supabase
     .from("intents")
     .select("*, author:profiles!author_id(*)", { count: "exact" })
-    .eq("lifecycle_status", "active" as IntentLifecycleStatus)
+    .eq("lifecycle_status", "active")
     .gte("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
@@ -125,9 +124,9 @@ export async function POST(req: NextRequest) {
       content: body.content,
       ecosystem: body.ecosystem ?? null,
       sector: body.sector ?? null,
-      priority: body.priority ?? ("Open" as IntentPriority),
+      priority: body.priority ?? "Open",
       expires_at: expiresAt.toISOString(),
-      lifecycle_status: "active" as IntentLifecycleStatus,
+      lifecycle_status: "active",
     })
     .select()
     .single();

@@ -57,7 +57,7 @@ export function Navbar() {
 
   const displayName = twitterHandle
     ? `@${twitterHandle}`
-    : (user?.verifiedCredentials?.find((c: any) => c.oauthProvider === 'email')?.oauthUsername ?? dynamicUser?.email ?? 'User');
+    : (user?.verifiedCredentials?.find((c) => c.format === 'email')?.email ?? dynamicUser?.email ?? 'User');
 
   return (
     <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'border-b border-white/8 bg-surface-page/90 backdrop-blur-xl' : 'bg-transparent'}`}>
@@ -140,7 +140,7 @@ export function Navbar() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-xs text-zinc-300 leading-relaxed">
-                                {(n.payload as any)?.message ?? n.type.replace(/_/g, ' ')}
+                                {(n.payload as { message?: string })?.message ?? n.type.replace(/_/g, ' ')}
                               </p>
                               <p className="text-[10px] text-zinc-600 mt-0.5">
                                 {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}

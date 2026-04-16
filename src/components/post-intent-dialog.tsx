@@ -135,7 +135,7 @@ export function PostIntentDialog({
       }
       onOpenChange(false);
 
-      // Success feedback — kill the dead zone
+      // Show reach estimate so the poster knows their intent is being seen
       getVerifiedUserCount().then((count) => {
         const reach = count > 0 ? count : 50;
         toast.success("Intent posted!", {

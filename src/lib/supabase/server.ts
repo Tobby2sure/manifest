@@ -18,7 +18,7 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // setAll called from Server Component — safe to ignore
+            // Server Components are read-only — cookie writes are expected to no-op here
           }
         },
       },

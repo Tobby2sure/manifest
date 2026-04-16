@@ -79,3 +79,15 @@ export async function getUnreadCount(userId: string): Promise<number> {
   if (error) return 0;
   return count ?? 0;
 }
+
+export async function notifyAsync(
+  userId: string,
+  type: string,
+  payload: Record<string, unknown>
+): Promise<void> {
+  try {
+    await createNotification(userId, type, payload);
+  } catch {
+    // Non-fatal
+  }
+}

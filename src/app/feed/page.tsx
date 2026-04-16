@@ -7,8 +7,8 @@ import type {
   Ecosystem,
   Sector,
   IntentPriority,
+  IntentSort,
 } from "@/lib/types/database";
-import type { IntentSort } from "@/app/actions/intents";
 import { FeedClient } from "./feed-client";
 
 interface FeedPageProps {

@@ -13,10 +13,11 @@ import {
   getAttendeeMatches,
   toggleAttendance,
   isAttending,
-  type ManifestEvent,
 } from "@/app/actions/events";
+import type { ManifestEvent } from "@/lib/types/database";
 import type { Profile, IntentWithAuthor } from "@/lib/types/database";
 import { INTENT_TYPE_CONFIG } from "@/lib/types/database";
+import { toast } from "sonner";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,7 @@ export default function EventDetailPage({
         userId ? isAttending(ev.id, userId) : false,
       ]);
 
+      // Supabase infers profiles!user_id(*) as any[] without a typed DB; the FK is many-to-one
       setAttendees(atts as unknown as { user_id: string; profiles: Profile }[]);
       setAttending(att);
 
@@ -72,11 +74,12 @@ export default function EventDetailPage({
     startTransition(async () => {
       try {
         await toggleAttendance(event.id, userId);
-        // Refresh attendees
         const atts = await getEventAttendees(event.id);
+        // Supabase infers profiles!user_id(*) as any[] without a typed DB; the FK is many-to-one
         setAttendees(atts as unknown as { user_id: string; profiles: Profile }[]);
       } catch {
         setAttending(wasAttending);
+        toast.error("Failed to update attendance");
       }
     });
   }

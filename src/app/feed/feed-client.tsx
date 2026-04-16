@@ -22,8 +22,8 @@ import type {
   Ecosystem,
   Sector,
   IntentPriority,
+  IntentSort,
 } from "@/lib/types/database";
-import type { IntentSort } from "@/app/actions/intents";
 import { getIntents } from "@/app/actions/intents";
 import { getUserSavedIds } from "@/app/actions/saved";
 import { getUserInterestedIds } from "@/app/actions/interests";

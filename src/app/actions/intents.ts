@@ -12,22 +12,8 @@ import type {
   Sector,
   IntentPriority,
   IntentLifecycleStatus,
-  IntentClosedReason,
+  IntentFilters,
 } from "@/lib/types/database";
-
-export type IntentSort = "newest" | "ending_soon";
-
-export interface IntentFilters {
-  type?: IntentType;
-  ecosystem?: Ecosystem;
-  sector?: Sector;
-  priority?: IntentPriority;
-  search?: string;
-  sort?: IntentSort;
-  activeOnly?: boolean;
-  page?: number;
-  pageSize?: number;
-}
 
 export async function getIntents(
   filters?: IntentFilters
@@ -47,7 +33,7 @@ export async function getIntents(
 
   if (activeOnly) {
     query = query
-      .eq("lifecycle_status", "active" as IntentLifecycleStatus)
+      .eq("lifecycle_status", "active")
       .gte("expires_at", new Date().toISOString());
   }
 
@@ -82,7 +68,7 @@ export async function getIntents(
   }
 
   return {
-    intents: (data ?? []) as unknown as IntentWithAuthor[],
+    intents: (data ?? []) as IntentWithAuthor[],
     total: count ?? 0,
   };
 }
@@ -97,7 +83,7 @@ export async function getIntent(id: string): Promise<IntentWithAuthor | null> {
     .single();
 
   if (error) return null;
-  return data as unknown as IntentWithAuthor;
+  return data as IntentWithAuthor;
 }
 
 export async function createIntent(input: {
@@ -132,7 +118,7 @@ export async function createIntent(input: {
       sector: input.sector,
       priority: input.priority,
       expires_at: expiresAt.toISOString(),
-      lifecycle_status: "active" as IntentLifecycleStatus,
+      lifecycle_status: "active",
       is_founding: isFounding,
     })
     .select()
@@ -176,30 +162,6 @@ export async function createIntent(input: {
   return data as Intent;
 }
 
-export async function closeIntent(
-  id: string,
-  reason: IntentClosedReason
-): Promise<Intent> {
-  const supabase = createAdminClient();
-
-  const { data, error } = await supabase
-    .from("intents")
-    .update({
-      lifecycle_status: "closed" as IntentLifecycleStatus,
-      closed_reason: reason,
-    })
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  revalidatePath("/feed");
-  return data as Intent;
-}
-
 export async function getIntentsByAuthor(
   authorId: string
 ): Promise<IntentWithAuthor[]> {
@@ -215,7 +177,7 @@ export async function getIntentsByAuthor(
     throw new Error(error.message);
   }
 
-  return (data ?? []) as unknown as IntentWithAuthor[];
+  return (data ?? []) as IntentWithAuthor[];
 }
 
 export async function getFoundingBadgeRemaining(): Promise<number> {

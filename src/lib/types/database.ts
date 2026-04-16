@@ -207,6 +207,42 @@ export interface EndorsementWithAuthor extends Endorsement {
   endorser: Profile;
 }
 
+// ── Feed / Filter types ──
+
+export type IntentSort = "newest" | "ending_soon";
+
+export interface IntentFilters {
+  type?: IntentType;
+  ecosystem?: Ecosystem;
+  sector?: Sector;
+  priority?: IntentPriority;
+  search?: string;
+  sort?: IntentSort;
+  activeOnly?: boolean;
+  page?: number;
+  pageSize?: number;
+}
+
+// ── Event types ──
+
+export interface ManifestEvent {
+  id: string;
+  name: string;
+  slug: string;
+  location: string | null;
+  start_date: string;
+  end_date: string;
+  website: string | null;
+  created_at: string;
+}
+
+export interface EventAttendee {
+  id: string;
+  event_id: string;
+  user_id: string;
+  created_at: string;
+}
+
 // ── Config records ──
 
 export const INTENT_TYPE_CONFIG: Record<

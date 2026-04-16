@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Calendar, MapPin, Users } from "lucide-react";
-import { getEvents, seedEvents, type ManifestEvent } from "@/app/actions/events";
+import { getEvents, seedEvents } from "@/app/actions/events";
+import type { ManifestEvent } from "@/lib/types/database";
 
 export const dynamic = "force-dynamic";
 

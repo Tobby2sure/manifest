@@ -161,11 +161,6 @@
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
 }
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
 .animate-fade-up {
   animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
@@ -211,9 +206,6 @@
 /* Glow utilities */
 .glow-emerald-sm {
   box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
-}
-.glow-violet-sm {
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
 }
 
 /* Premium custom checkboxes */
@@ -285,11 +277,4 @@
     radial-gradient(ellipse 60% 40% at 10% 20%, rgba(139, 92, 246, 0.08), transparent),
     radial-gradient(ellipse 50% 50% at 80% 60%, rgba(16, 185, 129, 0.06), transparent),
     radial-gradient(ellipse 40% 30% at 50% 10%, rgba(59, 130, 246, 0.05), transparent);
-}
-
-/* Shimmer for stats tiles */
-.shimmer-stat {
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.02) 50%, transparent 100%);
-  background-size: 200% 100%;
-  animation: shimmer 4s ease-in-out infinite;
 }
