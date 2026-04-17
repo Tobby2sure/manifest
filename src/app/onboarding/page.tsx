@@ -14,6 +14,7 @@ import { useUser } from "@/lib/hooks/use-user";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePostHog } from "posthog-js/react";
 import { CheckCircle, ArrowRight, ArrowLeft, User, Building2, Link2 } from "lucide-react";
+import { ManifestMark } from "@/components/manifest-mark";
 
 const STEP_LABELS = ["Account Type", "Your Details", "Organization"];
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -153,8 +154,8 @@ export default function OnboardingPage() {
     return (
       <main className="min-h-[calc(100vh-4rem)] bg-surface-page flex items-center justify-center p-4">
         <div className="text-center max-w-sm">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center text-2xl font-bold text-white mx-auto mb-6 shadow-lg shadow-violet-500/20">
-            M
+          <div className="mx-auto mb-6 flex justify-center">
+            <ManifestMark size={56} mode="primary" className="text-white/90" />
           </div>
           <h1 className="text-2xl font-bold text-text-heading mb-2">
             Welcome to Manifest
