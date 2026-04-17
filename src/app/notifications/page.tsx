@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   MessageSquare,
   CheckCircle,
@@ -14,6 +15,8 @@ import {
   Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { OrgBadge } from "@/components/org-badge";
 import { useUser } from "@/lib/hooks/use-user";
 import {
   getNotifications,
@@ -25,7 +28,10 @@ import {
   acceptConnectionRequest,
   declineConnectionRequest,
   findPendingRequestFromNotification,
+  getConnectionRequestContexts,
+  type ConnectionRequestContext,
 } from "@/app/actions/connections";
+import { INTENT_TYPE_CONFIG } from "@/lib/types/database";
 import type { Notification, NotificationType } from "@/lib/types/database";
 import { formatDistanceToNow } from "date-fns";
 import { NotificationListSkeleton } from "@/components/skeletons";
@@ -113,12 +119,33 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
+  const [connectionContexts, setConnectionContexts] = useState<
+    Record<string, ConnectionRequestContext>
+  >({});
 
   useEffect(() => {
     if (!profile?.id) return;
     getNotifications(profile.id).then((data) => {
       setNotifications(data);
       setLoading(false);
+
+      // Enrich connection_request notifications with sender + pitch + intent
+      const pairs = data
+        .filter((n) => n.type === "connection_request")
+        .map((n) => ({
+          senderId: n.payload.senderId as string | undefined,
+          intentId: n.payload.intentId as string | undefined,
+        }))
+        .filter(
+          (p): p is { senderId: string; intentId: string } =>
+            !!p.senderId && !!p.intentId
+        );
+
+      if (pairs.length > 0) {
+        getConnectionRequestContexts(pairs)
+          .then(setConnectionContexts)
+          .catch(() => {});
+      }
     });
   }, [profile?.id]);
 
@@ -260,6 +287,13 @@ export default function NotificationsPage() {
               const isAffiliateRequest = notif.type === "affiliate_request";
               const isConnectionRequest = notif.type === "connection_request";
 
+              // Enriched context for connection requests (may be undefined
+              // while loading, or if the request was already responded to)
+              const connectionCtx =
+                isConnectionRequest && notif.payload.senderId && notif.payload.intentId
+                  ? connectionContexts[`${notif.payload.senderId}:${notif.payload.intentId}`]
+                  : undefined;
+
               return (
                 <div
                   key={notif.id}
@@ -321,7 +355,118 @@ export default function NotificationsPage() {
                     </div>
                   )}
 
-                  {isConnectionRequest && (
+                  {isConnectionRequest && connectionCtx && (
+                    <div className="px-4 pb-4 pt-0 space-y-3">
+                      {/* Sender identity card */}
+                      <Link
+                        href={`/profile/${connectionCtx.sender.id}`}
+                        className="flex items-start gap-3 rounded-lg border border-white/6 bg-white/3 p-3 hover:bg-white/5 transition-colors"
+                      >
+                        <Avatar className="size-10 shrink-0 ring-1 ring-white/10">
+                          {connectionCtx.sender.avatar_url ? (
+                            <AvatarImage
+                              src={connectionCtx.sender.avatar_url}
+                              alt={connectionCtx.sender.display_name ?? ""}
+                            />
+                          ) : null}
+                          <AvatarFallback className="bg-zinc-800 text-xs text-zinc-300">
+                            {(connectionCtx.sender.display_name ?? "?")[0]?.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-sm font-medium text-white/90 truncate">
+                              {connectionCtx.sender.display_name ?? "Anonymous"}
+                            </span>
+                            {connectionCtx.sender.twitter_verified && (
+                              <CheckCircle className="size-3.5 text-emerald-400 shrink-0" />
+                            )}
+                            {connectionCtx.sender.org_memberships?.[0]?.organizations && (
+                              <OrgBadge
+                                orgName={
+                                  connectionCtx.sender.org_memberships[0].organizations.name
+                                }
+                                orgSlug={
+                                  connectionCtx.sender.org_memberships[0].organizations.slug
+                                }
+                                size="sm"
+                                isAffiliate={
+                                  connectionCtx.sender.org_memberships[0].role === "affiliate"
+                                }
+                              />
+                            )}
+                          </div>
+                          {connectionCtx.sender.twitter_handle && (
+                            <p className="text-xs text-zinc-500">
+                              @{connectionCtx.sender.twitter_handle}
+                            </p>
+                          )}
+                          {connectionCtx.sender.bio && (
+                            <p className="text-xs text-zinc-400 mt-1.5 line-clamp-2">
+                              {connectionCtx.sender.bio}
+                            </p>
+                          )}
+                        </div>
+                      </Link>
+
+                      {/* Pitch message */}
+                      <div className="rounded-lg border-l-2 border-violet-500/50 bg-white/3 px-3 py-2.5">
+                        <p className="text-[11px] uppercase tracking-wide text-violet-400/80 mb-1">
+                          Their pitch
+                        </p>
+                        <p className="text-sm text-white/85 leading-relaxed whitespace-pre-wrap">
+                          {connectionCtx.pitch}
+                        </p>
+                      </div>
+
+                      {/* Intent context */}
+                      {connectionCtx.intent && (
+                        <div className="flex items-center gap-2 text-xs text-zinc-500">
+                          <span className="text-zinc-500">For your</span>
+                          <span
+                            className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium ${
+                              INTENT_TYPE_CONFIG[
+                                connectionCtx.intent.type as keyof typeof INTENT_TYPE_CONFIG
+                              ]?.color ?? "bg-zinc-500/20 text-zinc-400"
+                            }`}
+                          >
+                            {INTENT_TYPE_CONFIG[
+                              connectionCtx.intent.type as keyof typeof INTENT_TYPE_CONFIG
+                            ]?.label ?? connectionCtx.intent.type}
+                          </span>
+                          <span className="text-zinc-400 truncate">
+                            {connectionCtx.intent.content.slice(0, 60)}
+                            {connectionCtx.intent.content.length > 60 ? "…" : ""}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Accept / Decline */}
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleConnectionResponse(notif, "accept")}
+                          disabled={isPending}
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white border-0"
+                        >
+                          Accept
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleConnectionResponse(notif, "decline")}
+                          disabled={isPending}
+                          className="border-white/10 text-zinc-300 hover:bg-white/5"
+                        >
+                          Decline
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fallback: request context missing (e.g. already responded to) —
+                      still show Accept/Decline buttons so the user isn't stuck */}
+                  {isConnectionRequest && !connectionCtx && (
                     <div className="flex gap-2 px-4 pb-4 pt-0">
                       <Button
                         size="sm"
