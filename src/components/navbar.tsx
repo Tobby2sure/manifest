@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Plus, LogOut, Settings, Bell, User, CheckCheck, MessageSquare, CheckCircle, XCircle, Building2, LayoutDashboard } from 'lucide-react';
+import { Plus, LogOut, Settings, Bell, User, CheckCheck, MessageSquare, CheckCircle, XCircle, Building2 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { getNotifications } from '@/app/actions/notifications';
 import { getMyPrimaryOrg } from '@/app/org/[slug]/actions';
@@ -203,24 +203,22 @@ export function Navbar() {
                     </div>
                   </div>
                   <DropdownMenuSeparator className="bg-white/8" />
-                  <DropdownMenuItem onClick={() => window.location.href = '/profile/me'} className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
-                    <User className="h-4 w-4" />My Profile
-                  </DropdownMenuItem>
+                  {/* For org accounts, the org page IS the profile — skip "My Profile" */}
+                  {profile?.account_type !== 'organization' && (
+                    <DropdownMenuItem onClick={() => window.location.href = '/profile/me'} className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
+                      <User className="h-4 w-4" />My Profile
+                    </DropdownMenuItem>
+                  )}
                   {myOrg && (
                     <DropdownMenuItem onClick={() => window.location.href = `/org/${myOrg.slug}`} className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
                       <Building2 className="h-4 w-4" />My Organization
-                    </DropdownMenuItem>
-                  )}
-                  {myOrg && myOrg.role === 'admin' && (
-                    <DropdownMenuItem onClick={() => window.location.href = `/org/${myOrg.slug}/dashboard`} className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
-                      <LayoutDashboard className="h-4 w-4" />Org Dashboard
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={() => window.location.href = '/settings'} className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
                     <Settings className="h-4 w-4" />Settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-white/8" />
-                  <DropdownMenuItem onClick={() => handleLogOut()} className="flex items-center gap-2 cursor-pointer text-red-400 hover:text-red-300">
+                  <DropdownMenuItem onClick={() => handleLogOut()} className="flex items-center gap-2 cursor-pointer text-zinc-400 hover:text-white">
                     <LogOut className="h-4 w-4" />Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
