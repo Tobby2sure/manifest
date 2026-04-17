@@ -302,6 +302,131 @@ export async function findPendingRequestFromNotification(params: {
   return (data as { id: string } | null)?.id ?? null;
 }
 
+export interface ConnectionRequestContext {
+  sender: {
+    id: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    twitter_handle: string | null;
+    twitter_verified: boolean;
+    bio: string | null;
+    account_type: string | null;
+    org_memberships?: Array<{
+      role: string;
+      organizations: { id: string; name: string; slug: string } | null;
+    }>;
+  };
+  pitch: string;
+  intent: { id: string; type: string; content: string };
+}
+
+/**
+ * Batch-fetch context for connection_request notifications.
+ * Takes a list of {senderId, intentId} pairs, returns a Map keyed
+ * by "senderId:intentId" with the full sender profile, pitch message,
+ * and intent context. Used by the notifications page to enrich the
+ * connection request cards.
+ */
+export async function getConnectionRequestContexts(
+  pairs: Array<{ senderId: string; intentId: string }>
+): Promise<Record<string, ConnectionRequestContext>> {
+  if (pairs.length === 0) return {};
+
+  const userId = await getSessionUserId();
+  const supabase = createAdminClient();
+
+  const senderIds = Array.from(new Set(pairs.map((p) => p.senderId)));
+  const intentIds = Array.from(new Set(pairs.map((p) => p.intentId)));
+
+  const [profilesRes, requestsRes, intentsRes] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select(
+        "id, display_name, avatar_url, twitter_handle, twitter_verified, bio, account_type, org_memberships:org_members(role, organizations(id, name, slug))"
+      )
+      .in("id", senderIds),
+    supabase
+      .from("connection_requests")
+      .select("sender_id, intent_id, pitch_message")
+      .eq("receiver_id", userId)
+      .eq("status", "pending")
+      .in("sender_id", senderIds)
+      .in("intent_id", intentIds),
+    supabase
+      .from("intents")
+      .select("id, type, content")
+      .in("id", intentIds),
+  ]);
+
+  type OrgShape = { id: string; name: string; slug: string };
+  type RawProfileRow = {
+    id: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    twitter_handle: string | null;
+    twitter_verified: boolean;
+    bio: string | null;
+    account_type: string | null;
+    org_memberships?: Array<{
+      role: string;
+      organizations: OrgShape | OrgShape[] | null;
+    }>;
+  };
+  type ProfileRow = {
+    id: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    twitter_handle: string | null;
+    twitter_verified: boolean;
+    bio: string | null;
+    account_type: string | null;
+    org_memberships?: Array<{
+      role: string;
+      organizations: OrgShape | null;
+    }>;
+  };
+  type RequestRow = { sender_id: string; intent_id: string; pitch_message: string };
+  type IntentRow = { id: string; type: string; content: string };
+
+  // Normalize org_memberships.organizations (Supabase typings can be ambiguous)
+  const normalizeProfile = (p: RawProfileRow): ProfileRow => ({
+    ...p,
+    org_memberships: p.org_memberships?.map((m) => ({
+      role: m.role,
+      organizations: Array.isArray(m.organizations)
+        ? m.organizations[0] ?? null
+        : m.organizations,
+    })),
+  });
+
+  const profileById = new Map<string, ProfileRow>(
+    ((profilesRes.data ?? []) as unknown as RawProfileRow[])
+      .map(normalizeProfile)
+      .map((p) => [p.id, p])
+  );
+  const intentById = new Map<string, IntentRow>(
+    ((intentsRes.data ?? []) as IntentRow[]).map((i) => [i.id, i])
+  );
+  const pitchByKey = new Map<string, string>(
+    ((requestsRes.data ?? []) as RequestRow[]).map((r) => [
+      `${r.sender_id}:${r.intent_id}`,
+      r.pitch_message,
+    ])
+  );
+
+  const out: Record<string, ConnectionRequestContext> = {};
+  for (const { senderId, intentId } of pairs) {
+    const key = `${senderId}:${intentId}`;
+    const sender = profileById.get(senderId);
+    const intent = intentById.get(intentId);
+    const pitch = pitchByKey.get(key);
+    if (!sender || !intent || !pitch) continue;
+    out[key] = { sender, pitch, intent };
+  }
+
+  return out;
+}
+
 export async function getAcceptedConnections(): Promise<ConnectionWithIntent[]> {
   const userId = await getSessionUserId();
   const supabase = createAdminClient();
