@@ -14,6 +14,7 @@ import {
   Link2,
   Copy,
   Check,
+  LayoutDashboard,
 } from "lucide-react";
 import type { IntentWithAuthor } from "@/lib/types/database";
 import { toast } from "sonner";
@@ -171,6 +172,21 @@ export default function OrgPage() {
               </div>
             </div>
           </div>
+
+          {/* Admin: Dashboard link */}
+          {isAdmin && (
+            <div className="mt-4 pt-4 border-t border-white/6 flex items-center gap-2 flex-wrap">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push(`/org/${slug}/dashboard`)}
+                className="border-violet-500/30 text-violet-300 hover:bg-violet-500/10"
+              >
+                <LayoutDashboard className="size-4 mr-1.5" />
+                Dashboard
+              </Button>
+            </div>
+          )}
 
           {/* Admin: Generate invite */}
           {isAdmin && (

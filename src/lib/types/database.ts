@@ -191,7 +191,24 @@ export type NotificationType =
   | "org_intent_approved"
   | "org_intent_rejected"
   | "intent_engagement_summary"
-  | "intent_suggestions";
+  | "intent_suggestions"
+  | "affiliate_request"
+  | "affiliate_accepted"
+  | "affiliate_declined";
+
+export type OrgRole = "admin" | "member" | "affiliate";
+
+export type AffiliateRequestStatus = "pending" | "accepted" | "declined";
+
+export interface AffiliateRequest {
+  id: string;
+  org_id: string;
+  target_profile_id: string;
+  requested_by: string;
+  status: AffiliateRequestStatus;
+  created_at: string;
+  responded_at: string | null;
+}
 
 export interface Notification {
   id: string;
@@ -250,25 +267,6 @@ export interface IntentFilters {
   pageSize?: number;
 }
 
-// ── Event types ──
-
-export interface ManifestEvent {
-  id: string;
-  name: string;
-  slug: string;
-  location: string | null;
-  start_date: string;
-  end_date: string;
-  website: string | null;
-  created_at: string;
-}
-
-export interface EventAttendee {
-  id: string;
-  event_id: string;
-  user_id: string;
-  created_at: string;
-}
 
 // ── Config records ──
 

@@ -39,27 +39,4 @@ export async function ensureTables() {
     );
   }
 
-  // Check events
-  const { error: evErr } = await supabase
-    .from("events")
-    .select("id")
-    .limit(0);
-
-  if (evErr?.code === "42P01") {
-    console.warn(
-      "[db-setup] events table does not exist. Please create it via Supabase SQL editor."
-    );
-  }
-
-  // Check event_attendees
-  const { error: eaErr } = await supabase
-    .from("event_attendees")
-    .select("id")
-    .limit(0);
-
-  if (eaErr?.code === "42P01") {
-    console.warn(
-      "[db-setup] event_attendees table does not exist. Please create it via Supabase SQL editor."
-    );
-  }
 }
