@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUserId } from "@/lib/auth";
+import { isReservedSlug } from "@/lib/reserved-slugs";
 import type { Organization } from "@/lib/types/database";
 
 /**
@@ -57,14 +58,20 @@ async function generateUniqueSlug(name: string): Promise<string> {
     .slice(0, 40) || "org";
 
   const supabase = createAdminClient();
-  // Check base
-  const { data: existing } = await supabase
-    .from("organizations")
-    .select("id")
-    .eq("slug", base)
-    .maybeSingle();
 
-  if (!existing) return base;
+  // Reserved slugs are never assigned — skip straight to suffixing
+  const baseIsUsable = !isReservedSlug(base);
+
+  // Check base
+  if (baseIsUsable) {
+    const { data: existing } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("slug", base)
+      .maybeSingle();
+
+    if (!existing) return base;
+  }
 
   // Try with a short random suffix
   for (let i = 0; i < 5; i++) {
@@ -121,6 +128,11 @@ export async function createOrg(data: {
 }): Promise<Organization> {
   const userId = await getSessionUserId();
   const supabase = createAdminClient();
+
+  // If caller supplied an explicit slug, reject reserved names outright
+  if (data.slug && isReservedSlug(data.slug)) {
+    throw new Error("That org name is reserved — please choose another.");
+  }
 
   const slug = data.slug || (await generateUniqueSlug(data.name));
 
