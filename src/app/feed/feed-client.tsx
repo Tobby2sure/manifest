@@ -533,9 +533,11 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                         intent={intent}
                         currentUserId={profile?.id ?? null}
                         onRequestConnection={
-                          isAuthenticated
-                            ? (i) => setConnectIntent(i)
-                            : () => setShowAuthFlow(true)
+                          !isAuthenticated
+                            ? () => setShowAuthFlow(true)
+                            : !(profile?.twitter_verified || twitterVerified)
+                            ? () => router.push('/onboarding/verify-x')
+                            : (i) => setConnectIntent(i)
                         }
                         onViewContact={(i) => setViewContactIntent(i)}
                         isSaved={savedIds.has(intent.id)}

@@ -9,9 +9,9 @@ import {
   Clock,
   Bell,
   CheckCheck,
-  Building2,
   Eye,
   Sparkles,
+  Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/lib/hooks/use-user";
@@ -20,9 +20,11 @@ import {
   markRead,
   markAllRead,
 } from "@/app/actions/notifications";
+import { acceptAffiliateRequest, declineAffiliateRequest } from "@/app/actions/affiliates";
 import type { Notification, NotificationType } from "@/lib/types/database";
 import { formatDistanceToNow } from "date-fns";
 import { NotificationListSkeleton } from "@/components/skeletons";
+import { toast } from "sonner";
 
 const NOTIF_ICONS: Record<NotificationType, typeof MessageSquare> = {
   connection_request: MessageSquare,
@@ -34,6 +36,9 @@ const NOTIF_ICONS: Record<NotificationType, typeof MessageSquare> = {
   org_intent_rejected: XCircle,
   intent_engagement_summary: Eye,
   intent_suggestions: Sparkles,
+  affiliate_request: Award,
+  affiliate_accepted: CheckCircle,
+  affiliate_declined: XCircle,
 };
 
 const NOTIF_COLORS: Record<NotificationType, string> = {
@@ -46,6 +51,9 @@ const NOTIF_COLORS: Record<NotificationType, string> = {
   org_intent_rejected: "text-red-400",
   intent_engagement_summary: "text-violet-400",
   intent_suggestions: "text-cyan-400",
+  affiliate_request: "text-violet-400",
+  affiliate_accepted: "text-emerald-400",
+  affiliate_declined: "text-red-400",
 };
 
 const NOTIF_BG: Record<NotificationType, string> = {
@@ -58,6 +66,9 @@ const NOTIF_BG: Record<NotificationType, string> = {
   org_intent_rejected: "bg-red-500/10",
   intent_engagement_summary: "bg-violet-500/10",
   intent_suggestions: "bg-cyan-500/10",
+  affiliate_request: "bg-violet-500/10",
+  affiliate_accepted: "bg-emerald-500/10",
+  affiliate_declined: "bg-red-500/10",
 };
 
 function getNotificationMessage(notif: Notification): string {
@@ -80,6 +91,12 @@ function getNotificationMessage(notif: Notification): string {
     }
     case "intent_suggestions":
       return p.message as string ?? "Check out intents that match yours";
+    case "affiliate_request":
+      return `${p.orgName ?? "An organization"} wants to mark you as an affiliate`;
+    case "affiliate_accepted":
+      return `${p.targetName ?? "Someone"} accepted your affiliate request`;
+    case "affiliate_declined":
+      return `Your affiliate request was declined`;
     default:
       return "You have a new notification";
   }
@@ -115,6 +132,34 @@ export default function NotificationsPage() {
     startTransition(async () => {
       await markAllRead(profile.id);
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    });
+  };
+
+  const handleAcceptAffiliate = (notif: Notification) => {
+    const requestId = notif.payload.requestId as string | undefined;
+    if (!requestId) return;
+    startTransition(async () => {
+      try {
+        await acceptAffiliateRequest(requestId);
+        toast.success("Affiliate request accepted");
+        setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Failed to accept");
+      }
+    });
+  };
+
+  const handleDeclineAffiliate = (notif: Notification) => {
+    const requestId = notif.payload.requestId as string | undefined;
+    if (!requestId) return;
+    startTransition(async () => {
+      try {
+        await declineAffiliateRequest(requestId);
+        toast.success("Request declined");
+        setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Failed to decline");
+      }
     });
   };
 
@@ -175,41 +220,69 @@ export default function NotificationsPage() {
               const iconColor = NOTIF_COLORS[notif.type] ?? "text-zinc-400";
               const bgColor = NOTIF_BG[notif.type] ?? "bg-white/5";
 
+              const isAffiliateRequest = notif.type === "affiliate_request";
+
               return (
-                <button
+                <div
                   key={notif.id}
-                  onClick={() => handleMarkRead(notif)}
-                  className={`w-full flex items-start gap-3 rounded-xl border p-4 text-left transition-colors ${
+                  className={`w-full rounded-xl border transition-colors ${
                     notif.read
                       ? "border-white/6 bg-card/50"
                       : "border-white/8 bg-card"
                   }`}
                 >
-                  <div
-                    className={`shrink-0 size-9 rounded-full flex items-center justify-center ${bgColor}`}
+                  <button
+                    onClick={() => handleMarkRead(notif)}
+                    className="w-full flex items-start gap-3 p-4 text-left"
                   >
-                    <Icon className={`size-4 ${iconColor}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={`text-sm leading-relaxed ${
-                        notif.read ? "text-zinc-400" : "text-white/90"
-                      }`}
+                    <div
+                      className={`shrink-0 size-9 rounded-full flex items-center justify-center ${bgColor}`}
                     >
-                      {getNotificationMessage(notif)}
-                    </p>
-                    <p className="text-xs text-zinc-500 mt-1">
-                      {formatDistanceToNow(new Date(notif.created_at), {
-                        addSuffix: true,
-                      })}
-                    </p>
-                  </div>
-                  {!notif.read && (
-                    <div className="shrink-0 mt-1.5">
-                      <div className="size-2 rounded-full bg-emerald-400" />
+                      <Icon className={`size-4 ${iconColor}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className={`text-sm leading-relaxed ${
+                          notif.read ? "text-zinc-400" : "text-white/90"
+                        }`}
+                      >
+                        {getNotificationMessage(notif)}
+                      </p>
+                      <p className="text-xs text-zinc-500 mt-1">
+                        {formatDistanceToNow(new Date(notif.created_at), {
+                          addSuffix: true,
+                        })}
+                      </p>
+                    </div>
+                    {!notif.read && (
+                      <div className="shrink-0 mt-1.5">
+                        <div className="size-2 rounded-full bg-emerald-400" />
+                      </div>
+                    )}
+                  </button>
+
+                  {isAffiliateRequest && (
+                    <div className="flex gap-2 px-4 pb-4 pt-0">
+                      <Button
+                        size="sm"
+                        onClick={() => handleAcceptAffiliate(notif)}
+                        disabled={isPending}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white border-0"
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeclineAffiliate(notif)}
+                        disabled={isPending}
+                        className="border-white/10 text-zinc-300 hover:bg-white/5"
+                      >
+                        Decline
+                      </Button>
                     </div>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>

@@ -77,9 +77,6 @@ export function Navbar() {
           <Link href="/feed" className="text-sm text-zinc-400 hover:text-white transition-colors">
             Explore
           </Link>
-          <Link href="/events" className="text-sm text-zinc-400 hover:text-white transition-colors">
-            Events
-          </Link>
         </div>
 
         {/* Right */}

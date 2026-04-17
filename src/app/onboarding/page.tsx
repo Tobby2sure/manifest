@@ -44,7 +44,13 @@ export default function OnboardingPage() {
   const [telegram, setTelegram] = useState(
     profile?.telegram_handle ?? ""
   );
-  const [email, setEmail] = useState(profile?.email ?? "");
+  // Email from sign-in (Dynamic) — readonly in onboarding
+  const signInEmail = user?.verifiedCredentials?.find(c => c.format === 'email')?.email ?? '';
+  const [email, setEmail] = useState(signInEmail || profile?.email || "");
+  useEffect(() => {
+    if (signInEmail) setEmail(signInEmail);
+  }, [signInEmail]);
+
   const [orgName, setOrgName] = useState("");
   const [orgWebsite, setOrgWebsite] = useState("");
   const [orgLogo, setOrgLogo] = useState("");
@@ -52,32 +58,45 @@ export default function OnboardingPage() {
   const [error, setError] = useState("");
 
   const isOrg = accountType === "organization";
-  const totalSteps = isOrg ? 4 : 3;
+  // Both account types now have 3 steps. Org skips "Your Details".
+  const totalSteps = 3;
 
   const twitterCredential = user?.verifiedCredentials?.find(c => c.oauthProvider === 'twitter');
   const hasTwitter = !!twitterCredential?.oauthUsername;
   const twitterUsername = twitterCredential?.oauthUsername;
 
   function currentStepIndex() {
+    // Maps raw step → visual step indicator position
     if (step === 0) return 0;
+    if (isOrg) {
+      // Org flow: 0 (type) → 2 (org details) → 3 (X verify)
+      if (step === 2) return 1;
+      return 2; // step 3
+    }
+    // Individual flow: 0 (type) → 1 (your details) → 3 (X verify)
     if (step === 1) return 1;
-    if (step === 2 && isOrg) return 2;
-    return isOrg ? 3 : 2;
+    return 2; // step 3
   }
 
   function nextStep() {
     setDirection(1);
     posthog?.capture("onboarding_step_completed", { step: currentStepIndex() });
     if (step === 0) {
-      setStep(1);
+      // Org skips "Your Details" (step 1) entirely
+      setStep(isOrg ? 2 : 1);
     } else if (step === 1) {
       if (!displayName.trim()) {
         setError("Display name is required.");
         return;
       }
       setError("");
-      setStep(isOrg ? 2 : 3);
+      setStep(3);
     } else if (step === 2) {
+      if (!orgName.trim()) {
+        setError("Organization name is required.");
+        return;
+      }
+      setError("");
       setStep(3);
     }
   }
@@ -87,7 +106,8 @@ export default function OnboardingPage() {
     if (step === 3) {
       setStep(isOrg ? 2 : 1);
     } else if (step === 2) {
-      setStep(1);
+      // Org went directly from 0 → 2, so back goes to 0
+      setStep(0);
     } else if (step === 1) {
       setStep(0);
     }
@@ -100,12 +120,14 @@ export default function OnboardingPage() {
 
     try {
       const walletAddress = primaryWallet?.address ?? undefined;
+      // For orgs, use org name as display_name since we skip "Your Details"
+      const effectiveDisplayName = isOrg ? orgName : displayName;
       await upsertProfile({
         id: user.userId!,
-        display_name: displayName,
+        display_name: effectiveDisplayName,
         bio: bio || undefined,
         telegram_handle: telegram || undefined,
-        email: email || undefined,
+        email: signInEmail || email || undefined,
         account_type: accountType,
         twitter_handle: twitterUsername ?? undefined,
         twitter_verified: hasTwitter,
@@ -306,11 +328,16 @@ export default function OnboardingPage() {
                     <Input
                       id="email"
                       type="email"
-                      value={email}
+                      value={signInEmail || email}
                       onChange={(e) => setEmail(e.target.value)}
+                      readOnly={!!signInEmail}
+                      disabled={!!signInEmail}
                       placeholder="you@example.com"
-                      className="mt-1.5 bg-white/5 border-white/8 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200"
+                      className="mt-1.5 bg-white/5 border-white/8 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
                     />
+                    {signInEmail && (
+                      <p className="text-xs text-text-muted mt-1.5">From your sign-in — can't be changed</p>
+                    )}
                   </div>
                 </div>
                 {error && <p className="text-sm text-red-400 mt-3">{error}</p>}
@@ -461,12 +488,13 @@ export default function OnboardingPage() {
                     if (!user) return;
                     setSubmitting(true);
                     try {
+                      const effectiveDisplayName = isOrg ? orgName : displayName;
                       await upsertProfile({
                         id: user.userId!,
-                        display_name: displayName,
+                        display_name: effectiveDisplayName,
                         bio: bio || undefined,
                         telegram_handle: telegram || undefined,
-                        email: email || undefined,
+                        email: signInEmail || email || undefined,
                         account_type: accountType,
                         twitter_verified: false,
                         wallet_address: primaryWallet?.address ?? undefined,
