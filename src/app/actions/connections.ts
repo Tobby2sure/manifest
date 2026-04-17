@@ -158,6 +158,150 @@ export async function updateConnectionLifecycle(
   revalidatePath(`/profile/${userId}`);
 }
 
+/**
+ * Accept a pending connection request.
+ * Caller must be the request's receiver.
+ * Notifies the sender on success.
+ */
+export async function acceptConnectionRequest(
+  requestId: string
+): Promise<void> {
+  const userId = await getSessionUserId();
+  const supabase = createAdminClient();
+
+  const { data: request, error: fetchError } = await supabase
+    .from("connection_requests")
+    .select("*")
+    .eq("id", requestId)
+    .maybeSingle();
+
+  if (fetchError || !request) {
+    throw new Error("Request not found");
+  }
+  const req = request as ConnectionRequest;
+  if (req.receiver_id !== userId) {
+    throw new Error("Not authorized");
+  }
+  if (req.status !== "pending") {
+    throw new Error(`Request already ${req.status}`);
+  }
+
+  const { error: updateError } = await supabase
+    .from("connection_requests")
+    .update({ status: "accepted", updated_at: new Date().toISOString() })
+    .eq("id", requestId);
+
+  if (updateError) throw new Error(updateError.message);
+
+  // Notify the sender
+  try {
+    const { getProfile } = await import("@/app/actions/profiles");
+    const receiverProfile = await getProfile(userId);
+    notifyAsync(req.sender_id, "request_accepted", {
+      receiverName: receiverProfile?.display_name ?? "Someone",
+      intentId: req.intent_id,
+      connectionId: req.id,
+      receiverId: userId,
+    });
+  } catch (e) {
+    console.error("[acceptConnectionRequest] notify failed:", e);
+  }
+
+  try {
+    trackServerEvent(userId, "connection_accepted", {
+      intentId: req.intent_id,
+      senderId: req.sender_id,
+    });
+  } catch {
+    // non-fatal
+  }
+
+  revalidatePath("/notifications");
+  revalidatePath("/feed");
+  revalidatePath(`/profile/${userId}`);
+}
+
+/**
+ * Decline a pending connection request.
+ * Caller must be the request's receiver.
+ */
+export async function declineConnectionRequest(
+  requestId: string
+): Promise<void> {
+  const userId = await getSessionUserId();
+  const supabase = createAdminClient();
+
+  const { data: request, error: fetchError } = await supabase
+    .from("connection_requests")
+    .select("*")
+    .eq("id", requestId)
+    .maybeSingle();
+
+  if (fetchError || !request) {
+    throw new Error("Request not found");
+  }
+  const req = request as ConnectionRequest;
+  if (req.receiver_id !== userId) {
+    throw new Error("Not authorized");
+  }
+  if (req.status !== "pending") {
+    throw new Error(`Request already ${req.status}`);
+  }
+
+  const { error: updateError } = await supabase
+    .from("connection_requests")
+    .update({ status: "declined", updated_at: new Date().toISOString() })
+    .eq("id", requestId);
+
+  if (updateError) throw new Error(updateError.message);
+
+  try {
+    notifyAsync(req.sender_id, "request_declined", {
+      intentId: req.intent_id,
+      connectionId: req.id,
+    });
+  } catch (e) {
+    console.error("[declineConnectionRequest] notify failed:", e);
+  }
+
+  try {
+    trackServerEvent(userId, "connection_declined", {
+      intentId: req.intent_id,
+      senderId: req.sender_id,
+    });
+  } catch {
+    // non-fatal
+  }
+
+  revalidatePath("/notifications");
+}
+
+/**
+ * Find the pending connection_request ID from a notification's payload fields.
+ * Notifications store {senderId, intentId}; the receiver is always the current user.
+ * Returns null if no matching pending request exists (e.g., already responded).
+ */
+export async function findPendingRequestFromNotification(params: {
+  senderId: string;
+  intentId: string;
+}): Promise<string | null> {
+  const userId = await getSessionUserId();
+  const supabase = createAdminClient();
+
+  const { data } = await supabase
+    .from("connection_requests")
+    .select("id")
+    .eq("sender_id", params.senderId)
+    .eq("intent_id", params.intentId)
+    .eq("receiver_id", userId)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return (data as { id: string } | null)?.id ?? null;
+}
+
 export async function getAcceptedConnections(): Promise<ConnectionWithIntent[]> {
   const userId = await getSessionUserId();
   const supabase = createAdminClient();

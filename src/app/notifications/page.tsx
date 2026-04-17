@@ -21,6 +21,11 @@ import {
   markAllRead,
 } from "@/app/actions/notifications";
 import { acceptAffiliateRequest, declineAffiliateRequest } from "@/app/actions/affiliates";
+import {
+  acceptConnectionRequest,
+  declineConnectionRequest,
+  findPendingRequestFromNotification,
+} from "@/app/actions/connections";
 import type { Notification, NotificationType } from "@/lib/types/database";
 import { formatDistanceToNow } from "date-fns";
 import { NotificationListSkeleton } from "@/components/skeletons";
@@ -163,6 +168,38 @@ export default function NotificationsPage() {
     });
   };
 
+  const handleConnectionResponse = (
+    notif: Notification,
+    action: "accept" | "decline"
+  ) => {
+    const senderId = notif.payload.senderId as string | undefined;
+    const intentId = notif.payload.intentId as string | undefined;
+    if (!senderId || !intentId) {
+      toast.error("Missing request info");
+      return;
+    }
+    startTransition(async () => {
+      try {
+        const requestId = await findPendingRequestFromNotification({ senderId, intentId });
+        if (!requestId) {
+          toast.error("This request has already been responded to");
+          setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
+          return;
+        }
+        if (action === "accept") {
+          await acceptConnectionRequest(requestId);
+          toast.success("Connection accepted");
+        } else {
+          await declineConnectionRequest(requestId);
+          toast.success("Request declined");
+        }
+        setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Failed");
+      }
+    });
+  };
+
   if (isLoading || loading) {
     return (
       <main className="min-h-[calc(100vh-4rem)] bg-background">
@@ -221,6 +258,7 @@ export default function NotificationsPage() {
               const bgColor = NOTIF_BG[notif.type] ?? "bg-white/5";
 
               const isAffiliateRequest = notif.type === "affiliate_request";
+              const isConnectionRequest = notif.type === "connection_request";
 
               return (
                 <div
@@ -275,6 +313,28 @@ export default function NotificationsPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => handleDeclineAffiliate(notif)}
+                        disabled={isPending}
+                        className="border-white/10 text-zinc-300 hover:bg-white/5"
+                      >
+                        Decline
+                      </Button>
+                    </div>
+                  )}
+
+                  {isConnectionRequest && (
+                    <div className="flex gap-2 px-4 pb-4 pt-0">
+                      <Button
+                        size="sm"
+                        onClick={() => handleConnectionResponse(notif, "accept")}
+                        disabled={isPending}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white border-0"
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleConnectionResponse(notif, "decline")}
                         disabled={isPending}
                         className="border-white/10 text-zinc-300 hover:bg-white/5"
                       >
