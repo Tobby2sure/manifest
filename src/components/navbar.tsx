@@ -138,7 +138,12 @@ export function Navbar() {
                     ) : (
                       <div>
                         {notifications.slice(0, 4).map(n => (
-                          <div key={n.id} className={`flex items-start gap-3 px-4 py-3 border-b border-white/4 hover:bg-white/3 transition-colors ${!n.read ? 'bg-violet-500/[0.04]' : ''}`}>
+                          <Link
+                            key={n.id}
+                            href="/notifications"
+                            onClick={() => setNotifOpen(false)}
+                            className={`flex items-start gap-3 px-4 py-3 border-b border-white/4 hover:bg-white/6 transition-colors cursor-pointer ${!n.read ? 'bg-violet-500/[0.04]' : ''}`}
+                          >
                             <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${!n.read ? 'bg-violet-500/20' : 'bg-white/5'}`}>
                               {n.type === 'connection_request' && <MessageSquare className="size-3.5 text-blue-400" />}
                               {n.type === 'request_accepted' && <CheckCircle className="size-3.5 text-emerald-400" />}
@@ -154,7 +159,7 @@ export function Navbar() {
                               </p>
                             </div>
                             {!n.read && <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500" />}
-                          </div>
+                          </Link>
                         ))}
                         <Link href="/notifications" onClick={() => setNotifOpen(false)} className="block px-4 py-2.5 text-center text-xs text-violet-400 hover:text-violet-300 transition-colors">
                           More
