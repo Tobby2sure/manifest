@@ -74,18 +74,27 @@ export async function GET(request: NextRequest) {
 
     const { access_token } = tokenData;
 
-    // Use Twitter v2 /users/me to get the authenticated user's handle
+    // Use Twitter v2 /users/me to get the authenticated user's handle + avatar
     let twitterHandle: string | null = null;
     let twitterId: string | null = null;
+    let twitterAvatar: string | null = null;
 
     try {
-      const meRes = await fetch("https://api.twitter.com/2/users/me", {
-        headers: { Authorization: `Bearer ${access_token}` },
-      });
+      const meRes = await fetch(
+        "https://api.twitter.com/2/users/me?user.fields=profile_image_url",
+        {
+          headers: { Authorization: `Bearer ${access_token}` },
+        }
+      );
       if (meRes.ok) {
         const meData = await meRes.json();
         twitterHandle = meData.data?.username ?? null;
         twitterId = meData.data?.id ?? null;
+        // Twitter returns _normal (48x48); upgrade to _400x400 for profile pic
+        const rawAvatar = meData.data?.profile_image_url ?? null;
+        twitterAvatar = rawAvatar
+          ? rawAvatar.replace("_normal", "_400x400")
+          : null;
       }
     } catch {
       // v2 /users/me failed — continue without handle
@@ -133,14 +142,29 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Only auto-populate avatar_url if the user hasn't set one already.
+    const { data: currentProfile } = await supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const shouldSetAvatar =
+      twitterAvatar && !(currentProfile as { avatar_url: string | null } | null)?.avatar_url;
+
+    const profileUpdate: Record<string, unknown> = {
+      twitter_handle: twitterHandle,
+      twitter_id: twitterId,
+      twitter_verified: true,
+      twitter_verified_at: new Date().toISOString(),
+    };
+    if (shouldSetAvatar) {
+      profileUpdate.avatar_url = twitterAvatar;
+    }
+
     const { error: dbError } = await supabase
       .from("profiles")
-      .update({
-        twitter_handle: twitterHandle,
-        twitter_id: twitterId,
-        twitter_verified: true,
-        twitter_verified_at: new Date().toISOString(),
-      })
+      .update(profileUpdate)
       .eq("id", userId);
 
     if (dbError) {
