@@ -21,7 +21,6 @@ import type {
   IntentType,
   Ecosystem,
   Sector,
-  IntentPriority,
   IntentSort,
 } from "@/lib/types/database";
 import { getIntents } from "@/app/actions/intents";
@@ -55,8 +54,6 @@ const SORT_OPTIONS: { value: IntentSort; label: string }[] = [
   { value: "ending_soon", label: "Ending Soon" },
 ];
 
-const PRIORITY_OPTIONS: IntentPriority[] = ["Urgent", "Active", "Open"];
-
 const ease = [0.22, 1, 0.36, 1] as const;
 
 interface FeedClientProps {
@@ -66,7 +63,6 @@ interface FeedClientProps {
     type?: IntentType;
     ecosystem?: Ecosystem;
     sector?: Sector;
-    priority?: IntentPriority;
     search?: string;
     sort?: IntentSort;
     page?: number;
@@ -157,7 +153,6 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
   const activeType = initialFilters.type ?? null;
   const activeEcosystem = initialFilters.ecosystem ?? null;
   const activeSector = initialFilters.sector ?? null;
-  const activePriority = initialFilters.priority ?? null;
   const activeSort = initialFilters.sort ?? "newest";
 
   const updateFilter = useCallback(
@@ -222,7 +217,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
   }, [loadMore]);
 
   const canPost = isAuthenticated && (profile?.twitter_verified || twitterVerified);
-  const hasActiveFilters = activeType || activeEcosystem || activeSector || activePriority || searchValue;
+  const hasActiveFilters = activeType || activeEcosystem || activeSector || searchValue;
 
   // Filter out intents from blocked users
   const visibleIntents = blockedIds.size > 0
@@ -417,39 +412,6 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                   isCustomSector ? 'border-violet-500/30 bg-white/6' : 'border-white/8'
                 }`}
               />
-            </div>
-
-            {/* Priority */}
-            <div>
-              <h3 className="text-[11px] font-semibold text-text-heading/40 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <span className="h-px flex-1 bg-gradient-to-r from-white/6 to-transparent" />
-                Priority
-                <span className="h-px flex-1 bg-gradient-to-l from-white/6 to-transparent" />
-              </h3>
-              <div className="space-y-0.5">
-                {PRIORITY_OPTIONS.map((p) => (
-                  <label
-                    key={p}
-                    className={`flex items-center gap-2.5 cursor-pointer group rounded-lg px-2.5 py-1.5 transition-all duration-200 ${
-                      activePriority === p ? 'bg-white/4' : 'hover:bg-white/3'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={activePriority === p}
-                      onChange={() =>
-                        updateFilter("priority", activePriority === p ? null : p)
-                      }
-                      className="premium-checkbox"
-                    />
-                    <span className={`text-sm transition-colors duration-200 ${
-                      activePriority === p ? 'text-text-heading' : 'text-text-body group-hover:text-[#CBD5E1]'
-                    }`}>
-                      {p}
-                    </span>
-                  </label>
-                ))}
-              </div>
             </div>
 
             {/* Clear filters */}

@@ -35,6 +35,7 @@ import { INTENT_TYPE_CONFIG } from "@/lib/types/database";
 import type { Notification, NotificationType } from "@/lib/types/database";
 import { formatDistanceToNow } from "date-fns";
 import { NotificationListSkeleton } from "@/components/skeletons";
+import { ViewContactDialog } from "@/components/view-contact-dialog";
 import { toast } from "sonner";
 
 const NOTIF_ICONS: Record<NotificationType, typeof MessageSquare> = {
@@ -122,6 +123,7 @@ export default function NotificationsPage() {
   const [connectionContexts, setConnectionContexts] = useState<
     Record<string, ConnectionRequestContext>
   >({});
+  const [revealContactId, setRevealContactId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -216,6 +218,7 @@ export default function NotificationsPage() {
         if (action === "accept") {
           await acceptConnectionRequest(requestId);
           toast.success("Connection accepted");
+          setRevealContactId(requestId);
         } else {
           await declineConnectionRequest(requestId);
           toast.success("Request declined");
@@ -356,11 +359,11 @@ export default function NotificationsPage() {
                   )}
 
                   {isConnectionRequest && connectionCtx && (
-                    <div className="px-4 pb-4 pt-0 space-y-3">
+                    <div className="px-4 pb-4 pt-0 space-y-2.5">
                       {/* Sender identity card */}
                       <Link
                         href={`/profile/${connectionCtx.sender.id}`}
-                        className="flex items-start gap-3 rounded-lg border border-white/6 bg-white/3 p-3 hover:bg-white/5 transition-colors"
+                        className="flex items-start gap-3 rounded-lg border border-white/6 bg-white/3 px-3 py-2.5 hover:bg-white/5 transition-colors"
                       >
                         <Avatar className="size-10 shrink-0 ring-1 ring-white/10">
                           {connectionCtx.sender.avatar_url ? (
@@ -401,7 +404,7 @@ export default function NotificationsPage() {
                               @{connectionCtx.sender.twitter_handle}
                             </p>
                           )}
-                          {connectionCtx.sender.bio && (
+                          {connectionCtx.sender.bio && connectionCtx.sender.bio.trim().length >= 12 && (
                             <p className="text-xs text-zinc-400 mt-1.5 line-clamp-2">
                               {connectionCtx.sender.bio}
                             </p>
@@ -411,7 +414,7 @@ export default function NotificationsPage() {
 
                       {/* Pitch message */}
                       <div className="rounded-lg border-l-2 border-violet-500/50 bg-white/3 px-3 py-2.5">
-                        <p className="text-[11px] uppercase tracking-wide text-violet-400/80 mb-1">
+                        <p className="text-[10px] font-medium text-violet-400 mb-1">
                           Their pitch
                         </p>
                         <p className="text-sm text-white/85 leading-relaxed whitespace-pre-wrap">
@@ -421,23 +424,24 @@ export default function NotificationsPage() {
 
                       {/* Intent context */}
                       {connectionCtx.intent && (
-                        <div className="flex items-center gap-2 text-xs text-zinc-500">
-                          <span className="text-zinc-500">For your</span>
-                          <span
-                            className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium ${
-                              INTENT_TYPE_CONFIG[
+                        <div className="text-xs text-zinc-500">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-zinc-500">For your</span>
+                            <span
+                              className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium ${
+                                INTENT_TYPE_CONFIG[
+                                  connectionCtx.intent.type as keyof typeof INTENT_TYPE_CONFIG
+                                ]?.color ?? "bg-zinc-500/20 text-zinc-400"
+                              }`}
+                            >
+                              {INTENT_TYPE_CONFIG[
                                 connectionCtx.intent.type as keyof typeof INTENT_TYPE_CONFIG
-                              ]?.color ?? "bg-zinc-500/20 text-zinc-400"
-                            }`}
-                          >
-                            {INTENT_TYPE_CONFIG[
-                              connectionCtx.intent.type as keyof typeof INTENT_TYPE_CONFIG
-                            ]?.label ?? connectionCtx.intent.type}
-                          </span>
-                          <span className="text-zinc-400 truncate">
-                            {connectionCtx.intent.content.slice(0, 60)}
-                            {connectionCtx.intent.content.length > 60 ? "…" : ""}
-                          </span>
+                              ]?.label ?? connectionCtx.intent.type}
+                            </span>
+                          </div>
+                          <p className="text-zinc-400 line-clamp-2 leading-snug">
+                            {connectionCtx.intent.content}
+                          </p>
                         </div>
                       )}
 
@@ -447,7 +451,7 @@ export default function NotificationsPage() {
                           size="sm"
                           onClick={() => handleConnectionResponse(notif, "accept")}
                           disabled={isPending}
-                          className="bg-emerald-600 hover:bg-emerald-500 text-white border-0"
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white border-0"
                         >
                           Accept
                         </Button>
@@ -456,7 +460,7 @@ export default function NotificationsPage() {
                           variant="outline"
                           onClick={() => handleConnectionResponse(notif, "decline")}
                           disabled={isPending}
-                          className="border-white/10 text-zinc-300 hover:bg-white/5"
+                          className="flex-1 border-white/10 text-zinc-300 hover:bg-white/5"
                         >
                           Decline
                         </Button>
@@ -472,7 +476,7 @@ export default function NotificationsPage() {
                         size="sm"
                         onClick={() => handleConnectionResponse(notif, "accept")}
                         disabled={isPending}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white border-0"
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white border-0"
                       >
                         Accept
                       </Button>
@@ -481,9 +485,23 @@ export default function NotificationsPage() {
                         variant="outline"
                         onClick={() => handleConnectionResponse(notif, "decline")}
                         disabled={isPending}
-                        className="border-white/10 text-zinc-300 hover:bg-white/5"
+                        className="flex-1 border-white/10 text-zinc-300 hover:bg-white/5"
                       >
                         Decline
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Sender-side: show View Contact on accepted requests */}
+                  {notif.type === "request_accepted" && typeof notif.payload.connectionId === "string" && (
+                    <div className="flex gap-2 px-4 pb-4 pt-0">
+                      <Button
+                        size="sm"
+                        onClick={() => setRevealContactId(notif.payload.connectionId as string)}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white border-0"
+                      >
+                        <Eye className="size-3.5 mr-1.5" />
+                        View Contact
                       </Button>
                     </div>
                   )}
@@ -493,6 +511,14 @@ export default function NotificationsPage() {
           </div>
         )}
       </div>
+
+      <ViewContactDialog
+        open={!!revealContactId}
+        onOpenChange={(open) => {
+          if (!open) setRevealContactId(null);
+        }}
+        connectionId={revealContactId}
+      />
     </main>
   );
 }

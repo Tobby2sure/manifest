@@ -36,8 +36,6 @@ export type Sector =
   | "payments"
   | (string & {});
 
-export type IntentPriority = "Open" | "Active" | "Urgent";
-
 export type IntentLifecycleStatus =
   | "active"
   | "in_discussion"
@@ -110,7 +108,6 @@ export interface Intent {
   content: string;
   ecosystem: Ecosystem | null;
   sector: Sector | null;
-  priority: IntentPriority;
   expires_at: string;
   lifecycle_status: IntentLifecycleStatus;
   closed_reason: IntentClosedReason | null;
@@ -259,7 +256,6 @@ export interface IntentFilters {
   type?: IntentType;
   ecosystem?: Ecosystem;
   sector?: Sector;
-  priority?: IntentPriority;
   search?: string;
   sort?: IntentSort;
   activeOnly?: boolean;

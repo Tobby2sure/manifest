@@ -12,7 +12,6 @@ import type {
   IntentType,
   Ecosystem,
   Sector,
-  IntentPriority,
   IntentLifecycleStatus,
   IntentFilters,
 } from "@/lib/types/database";
@@ -47,9 +46,6 @@ export async function getIntents(
   }
   if (filters?.sector) {
     query = query.eq("sector", filters.sector);
-  }
-  if (filters?.priority) {
-    query = query.eq("priority", filters.priority);
   }
   if (filters?.search) {
     query = query.textSearch("content", filters.search, { type: "websearch" });
@@ -94,7 +90,6 @@ export async function createIntent(input: {
   content: string;
   ecosystem: Ecosystem | null;
   sector: Sector | null;
-  priority: IntentPriority;
   durationDays: number;
 }): Promise<Intent> {
   const supabase = createAdminClient();
@@ -129,7 +124,6 @@ export async function createIntent(input: {
       content: input.content,
       ecosystem: input.ecosystem,
       sector: input.sector,
-      priority: input.priority,
       expires_at: expiresAt.toISOString(),
       lifecycle_status: "active",
       is_founding: isFounding,

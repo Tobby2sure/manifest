@@ -6,7 +6,6 @@ import type {
   IntentType,
   Ecosystem,
   Sector,
-  IntentPriority,
   IntentSort,
 } from "@/lib/types/database";
 import { FeedClient } from "./feed-client";
@@ -16,7 +15,6 @@ interface FeedPageProps {
     type?: string;
     ecosystem?: string;
     sector?: string;
-    priority?: string;
     search?: string;
     sort?: string;
     page?: string;
@@ -32,7 +30,6 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     type: (params.type as IntentType) || undefined,
     ecosystem: (params.ecosystem as Ecosystem) || undefined,
     sector: (params.sector as Sector) || undefined,
-    priority: (params.priority as IntentPriority) || undefined,
     search: params.search || undefined,
     sort: (params.sort as IntentSort) || undefined,
     page: params.page ? parseInt(params.page, 10) : 0,
