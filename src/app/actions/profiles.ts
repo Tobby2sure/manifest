@@ -19,6 +19,68 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   return (data as Profile) ?? null;
 }
 
+/**
+ * Returns per-tab content counts for the profile page, used to hide empty tabs.
+ * Owner-only counts (saved, connections) are gated via getSessionUserId.
+ */
+export async function getProfileCounts(userId: string): Promise<{
+  endorsements: number;
+  saved: number;
+  connections: number;
+  nfts: number;
+}> {
+  const supabase = createAdminClient();
+
+  // Session check — saved/connections are owner-only views
+  let sessionUserId: string | null = null;
+  try {
+    sessionUserId = await getSessionUserId();
+  } catch {
+    // Anonymous visitor is fine; owner-only counts will resolve to 0
+  }
+  const isOwner = sessionUserId === userId;
+
+  const endorsementsPromise = supabase
+    .from("endorsements")
+    .select("*", { count: "exact", head: true })
+    .eq("endorsee_id", userId);
+
+  const nftsPromise = supabase
+    .from("intents")
+    .select("*", { count: "exact", head: true })
+    .eq("author_id", userId)
+    .not("nft_token_id", "is", null);
+
+  const savedPromise = isOwner
+    ? supabase
+        .from("saved_intents")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+    : Promise.resolve({ count: 0 } as { count: number });
+
+  const connectionsPromise = isOwner
+    ? supabase
+        .from("connection_requests")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "accepted")
+        .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+    : Promise.resolve({ count: 0 } as { count: number });
+
+  const [endorsementsRes, nftsRes, savedRes, connectionsRes] = await Promise.all([
+    endorsementsPromise,
+    nftsPromise,
+    savedPromise,
+    connectionsPromise,
+  ]);
+
+  return {
+    endorsements: endorsementsRes.count ?? 0,
+    nfts: nftsRes.count ?? 0,
+    saved: savedRes.count ?? 0,
+    connections: connectionsRes.count ?? 0,
+  };
+}
+
 export async function upsertProfile(input: {
   id: string;
   display_name: string;

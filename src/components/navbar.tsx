@@ -11,9 +11,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Plus, LogOut, Settings, Bell, User, CheckCheck, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, LogOut, Settings, Bell, User, CheckCheck, MessageSquare, CheckCircle, XCircle, Building2, LayoutDashboard } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { getNotifications } from '@/app/actions/notifications';
+import { getMyPrimaryOrg } from '@/app/org/[slug]/actions';
 import type { Notification } from '@/lib/types/database';
 import { formatDistanceToNow } from 'date-fns';
 import { PostIntentDialog } from '@/components/post-intent-dialog';
@@ -22,12 +23,13 @@ import { useUser } from '@/lib/hooks/use-user';
 
 export function Navbar() {
   const { sdkHasLoaded, user: dynamicUser, handleLogOut, setShowAuthFlow } = useDynamicContext();
-  const { user, twitterHandle, twitterVerified } = useUser();
+  const { user, profile, twitterHandle, twitterVerified } = useUser();
   const isLoggedIn = !!dynamicUser || !!user;
   const [intentDialogOpen, setIntentDialogOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [myOrg, setMyOrg] = useState<{ id: string; slug: string; name: string; role: string } | null>(null);
   const notifRef = useRef<HTMLDivElement>(null);
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -42,6 +44,11 @@ export function Navbar() {
     getNotifications(user.userId)
       .then(data => setNotifications(data.slice(0, 5)))
       .catch(() => {});
+
+    // Fetch primary org for the dropdown "My Organization" link
+    getMyPrimaryOrg()
+      .then(setMyOrg)
+      .catch(() => setMyOrg(null));
   }, [user?.userId]);
 
   useEffect(() => {
@@ -161,21 +168,54 @@ export function Navbar() {
                 <DropdownMenuTrigger>
                   <button className="rounded-full focus:outline-none cursor-pointer">
                     <Avatar className="h-8 w-8 ring-1 ring-white/10 hover:ring-white/30 transition-all">
+                      {profile?.avatar_url ? (
+                        <AvatarImage src={profile.avatar_url} alt={displayName} />
+                      ) : null}
                       <AvatarFallback className="bg-zinc-800 text-xs text-zinc-300">
                         {displayName[0]?.toUpperCase() ?? 'U'}
                       </AvatarFallback>
                     </Avatar>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-card border-white/8">
-                  <div className="px-3 py-2">
-                    <p className="text-sm font-medium text-white truncate">{displayName}</p>
-                    {twitterVerified && <p className="text-xs text-emerald-400 mt-0.5">✓ X Verified</p>}
+                <DropdownMenuContent align="end" className="w-56 bg-card border-white/8">
+                  {/* Identity card: avatar + name + email/handle + verified */}
+                  <div className="flex items-center gap-3 px-3 py-3">
+                    <Avatar className="h-9 w-9 shrink-0 ring-1 ring-white/10">
+                      {profile?.avatar_url ? (
+                        <AvatarImage src={profile.avatar_url} alt={displayName} />
+                      ) : null}
+                      <AvatarFallback className="bg-zinc-800 text-xs text-zinc-300">
+                        {displayName[0]?.toUpperCase() ?? 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">
+                        {profile?.display_name ?? displayName}
+                      </p>
+                      {twitterHandle ? (
+                        <p className="text-xs text-zinc-400 truncate">@{twitterHandle}</p>
+                      ) : (
+                        <p className="text-xs text-zinc-400 truncate">{displayName}</p>
+                      )}
+                      {twitterVerified && (
+                        <p className="text-[10px] text-emerald-400 mt-0.5">✓ X Verified</p>
+                      )}
+                    </div>
                   </div>
                   <DropdownMenuSeparator className="bg-white/8" />
                   <DropdownMenuItem onClick={() => window.location.href = '/profile/me'} className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
                     <User className="h-4 w-4" />My Profile
                   </DropdownMenuItem>
+                  {myOrg && (
+                    <DropdownMenuItem onClick={() => window.location.href = `/org/${myOrg.slug}`} className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
+                      <Building2 className="h-4 w-4" />My Organization
+                    </DropdownMenuItem>
+                  )}
+                  {myOrg && myOrg.role === 'admin' && (
+                    <DropdownMenuItem onClick={() => window.location.href = `/org/${myOrg.slug}/dashboard`} className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
+                      <LayoutDashboard className="h-4 w-4" />Org Dashboard
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={() => window.location.href = '/settings'} className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
                     <Settings className="h-4 w-4" />Settings
                   </DropdownMenuItem>

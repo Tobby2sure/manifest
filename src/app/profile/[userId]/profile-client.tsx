@@ -27,6 +27,7 @@ import { getAcceptedConnections } from "@/app/actions/connections";
 import { DealTracker } from "@/components/deal-tracker";
 import type { ConnectionWithIntent } from "@/lib/types/database";
 import { getEndorsementsForUser } from "@/app/actions/endorsements";
+import { getProfileCounts } from "@/app/actions/profiles";
 
 type ProfileTab = "active" | "connections" | "saved" | "nfts" | "endorsements";
 
@@ -47,6 +48,12 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
   const [loadingConnections, setLoadingConnections] = useState(false);
   const [endorsements, setEndorsements] = useState<EndorsementWithAuthor[]>([]);
   const [loadingEndorsements, setLoadingEndorsements] = useState(false);
+  const [counts, setCounts] = useState<{
+    endorsements: number;
+    saved: number;
+    connections: number;
+    nfts: number;
+  } | null>(null);
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0 });
 
@@ -104,6 +111,13 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
     }
   }, [activeTab, profile.id, endorsements.length]);
 
+  // Load counts on mount to decide which tabs to show
+  useEffect(() => {
+    getProfileCounts(profile.id)
+      .then(setCounts)
+      .catch(() => setCounts({ endorsements: 0, saved: 0, connections: 0, nfts: 0 }));
+  }, [profile.id]);
+
   // Activity indicator
   const getActivityLabel = () => {
     if (!profile.last_active_at) return null;
@@ -115,15 +129,46 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
 
   const activity = getActivityLabel();
 
+  // Hide tabs with no content. Always show Active (owner's primary surface).
+  // Counts load async; while null, show only Active + any tab the user navigated to.
+  const c = counts;
   const tabs: { key: ProfileTab; label: string; icon: typeof Award; show: boolean }[] = [
     { key: "active", label: `Active (${activeIntents.length})`, icon: Zap, show: true },
-    { key: "connections", label: "Connections", icon: Handshake, show: isOwn },
-    { key: "endorsements", label: "Endorsements", icon: MessageSquare, show: true },
-    { key: "saved", label: "Saved", icon: Bookmark, show: isOwn },
-    { key: "nfts", label: "NFTs", icon: Award, show: true },
+    {
+      key: "connections",
+      label: c ? `Connections (${c.connections})` : "Connections",
+      icon: Handshake,
+      show: isOwn && (c?.connections ?? 0) > 0,
+    },
+    {
+      key: "endorsements",
+      label: c ? `Endorsements (${c.endorsements})` : "Endorsements",
+      icon: MessageSquare,
+      show: (c?.endorsements ?? 0) > 0,
+    },
+    {
+      key: "saved",
+      label: c ? `Saved (${c.saved})` : "Saved",
+      icon: Bookmark,
+      show: isOwn && (c?.saved ?? 0) > 0,
+    },
+    {
+      key: "nfts",
+      label: c ? `NFTs (${c.nfts})` : "NFTs",
+      icon: Award,
+      show: (c?.nfts ?? 0) > 0,
+    },
   ];
 
   const visibleTabs = tabs.filter((t) => t.show);
+
+  // If the selected tab was hidden (counts loaded and this tab now has 0), revert to Active
+  useEffect(() => {
+    if (!visibleTabs.some((t) => t.key === activeTab)) {
+      setActiveTab("active");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleTabs.length]);
 
   return (
     <div>
@@ -174,7 +219,7 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
             </p>
           )}
           {profile.bio && (
-            <p className="text-sm text-text-heading/70 mt-2 max-w-lg leading-relaxed">
+            <p className="text-[15px] text-text-heading/85 mt-3 max-w-lg leading-relaxed">
               {profile.bio}
             </p>
           )}
@@ -208,9 +253,15 @@ export function ProfileClient({ profile, intents }: ProfileClientProps) {
             </Badge>
           </div>
           {profile.wallet_address && (
-            <p className="text-xs text-text-muted mt-2 font-mono truncate max-w-xs">
-              {profile.wallet_address}
-            </p>
+            <a
+              href={`https://basescan.org/address/${profile.wallet_address}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-violet-400 mt-2 font-mono truncate max-w-xs transition-colors duration-200 cursor-pointer"
+            >
+              {profile.wallet_address.slice(0, 6)}…{profile.wallet_address.slice(-4)}
+              <ExternalLink className="size-3" />
+            </a>
           )}
         </div>
 
