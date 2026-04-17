@@ -17,6 +17,7 @@ import { getNotifications } from '@/app/actions/notifications';
 import type { Notification } from '@/lib/types/database';
 import { formatDistanceToNow } from 'date-fns';
 import { PostIntentDialog } from '@/components/post-intent-dialog';
+import { ManifestMark } from '@/components/manifest-mark';
 import { useUser } from '@/lib/hooks/use-user';
 
 export function Navbar() {
@@ -63,10 +64,12 @@ export function Navbar() {
     <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'border-b border-white/8 bg-surface-page/90 backdrop-blur-xl' : 'bg-transparent'}`}>
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-emerald-500 text-xs font-bold text-white shadow-lg shadow-violet-500/20 transition-transform group-hover:scale-110">
-            M
-          </div>
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <ManifestMark
+            size={32}
+            mode="primary"
+            className="text-white/90 transition-transform group-hover:scale-110"
+          />
           <span className="text-base font-bold tracking-tight text-white/90 group-hover:text-white transition-colors">
             Manifest
           </span>

@@ -9,6 +9,7 @@ import { INTENT_TYPE_CONFIG } from '@/lib/types/database';
 import type { IntentType } from '@/lib/types/database';
 import { getLandingStats, type LandingStats } from '@/app/actions/stats';
 import { ArrowRight, Shield, Search, Handshake, ExternalLink, CheckCircle } from 'lucide-react';
+import { ManifestMark } from '@/components/manifest-mark';
 
 const STEPS = [
   { icon: Shield, title: 'Verify with X', desc: 'Sign in and link your X account. X verification keeps the feed high-signal.', num: '01' },
@@ -255,9 +256,7 @@ export default function HomePage() {
       <footer className="border-t border-white/8">
         <div className="mx-auto max-w-5xl px-4 py-10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="size-6 rounded-lg bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center text-[10px] font-bold text-white">
-              M
-            </div>
+            <ManifestMark size={24} mode="primary" className="text-white/90" />
             <span className="text-xs text-text-muted">Manifest · 2025</span>
           </div>
           <div className="flex items-center gap-6">
