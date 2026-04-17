@@ -89,6 +89,10 @@ export default function VerifyXPage() {
                 ? "Authorization was cancelled."
                 : error === "twitter_already_linked"
                 ? "This X account is already linked to another Manifest profile."
+                : error === "not_configured"
+                ? "X verification isn't configured yet. An admin needs to set TWITTER_CLIENT_ID and NEXT_PUBLIC_APP_URL."
+                : error === "not_authenticated"
+                ? "Please sign in first, then try again."
                 : `Something went wrong (${error}). ${detail ? `Detail: ${detail}` : "Try again."}`}
             </div>
           )}

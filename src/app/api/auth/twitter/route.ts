@@ -29,6 +29,20 @@ async function generateCodeChallenge(verifier: string): Promise<string> {
 }
 
 export async function GET(request: NextRequest) {
+  // Fail-loud checks for misconfigured env
+  if (!process.env.TWITTER_CLIENT_ID) {
+    console.error("[twitter-auth] TWITTER_CLIENT_ID not set");
+    return NextResponse.redirect(
+      new URL("/onboarding/verify-x?error=not_configured", request.url)
+    );
+  }
+  if (!process.env.NEXT_PUBLIC_APP_URL) {
+    console.error("[twitter-auth] NEXT_PUBLIC_APP_URL not set");
+    return NextResponse.redirect(
+      new URL("/onboarding/verify-x?error=not_configured", request.url)
+    );
+  }
+
   // Read userId from our signed manifest_session cookie
   let userId: string | null = null;
   const sessionCookie = request.cookies.get("manifest_session")?.value;
@@ -65,8 +79,9 @@ export async function GET(request: NextRequest) {
     code_challenge_method: "S256",
   });
 
+  // Twitter has migrated to x.com; use the stable canonical URL.
   const response = NextResponse.redirect(
-    `https://twitter.com/i/oauth2/authorize?${params.toString()}`
+    `https://x.com/i/oauth2/authorize?${params.toString()}`
   );
 
   // Store verifier and state in cookies
