@@ -15,6 +15,7 @@ import {
 } from "@/app/actions/affiliates";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PageLoader } from "@/components/page-loader";
 import {
   ArrowLeft,
   Search,
@@ -176,8 +177,8 @@ export default function OrgDashboardPage() {
 
   if (isLoading || loading) {
     return (
-      <main className="min-h-[calc(100vh-4rem)] bg-background flex items-center justify-center">
-        <p className="text-zinc-400">Loading...</p>
+      <main className="min-h-[calc(100vh-4rem)] bg-background">
+        <PageLoader />
       </main>
     );
   }

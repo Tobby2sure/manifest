@@ -7,6 +7,7 @@ import { useUser } from "@/lib/hooks/use-user";
 import { getOrg, generateInviteCode } from "./actions";
 import { Button } from "@/components/ui/button";
 import { IntentCard } from "@/components/intent-card";
+import { PageLoader } from "@/components/page-loader";
 import {
   CheckCircle,
   Globe,
@@ -88,8 +89,8 @@ export default function OrgPage() {
 
   if (loading) {
     return (
-      <main className="min-h-[calc(100vh-4rem)] bg-background flex items-center justify-center">
-        <p className="text-zinc-400">Loading...</p>
+      <main className="min-h-[calc(100vh-4rem)] bg-background">
+        <PageLoader />
       </main>
     );
   }

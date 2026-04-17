@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle, XCircle, Inbox } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { PageLoader } from "@/components/page-loader";
 
 interface PendingRequest {
   id: string;
@@ -106,8 +107,8 @@ export default function ApprovalsPage() {
 
   if (loading) {
     return (
-      <main className="min-h-[calc(100vh-4rem)] bg-background flex items-center justify-center">
-        <p className="text-zinc-400">Loading...</p>
+      <main className="min-h-[calc(100vh-4rem)] bg-background">
+        <PageLoader />
       </main>
     );
   }
