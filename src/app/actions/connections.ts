@@ -20,12 +20,30 @@ export async function sendConnectionRequest(
 ): Promise<ConnectionRequest> {
   const senderId = await getSessionUserId();
 
-  // Rate limit: 10 connection requests per sender per day
-  await checkConnectionRateLimit(senderId);
+  // Rate limit: 10 connection requests per sender per day.
+  // If the limiter errors (bad Upstash creds, etc.), log and allow —
+  // don't block a legitimate action because of infra flakiness.
+  try {
+    await checkConnectionRateLimit(senderId);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    if (msg.toLowerCase().includes("limit of")) {
+      throw e; // user genuinely hit their daily cap
+    }
+    console.error("[sendConnectionRequest] rate limiter error (allowing through):", e);
+  }
 
-  // Block check: prevent pitches between blocked users
-  if (await isBlocked(senderId, receiverId)) {
-    throw new Error("Unable to send this connection request");
+  // Block check — non-fatal if the query itself errors.
+  try {
+    if (await isBlocked(senderId, receiverId)) {
+      throw new Error("Unable to send this connection request");
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    if (msg.includes("Unable to send")) {
+      throw e;
+    }
+    console.error("[sendConnectionRequest] block check error (allowing through):", e);
   }
 
   const supabase = createAdminClient();
@@ -43,18 +61,28 @@ export async function sendConnectionRequest(
     .single();
 
   if (error) {
-    throw new Error(error.message);
+    console.error("[sendConnectionRequest] insert failed:", error);
+    throw new Error(error.message || "Failed to create connection request");
   }
 
-  trackServerEvent(senderId, "connection_sent", { intentId, receiverId });
+  // Non-fatal post-insert side effects
+  try {
+    trackServerEvent(senderId, "connection_sent", { intentId, receiverId });
+  } catch (e) {
+    console.error("[sendConnectionRequest] analytics failed:", e);
+  }
 
-  const { getProfile } = await import("@/app/actions/profiles");
-  const senderProfile = await getProfile(senderId);
-  notifyAsync(receiverId, "connection_request", {
-    senderName: senderProfile?.display_name ?? "Someone",
-    intentId,
-    senderId,
-  });
+  try {
+    const { getProfile } = await import("@/app/actions/profiles");
+    const senderProfile = await getProfile(senderId);
+    notifyAsync(receiverId, "connection_request", {
+      senderName: senderProfile?.display_name ?? "Someone",
+      intentId,
+      senderId,
+    });
+  } catch (e) {
+    console.error("[sendConnectionRequest] notification failed:", e);
+  }
 
   revalidatePath("/feed");
   return data as ConnectionRequest;
