@@ -22,7 +22,6 @@ import type {
   IntentType,
   Ecosystem,
   Sector,
-  IntentPriority,
   Organization,
 } from "@/lib/types/database";
 import { INTENT_TEMPLATES } from "@/lib/intent-templates";
@@ -30,8 +29,6 @@ import { AlertCircle, Info, Sparkles, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { getVerifiedUserCount } from "@/app/actions/views";
 import { getFoundingBadgeRemaining } from "@/app/actions/intents";
-
-const PRIORITIES: IntentPriority[] = ["Open", "Active", "Urgent"];
 
 interface PostIntentDialogProps {
   open: boolean;
@@ -52,7 +49,6 @@ export function PostIntentDialog({
   const [customEcosystem, setCustomEcosystem] = useState("");
   const [sector, setSector] = useState<Sector | "">("");
   const [customSector, setCustomSector] = useState("");
-  const [priority, setPriority] = useState<IntentPriority>("Open");
   const [duration, setDuration] = useState(30);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -126,7 +122,6 @@ export function PostIntentDialog({
         content,
         ecosystem: finalEcosystem,
         sector: finalSector,
-        priority,
         durationDays: duration,
       });
       if (selectedOrgId) {
@@ -154,7 +149,6 @@ export function PostIntentDialog({
       setCustomEcosystem("");
       setSector("");
       setCustomSector("");
-      setPriority("Open");
       setDuration(30);
       setUseTemplate(false);
       setSelectedOrgId("");
@@ -375,30 +369,6 @@ export function PostIntentDialog({
                   className="mt-1.5 w-full h-8 rounded-lg border border-white/10 bg-white/5 px-2.5 text-sm text-white/90 outline-none focus:border-emerald-500 placeholder:text-zinc-500"
                 />
               )}
-            </div>
-          </div>
-
-          {/* Priority */}
-          <div>
-            <Label className="text-zinc-300">Priority</Label>
-            <div className="flex gap-2 mt-1.5">
-              {PRIORITIES.map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setPriority(p)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                    priority === p
-                      ? p === "Urgent"
-                        ? "bg-red-500/20 text-red-400 ring-1 ring-red-500/30"
-                        : p === "Active"
-                          ? "bg-amber-500/20 text-amber-400 ring-1 ring-amber-500/30"
-                          : "bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/30"
-                      : "bg-white/5 text-zinc-400 hover:bg-white/10"
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
             </div>
           </div>
 
