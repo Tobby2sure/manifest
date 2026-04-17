@@ -3,11 +3,10 @@
 import { useUser } from '@/lib/hooks/use-user';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useRef, useEffect, useState } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { INTENT_TYPE_CONFIG } from '@/lib/types/database';
 import type { IntentType } from '@/lib/types/database';
-import { getLandingStats, type LandingStats } from '@/app/actions/stats';
 import { ArrowRight, Shield, Search, Handshake, ExternalLink, CheckCircle } from 'lucide-react';
 import { ManifestMark } from '@/components/manifest-mark';
 
@@ -24,45 +23,16 @@ const INTENT_TYPES: IntentType[] = [
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-function CountUp({ target, suffix }: { target: number; suffix: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true });
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    if (!inView) return;
-    let frame: number;
-    const duration = 1500;
-    const start = performance.now();
-    function animate(now: number) {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(eased * target));
-      if (progress < 1) frame = requestAnimationFrame(animate);
-    }
-    frame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frame);
-  }, [inView, target]);
-
-  return <span ref={ref}>{count}{suffix}</span>;
-}
-
 export default function HomePage() {
   const { isAuthenticated: authenticated, isLoading } = useUser();
   const ready = !isLoading;
   const router = useRouter();
-  const [stats, setStats] = useState<LandingStats | null>(null);
 
   useEffect(() => {
     if (ready && authenticated) {
       router.replace('/feed');
     }
   }, [ready, authenticated, router]);
-
-  useEffect(() => {
-    getLandingStats().then(setStats).catch(() => {});
-  }, []);
 
   if (!ready || authenticated) {
     return <main className="min-h-screen bg-surface-page" />;
@@ -137,34 +107,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Animated stat strip — only shown when numbers are meaningful */}
-      {stats && (
-        <div className="border-y border-white/8 bg-white/3">
-          <div className="mx-auto max-w-5xl px-4 py-6">
-            <div className="flex items-center justify-center gap-8 sm:gap-16 text-center">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl sm:text-3xl font-bold text-text-heading">
-                  <CountUp target={stats.intents} suffix="" />
-                </span>
-                <span className="text-sm text-text-muted">intents</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl sm:text-3xl font-bold text-text-heading">
-                  <CountUp target={stats.builders} suffix="" />
-                </span>
-                <span className="text-sm text-text-muted">builders</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl sm:text-3xl font-bold text-text-heading">
-                  <CountUp target={stats.ecosystems} suffix="" />
-                </span>
-                <span className="text-sm text-text-muted">ecosystems</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* How it works */}
       <section className="mx-auto max-w-5xl px-4 py-20 sm:py-28">

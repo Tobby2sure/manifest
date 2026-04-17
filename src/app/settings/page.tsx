@@ -10,8 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useUser } from '@/lib/hooks/use-user';
 import { updateProfile } from '@/app/actions/profiles';
-import { getUserApiKey, generateApiKey, getUserWebhooks, createWebhook, deleteWebhook } from '@/app/actions/api-keys';
-import { CheckCircle, Copy, ExternalLink, LogOut, Key, Webhook, Trash2, Plus } from 'lucide-react';
+import { CheckCircle, Copy, ExternalLink, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
@@ -25,15 +24,6 @@ export default function SettingsPage() {
   const [email, setEmail] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // Developer state
-  const [apiKey, setApiKey] = useState<string | null>(null);
-  const [apiKeyInfo, setApiKeyInfo] = useState<{ id: string; name: string } | null>(null);
-  const [showKey, setShowKey] = useState(false);
-  const [webhooks, setWebhooks] = useState<{ id: string; url: string; events: string[]; created_at: string }[]>([]);
-  const [webhookUrl, setWebhookUrl] = useState('');
-  const [webhookEvents, setWebhookEvents] = useState<string[]>(['intent.created']);
-  const [creatingWebhook, setCreatingWebhook] = useState(false);
-
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.display_name ?? '');
@@ -42,15 +32,6 @@ export default function SettingsPage() {
       setEmail(profile.email ?? '');
     }
   }, [profile]);
-
-  useEffect(() => {
-    if (user?.userId && profile) {
-      getUserApiKey().then((k) => {
-        if (k) setApiKeyInfo(k);
-      }).catch(() => {});
-      getUserWebhooks().then(setWebhooks).catch(() => {});
-    }
-  }, [user?.userId, profile]);
 
   async function handleSave() {
     if (!profile) return;
@@ -233,165 +214,6 @@ export default function SettingsPage() {
             </div>
           </section>
         )}
-
-        {/* Developer */}
-        <section className="rounded-xl border border-white/8 bg-card p-5 mb-6">
-          <h2 className="text-base font-medium text-white/90 mb-4 flex items-center gap-2">
-            <Key className="size-4 text-violet-400" />
-            Developer
-          </h2>
-
-          {/* API Key */}
-          <div className="mb-5">
-            <Label className="text-zinc-300 text-sm">API Key</Label>
-            {apiKeyInfo && !apiKey ? (
-              <div className="flex items-center gap-2 mt-2">
-                <span className="text-xs text-zinc-400 font-mono bg-white/3 border border-white/6 rounded-lg px-3 py-2 flex-1">
-                  ••••••••••••••••
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={async () => {
-                    const { key } = await generateApiKey();
-                    setApiKey(key);
-                    setShowKey(true);
-                    toast.success('New API key generated');
-                  }}
-                  className="border-white/10 text-zinc-300"
-                >
-                  Regenerate
-                </Button>
-              </div>
-            ) : apiKey ? (
-              <div className="mt-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-emerald-400 font-mono bg-emerald-500/5 border border-emerald-500/20 rounded-lg px-3 py-2 flex-1 truncate">
-                    {showKey ? apiKey : '••••••••••••••••'}
-                  </span>
-                  <button onClick={() => setShowKey(!showKey)} className="text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer">
-                    {showKey ? 'Hide' : 'Show'}
-                  </button>
-                  <button onClick={() => { navigator.clipboard.writeText(apiKey); toast.success('Copied'); }} className="p-1.5 text-zinc-400 hover:text-white transition-colors cursor-pointer">
-                    <Copy className="size-3.5" />
-                  </button>
-                </div>
-                <p className="text-[11px] text-amber-400 mt-1.5">Save this key — it won&apos;t be shown again.</p>
-              </div>
-            ) : (
-              <div className="mt-2">
-                <Button
-                  size="sm"
-                  onClick={async () => {
-                    const { key } = await generateApiKey();
-                    setApiKey(key);
-                    setShowKey(true);
-                    toast.success('API key generated');
-                  }}
-                  className="bg-violet-600 hover:bg-violet-500 text-white cursor-pointer"
-                >
-                  <Key className="size-3.5 mr-1.5" />
-                  Generate API Key
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* Webhooks */}
-          <div>
-            <Label className="text-zinc-300 text-sm flex items-center gap-1.5">
-              <Webhook className="size-3.5 text-emerald-400" />
-              Webhooks
-            </Label>
-
-            {/* Existing webhooks */}
-            {webhooks.length > 0 && (
-              <div className="space-y-2 mt-3 mb-4">
-                {webhooks.map((wh) => (
-                  <div key={wh.id} className="flex items-center gap-2 rounded-lg border border-white/6 bg-white/3 px-3 py-2.5">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-zinc-300 font-mono truncate">{wh.url}</p>
-                      <p className="text-[10px] text-zinc-500 mt-0.5">{wh.events.join(', ')}</p>
-                    </div>
-                    <button
-                      onClick={async () => {
-                        await deleteWebhook(wh.id);
-                        setWebhooks((prev) => prev.filter((w) => w.id !== wh.id));
-                        toast.success('Webhook deleted');
-                      }}
-                      className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Create webhook form */}
-            <div className="mt-3 space-y-3 rounded-lg border border-white/6 bg-white/3 p-3">
-              <Input
-                value={webhookUrl}
-                onChange={(e) => setWebhookUrl(e.target.value)}
-                placeholder="https://your-server.com/webhook"
-                className="bg-white/5 border-white/10 text-sm"
-              />
-              <div className="flex items-center gap-3">
-                <label className="flex items-center gap-1.5 text-xs text-zinc-400 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={webhookEvents.includes('intent.created')}
-                    onChange={(e) => {
-                      setWebhookEvents((prev) =>
-                        e.target.checked
-                          ? [...prev, 'intent.created']
-                          : prev.filter((ev) => ev !== 'intent.created')
-                      );
-                    }}
-                    className="rounded border-white/20"
-                  />
-                  intent.created
-                </label>
-                <label className="flex items-center gap-1.5 text-xs text-zinc-400 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={webhookEvents.includes('connection.accepted')}
-                    onChange={(e) => {
-                      setWebhookEvents((prev) =>
-                        e.target.checked
-                          ? [...prev, 'connection.accepted']
-                          : prev.filter((ev) => ev !== 'connection.accepted')
-                      );
-                    }}
-                    className="rounded border-white/20"
-                  />
-                  connection.accepted
-                </label>
-              </div>
-              <Button
-                size="sm"
-                disabled={!webhookUrl || creatingWebhook}
-                onClick={async () => {
-                  setCreatingWebhook(true);
-                  try {
-                    const wh = await createWebhook(webhookUrl, webhookEvents);
-                    setWebhooks((prev) => [wh, ...prev]);
-                    setWebhookUrl('');
-                    toast.success('Webhook created. Secret: ' + wh.secret);
-                  } catch (e) {
-                    toast.error(e instanceof Error ? e.message : 'Failed');
-                  } finally {
-                    setCreatingWebhook(false);
-                  }
-                }}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer"
-              >
-                <Plus className="size-3.5 mr-1" />
-                {creatingWebhook ? 'Creating...' : 'Add Webhook'}
-              </Button>
-            </div>
-          </div>
-        </section>
 
         {/* Danger Zone */}
         <section className="rounded-xl border border-red-500/20 bg-red-500/5 p-5">

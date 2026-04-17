@@ -54,17 +54,23 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                 body: JSON.stringify({ userId: user.userId }),
               });
 
-              // Check if profile exists
+              // Check if profile exists. Only redirect on a confirmed exists:false
+              // response — never on errors (to avoid false /onboarding redirects).
               const res = await fetch(`/api/check-profile?userId=${user.userId}`);
+              if (!res.ok) {
+                // Let page-level logic + ProfileGuard handle routing
+                return;
+              }
               const data = await res.json();
-              if (!data.exists) {
+              if (data.exists === false) {
                 window.location.href = '/onboarding';
-              } else {
+              } else if (data.exists === true) {
                 const current = window.location.pathname;
                 if (current === '/' || current.startsWith('/onboarding')) {
                   window.location.href = '/feed';
                 }
               }
+              // If data.exists is neither true nor false, let page-level logic handle it.
             } catch (e) {
               console.error("Failed to check profile:", e);
             }
