@@ -499,14 +499,12 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
             </select>
           </div>
 
-          {/* Result count */}
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-xs text-text-muted">
-              <span className="text-text-heading/60 font-medium tabular-nums">{visibleIntents.length}</span>
-              {' '}of <span className="tabular-nums">{total}</span> intents
-            </p>
-            {isPending && <Loader2 className="size-3.5 text-violet-400 animate-spin" />}
-          </div>
+          {/* Pending transition indicator */}
+          {isPending && (
+            <div className="flex justify-end mb-4">
+              <Loader2 className="size-3.5 text-violet-400 animate-spin" />
+            </div>
+          )}
 
           <AnimatePresence mode="wait">
             {visibleIntents.length > 0 ? (

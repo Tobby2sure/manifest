@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { upsertProfile } from "@/app/actions/profiles";
+import { createOrg, getMyPrimaryOrg } from "@/app/org/[slug]/actions";
 import type { AccountType } from "@/lib/types/database";
 import { useUser } from "@/lib/hooks/use-user";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,14 +27,31 @@ export default function OnboardingPage() {
   const posthog = usePostHog();
   const queryClient = useQueryClient();
 
-  // Redirect existing users who already completed onboarding
+  // Redirect existing users who already completed onboarding.
+  // Exception: org-type users who haven't set up their org yet — resume them
+  // at the org step so they can finish.
+  const [step, setStep] = useState(0);
   useEffect(() => {
-    if (!isLoading && authenticated && profile?.display_name) {
+    if (isLoading || !authenticated || !profile?.display_name) return;
+
+    if (profile.account_type === "organization") {
+      // Check whether the org exists; if not, resume on org step
+      getMyPrimaryOrg()
+        .then((org) => {
+          if (org) {
+            router.replace("/feed");
+          } else {
+            // No org yet — jump to org details step (step 2)
+            setAccountType("organization");
+            setStep(2);
+          }
+        })
+        .catch(() => router.replace("/feed"));
+    } else {
       router.replace("/feed");
     }
-  }, [isLoading, authenticated, profile, router]);
-
-  const [step, setStep] = useState(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, authenticated, profile?.display_name, profile?.account_type]);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
   const [accountType, setAccountType] = useState<AccountType>(
     profile?.account_type ?? "individual"
@@ -52,9 +70,17 @@ export default function OnboardingPage() {
     if (signInEmail) setEmail(signInEmail);
   }, [signInEmail]);
 
-  const [orgName, setOrgName] = useState("");
+  // Pre-fill org fields for returning org users resuming onboarding
+  const [orgName, setOrgName] = useState(
+    profile?.account_type === "organization" ? (profile.display_name ?? "") : ""
+  );
   const [orgWebsite, setOrgWebsite] = useState("");
   const [orgLogo, setOrgLogo] = useState("");
+  useEffect(() => {
+    if (profile?.account_type === "organization" && profile.display_name) {
+      setOrgName(profile.display_name);
+    }
+  }, [profile?.account_type, profile?.display_name]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -134,6 +160,19 @@ export default function OnboardingPage() {
         twitter_verified: hasTwitter,
         wallet_address: walletAddress,
       });
+
+      // For org users, create the org + admin membership if not already done
+      if (isOrg && orgName.trim()) {
+        const existing = await getMyPrimaryOrg().catch(() => null);
+        if (!existing) {
+          await createOrg({
+            name: orgName.trim(),
+            website: orgWebsite.trim() || undefined,
+            logo_url: orgLogo.trim() || undefined,
+          });
+        }
+      }
+
       // Invalidate profile query so ProfileGuard sees the new profile
       await queryClient.invalidateQueries({ queryKey: ['user-profile', user.userId] });
       router.push("/onboarding/verify-x");
@@ -500,6 +539,19 @@ export default function OnboardingPage() {
                         twitter_verified: false,
                         wallet_address: primaryWallet?.address ?? undefined,
                       });
+
+                      // For org users, create the org + admin membership if not already done
+                      if (isOrg && orgName.trim()) {
+                        const existing = await getMyPrimaryOrg().catch(() => null);
+                        if (!existing) {
+                          await createOrg({
+                            name: orgName.trim(),
+                            website: orgWebsite.trim() || undefined,
+                            logo_url: orgLogo.trim() || undefined,
+                          });
+                        }
+                      }
+
                       // Invalidate profile query so ProfileGuard sees the new profile
                       await queryClient.invalidateQueries({ queryKey: ['user-profile', user.userId] });
                       router.push("/feed");
