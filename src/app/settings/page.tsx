@@ -11,8 +11,9 @@ import { Label } from '@/components/ui/label';
 import { useUser } from '@/lib/hooks/use-user';
 import { updateProfile } from '@/app/actions/profiles';
 import { uploadAvatar, removeAvatar } from '@/app/actions/avatar';
+import { revokeOtherSessions } from '@/app/actions/sessions';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { CheckCircle, Copy, ExternalLink, LogOut, Upload, Trash2, Loader2 } from 'lucide-react';
+import { CheckCircle, Copy, ExternalLink, LogOut, Upload, Trash2, Loader2, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
@@ -27,6 +28,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [revoking, setRevoking] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -302,6 +304,39 @@ export default function SettingsPage() {
             </div>
           </section>
         )}
+
+        {/* Security */}
+        <section className="rounded-xl border border-white/8 bg-card p-5">
+          <h2 className="text-base font-medium text-white/90 mb-1 flex items-center gap-2">
+            <ShieldAlert className="size-4 text-amber-400" />
+            Security
+          </h2>
+          <p className="text-sm text-zinc-400 mb-4">
+            If you suspect one of your other devices is compromised, sign out everywhere except this browser.
+          </p>
+          <Button
+            variant="outline"
+            disabled={revoking}
+            onClick={async () => {
+              setRevoking(true);
+              try {
+                await revokeOtherSessions();
+                toast.success('Other sessions signed out');
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : 'Could not revoke sessions');
+              } finally {
+                setRevoking(false);
+              }
+            }}
+            className="border-white/10 text-zinc-300 hover:bg-white/5"
+          >
+            {revoking ? (
+              <><Loader2 className="size-4 mr-2 animate-spin" />Signing out…</>
+            ) : (
+              <>Sign out of all other sessions</>
+            )}
+          </Button>
+        </section>
 
         {/* Danger Zone */}
         <section className="rounded-xl border border-red-500/20 bg-red-500/5 p-5">

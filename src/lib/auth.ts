@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { createHmac } from "crypto";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // Session cookies are HMAC-signed with a secret dedicated to session
 // verification. Previously this fell back to a public constant when
@@ -19,37 +20,60 @@ function getSessionSecret(): string {
   return s;
 }
 
+type ParsedSession = { userId: string; version: number };
+
 /**
- * Verify our signed manifest_session cookie.
+ * Parse + HMAC-verify our signed manifest_session cookie. Returns the
+ * userId and the token_version the cookie was issued at, or null if
+ * the cookie is missing/malformed/forged.
+ *
+ * Does NOT verify the version against the DB — that's a separate
+ * step so we only pay for the DB read on authenticated requests.
  */
-function verifySessionCookie(value: string): string | null {
-  const lastColon = value.lastIndexOf(":");
-  if (lastColon === -1) return null;
+function parseAndVerifyCookie(value: string): ParsedSession | null {
+  const parts = value.split(":");
+  if (parts.length !== 3) return null;
+  const [userId, versionStr, signature] = parts;
+  const version = Number(versionStr);
+  if (!userId || !Number.isInteger(version)) return null;
 
-  const userId = value.slice(0, lastColon);
-  const signature = value.slice(lastColon + 1);
-  const expected = createHmac("sha256", getSessionSecret()).update(userId).digest("hex");
-
+  const expected = createHmac("sha256", getSessionSecret())
+    .update(`${userId}:${version}`)
+    .digest("hex");
   if (signature !== expected) return null;
-  return userId;
+  return { userId, version };
+}
+
+async function currentTokenVersion(userId: string): Promise<number> {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("profiles")
+    .select("token_version")
+    .eq("id", userId)
+    .maybeSingle();
+  return (data as { token_version?: number } | null)?.token_version ?? 0;
 }
 
 /**
  * Get the authenticated user's ID from the manifest_session cookie.
- * This cookie is set by POST /api/auth/session, which in turn verifies
- * a Dynamic JWT before issuing it.
+ * Enforces that the cookie's token_version still matches the profile's
+ * current value — bumping token_version in the DB invalidates all
+ * outstanding cookies (used for sign-out-everywhere).
+ *
  * Throws if no valid session exists.
  */
 export async function getSessionUserId(): Promise<string> {
   const cookieStore = await cookies();
-  const session = cookieStore.get("manifest_session")?.value;
+  const raw = cookieStore.get("manifest_session")?.value;
+  if (!raw) throw new Error("Not authenticated");
 
-  if (session) {
-    const userId = verifySessionCookie(session);
-    if (userId) return userId;
-  }
+  const parsed = parseAndVerifyCookie(raw);
+  if (!parsed) throw new Error("Not authenticated");
 
-  throw new Error("Not authenticated");
+  const dbVersion = await currentTokenVersion(parsed.userId);
+  if (dbVersion !== parsed.version) throw new Error("Not authenticated");
+
+  return parsed.userId;
 }
 
 /**
@@ -62,4 +86,17 @@ export async function getOptionalSessionUserId(): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Internal helper: mint a session-cookie value for the given user at
+ * their current token_version. Used by the sign-out-everywhere flow
+ * to reissue the caller's cookie after bumping the DB version.
+ */
+export async function signSessionCookieValue(userId: string): Promise<string> {
+  const version = await currentTokenVersion(userId);
+  const signature = createHmac("sha256", getSessionSecret())
+    .update(`${userId}:${version}`)
+    .digest("hex");
+  return `${userId}:${version}:${signature}`;
 }
