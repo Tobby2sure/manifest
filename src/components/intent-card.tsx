@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { formatDistanceToNow } from "date-fns";
-import { formatCompactDuration } from "@/lib/utils";
 import Link from "next/link";
+import { formatShort } from "@/lib/format-time";
 import {
   CheckCircle,
   Clock,
@@ -114,13 +113,9 @@ export function IntentCard({
   const expiresAt = new Date(intent.expires_at);
   const now = new Date();
   const isExpired = expiresAt <= now;
-  const timeRemaining = isExpired
-    ? "Expired"
-    : formatCompactDuration(expiresAt);
+  const timeRemaining = isExpired ? "Expired" : formatShort(expiresAt);
 
-  const postedAgo = formatDistanceToNow(new Date(intent.created_at), {
-    addSuffix: true,
-  });
+  const postedAgo = formatShort(new Date(intent.created_at), { withSuffix: true });
 
   const author = intent.author;
   const initials = author.display_name
@@ -241,8 +236,8 @@ export function IntentCard({
         </div>
       </div>
 
-      {/* Lifecycle / founding / expired badges */}
-      {((intent.lifecycle_status !== "active" && lifecycle) || intent.is_founding || isExpired) && (
+      {/* Lifecycle + Founding badges */}
+      {(intent.lifecycle_status !== "active" || intent.is_founding || isExpired) && (
         <div className="flex flex-wrap items-center gap-2 mb-3">
           {intent.lifecycle_status !== "active" && lifecycle && (
             <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${lifecycle.color}`}>
@@ -303,7 +298,7 @@ export function IntentCard({
         <div className="flex items-center gap-3 text-xs text-text-muted">
           <span className="flex items-center gap-1">
             <Clock className="size-3" />
-            {isExpired ? "Expired" : `${timeRemaining} left`}
+            {timeRemaining} left
           </span>
           <span>{postedAgo}</span>
           {isOwn && viewCount > 0 && (

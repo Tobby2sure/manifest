@@ -427,6 +427,51 @@ export async function getConnectionRequestContexts(
   return out;
 }
 
+/**
+ * For the caller, return their connection request (if any) for each of
+ * the given intent IDs. Keyed by intent_id. Used by the feed to decide
+ * which intents show "Connect" vs "Pending" vs "View Contact".
+ *
+ * The caller may be the sender (they requested connection on someone
+ * else's intent) OR the receiver (someone sent a request for their intent).
+ */
+export async function getMyConnectionsByIntent(
+  intentIds: string[]
+): Promise<Record<string, { id: string; status: string }>> {
+  if (intentIds.length === 0) return {};
+
+  const userId = await getSessionUserId();
+  const supabase = createAdminClient();
+
+  const { data } = await supabase
+    .from("connection_requests")
+    .select("id, intent_id, status, sender_id, receiver_id, created_at")
+    .in("intent_id", intentIds)
+    .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+    .order("created_at", { ascending: false });
+
+  type Row = {
+    id: string;
+    intent_id: string;
+    status: string;
+    sender_id: string;
+    receiver_id: string;
+  };
+
+  // Prefer accepted > pending > declined. Multiple rows per intent possible
+  // (e.g. user sent request that got declined, then sent another), so we
+  // rank and keep the best.
+  const rank: Record<string, number> = { accepted: 3, pending: 2, declined: 1 };
+  const out: Record<string, { id: string; status: string }> = {};
+  for (const r of (data ?? []) as Row[]) {
+    const existing = out[r.intent_id];
+    if (!existing || (rank[r.status] ?? 0) > (rank[existing.status] ?? 0)) {
+      out[r.intent_id] = { id: r.id, status: r.status };
+    }
+  }
+  return out;
+}
+
 export async function getAcceptedConnections(): Promise<ConnectionWithIntent[]> {
   const userId = await getSessionUserId();
   const supabase = createAdminClient();

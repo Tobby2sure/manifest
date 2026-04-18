@@ -28,6 +28,7 @@ import { getUserSavedIds } from "@/app/actions/saved";
 import { getUserInterestedIds } from "@/app/actions/interests";
 import { getViewCounts, recordViews } from "@/app/actions/views";
 import { getBlockedUserIds } from "@/app/actions/moderation";
+import { getMyConnectionsByIntent } from "@/app/actions/connections";
 import {
   Plus,
   SlidersHorizontal,
@@ -79,7 +80,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
 
   const [postDialogOpen, setPostDialogOpen] = useState(false);
   const [connectIntent, setConnectIntent] = useState<IntentWithAuthor | null>(null);
-  const [viewContactIntent, setViewContactIntent] = useState<IntentWithAuthor | null>(null);
+  const [viewContactConnectionId, setViewContactConnectionId] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
 
   // Search state
@@ -109,6 +110,9 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
   const [interestedIds, setInterestedIds] = useState<Set<string>>(new Set());
   const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
   const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
+  const [myConnectionsByIntent, setMyConnectionsByIntent] = useState<
+    Record<string, { id: string; status: string }>
+  >({});
 
   // Reset intents when initialIntents change (URL navigation)
   useEffect(() => {
@@ -148,6 +152,16 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
     if (otherIntentIds.length > 0) {
       recordViews(otherIntentIds).catch(() => {});
     }
+  }, [profile?.id, allIntents]);
+
+  // Load the user's connection requests for the visible intents so each
+  // IntentCard knows whether to show Connect / Pending / View Contact.
+  useEffect(() => {
+    if (!profile?.id || allIntents.length === 0) return;
+    const intentIds = allIntents.map((i) => i.id);
+    getMyConnectionsByIntent(intentIds)
+      .then(setMyConnectionsByIntent)
+      .catch(() => {});
   }, [profile?.id, allIntents]);
 
   const activeType = initialFilters.type ?? null;
@@ -492,6 +506,13 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                       <IntentCard
                         intent={intent}
                         currentUserId={profile?.id ?? null}
+                        requestStatus={
+                          (myConnectionsByIntent[intent.id]?.status as
+                            | "pending"
+                            | "accepted"
+                            | "declined"
+                            | undefined) ?? null
+                        }
                         onRequestConnection={
                           !isAuthenticated
                             ? () => setShowAuthFlow(true)
@@ -499,7 +520,10 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                             ? () => router.push('/onboarding/verify-x')
                             : (i) => setConnectIntent(i)
                         }
-                        onViewContact={(i) => setViewContactIntent(i)}
+                        onViewContact={() => {
+                          const conn = myConnectionsByIntent[intent.id];
+                          if (conn) setViewContactConnectionId(conn.id);
+                        }}
                         isSaved={savedIds.has(intent.id)}
                         isInterested={interestedIds.has(intent.id)}
                         viewCount={viewCounts[intent.id] ?? 0}
@@ -597,11 +621,11 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
             intent={connectIntent}
           />
           <ViewContactDialog
-            open={!!viewContactIntent}
+            open={!!viewContactConnectionId}
             onOpenChange={(open) => {
-              if (!open) setViewContactIntent(null);
+              if (!open) setViewContactConnectionId(null);
             }}
-            connectionId={null}
+            connectionId={viewContactConnectionId}
           />
         </>
       )}
