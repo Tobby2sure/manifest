@@ -597,6 +597,14 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                       Post Intent
                     </Button>
                   )}
+                  {isAuthenticated && !canPost && !hasActiveFilters && (
+                    <Button
+                      onClick={() => router.push('/onboarding/verify-x')}
+                      className="mt-5 bg-emerald-600 hover:bg-emerald-500 text-white border-0 cursor-pointer"
+                    >
+                      Verify X to post
+                    </Button>
+                  )}
                 </div>
               </motion.div>
             )}

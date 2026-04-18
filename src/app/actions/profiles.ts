@@ -20,6 +20,33 @@ async function assertDisplayNameAvailable(
   if (data) throw new Error("That display name is already taken");
 }
 
+// Translate Supabase/Postgres errors at the write boundary into
+// user-safe copy. We never surface raw SQL messages to the UI —
+// they leak constraint names, indexes, column details, etc.
+// Known unique-constraint violations get a purpose-written message;
+// everything else collapses to a generic retry prompt. The original
+// error is logged for server-side debugging.
+function humanizeProfileWriteError(error: {
+  code?: string;
+  message?: string;
+}): Error {
+  console.error("[profiles] write failed:", error);
+  if (error.code === "23505" || /unique/i.test(error.message ?? "")) {
+    const msg = error.message ?? "";
+    if (msg.includes("idx_profiles_display_name_ci_unique")) {
+      return new Error("That display name is already taken");
+    }
+    if (
+      msg.includes("idx_profiles_twitter_handle_ci_unique") ||
+      msg.includes("idx_profiles_twitter_id_unique")
+    ) {
+      return new Error("That X account is already linked to another profile");
+    }
+    return new Error("That value is already in use by another profile");
+  }
+  return new Error("We couldn't save your profile. Please try again.");
+}
+
 export async function getProfile(userId: string): Promise<Profile | null> {
   const supabase = createAdminClient();
 
@@ -154,7 +181,7 @@ export async function upsertProfile(input: {
     .single();
 
   if (error) {
-    throw new Error(error.message);
+    throw humanizeProfileWriteError(error);
   }
 
   const profile = data as Profile;
@@ -254,7 +281,7 @@ export async function updateProfile(
     .single();
 
   if (error) {
-    throw new Error(error.message);
+    throw humanizeProfileWriteError(error);
   }
 
   return data as Profile;

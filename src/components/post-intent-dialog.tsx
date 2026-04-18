@@ -37,6 +37,47 @@ interface PostIntentDialogProps {
   twitterVerified?: boolean;
 }
 
+const DRAFT_KEY = "manifest:draft-intent";
+
+type DraftShape = {
+  intentType?: IntentType;
+  content?: string;
+  ecosystem?: Ecosystem | "";
+  customEcosystem?: string;
+  sector?: Sector | "";
+  customSector?: string;
+  duration?: number;
+};
+
+function loadDraft(): DraftShape | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as DraftShape;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(draft: DraftShape) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    // quota exceeded, private browsing, etc. — draft is a best-effort nicety
+  }
+}
+
+function clearDraft() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    /* noop */
+  }
+}
+
 export function PostIntentDialog({
   open,
   onOpenChange,
@@ -56,6 +97,38 @@ export function PostIntentDialog({
   const [userOrgs, setUserOrgs] = useState<Array<{ role: string; organizations: Organization }>>([]);
   const [selectedOrgId, setSelectedOrgId] = useState<string>("");
   const [foundingRemaining, setFoundingRemaining] = useState<number | null>(null);
+
+  // Restore any draft when the dialog opens so a dismissed / interrupted
+  // typing session doesn't lose work.
+  useEffect(() => {
+    if (!open) return;
+    const draft = loadDraft();
+    if (!draft) return;
+    if (draft.intentType) setIntentType(draft.intentType);
+    if (typeof draft.content === "string") setContent(draft.content);
+    if (draft.ecosystem !== undefined) setEcosystem(draft.ecosystem);
+    if (typeof draft.customEcosystem === "string") setCustomEcosystem(draft.customEcosystem);
+    if (draft.sector !== undefined) setSector(draft.sector);
+    if (typeof draft.customSector === "string") setCustomSector(draft.customSector);
+    if (typeof draft.duration === "number") setDuration(draft.duration);
+  }, [open]);
+
+  // Debounced save of whatever the user has typed.
+  useEffect(() => {
+    if (!open) return;
+    const handle = window.setTimeout(() => {
+      saveDraft({
+        intentType,
+        content,
+        ecosystem,
+        customEcosystem,
+        sector,
+        customSector,
+        duration,
+      });
+    }, 300);
+    return () => window.clearTimeout(handle);
+  }, [open, intentType, content, ecosystem, customEcosystem, sector, customSector, duration]);
 
   useEffect(() => {
     if (open) {
@@ -152,6 +225,7 @@ export function PostIntentDialog({
       setDuration(30);
       setUseTemplate(false);
       setSelectedOrgId("");
+      clearDraft();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create intent");
     } finally {
@@ -159,26 +233,26 @@ export function PostIntentDialog({
     }
   }
 
-  // X verification gate
+  // X verification gate. Any draft typed before the dialog opened is
+  // preserved in localStorage, so verify-then-return lands the user back
+  // with their content intact.
   if (!twitterVerified) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md bg-card border-white/8">
           <DialogHeader>
-            <DialogTitle>Connect X to Post</DialogTitle>
+            <DialogTitle>One quick step: verify X</DialogTitle>
             <DialogDescription>
-              You need to verify your X (Twitter) account before posting
-              intents.
+              Takes about 10 seconds. Intents are tied to verified X accounts
+              so everyone on Manifest knows who's posting.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 mt-2">
-            <AlertCircle className="size-5 text-amber-400 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm text-zinc-300">
-                X verification ensures trust in the Manifest network. Connect
-                your X account in settings to start posting.
-              </p>
-            </div>
+          <div className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 mt-2">
+            <AlertCircle className="size-5 text-emerald-400 shrink-0 mt-0.5" />
+            <p className="text-sm text-zinc-300">
+              Anything you&apos;ve already typed is saved — come back to this
+              dialog after verifying and it&apos;ll be here.
+            </p>
           </div>
           <Button
             onClick={() => {
@@ -187,7 +261,7 @@ export function PostIntentDialog({
             }}
             className="w-full mt-2 bg-emerald-600 hover:bg-emerald-500 text-white border-0"
           >
-            Connect X to Post
+            Verify X account
           </Button>
         </DialogContent>
       </Dialog>
