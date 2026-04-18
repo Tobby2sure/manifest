@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { formatShort } from "@/lib/format-time";
+import { truncateGraphemes } from "@/lib/utils";
 import {
   CheckCircle,
   Clock,
@@ -107,7 +108,7 @@ export function IntentCard({
   const isOwn = currentUserId === intent.author_id;
   const contentTruncated = intent.content.length > 200 && !expanded;
   const displayContent = contentTruncated
-    ? intent.content.slice(0, 200) + "..."
+    ? truncateGraphemes(intent.content, 200)
     : intent.content;
 
   const expiresAt = new Date(intent.expires_at);
@@ -463,9 +464,15 @@ export function IntentCard({
             </Button>
           )}
           {!isOwn && requestStatus === "pending" && (
-            <Button size="sm" variant="outline" disabled className="ml-1">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled
+              className="ml-1"
+              title={isExpired ? "This intent expired before the author responded" : undefined}
+            >
               <Circle className="size-3.5 mr-1" />
-              Pending
+              {isExpired ? "Expired" : "Pending"}
             </Button>
           )}
           {!isOwn && requestStatus === "accepted" && (
