@@ -128,7 +128,10 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     if (!profile?.id) return;
-    getNotifications(profile.id).then((data) => {
+    const userId = profile.id;
+
+    const load = async () => {
+      const data = await getNotifications(userId);
       setNotifications(data);
       setLoading(false);
 
@@ -144,37 +147,48 @@ export default function NotificationsPage() {
             !!p.senderId && !!p.intentId
         );
 
-      if (pairs.length > 0) {
-        getConnectionRequestContexts(pairs)
-          .then((contexts) => {
-            setConnectionContexts(contexts);
+      if (pairs.length === 0) return;
 
-            // Any unread connection_request notification whose pending
-            // context is missing has already been responded to — clear
-            // it so it stops coming back on refresh.
-            const staleIds = data
-              .filter(
-                (n) =>
-                  !n.read &&
-                  n.type === "connection_request" &&
-                  n.payload.senderId &&
-                  n.payload.intentId &&
-                  !contexts[`${n.payload.senderId}:${n.payload.intentId}`]
-              )
-              .map((n) => n.id);
+      try {
+        const contexts = await getConnectionRequestContexts(pairs);
+        setConnectionContexts(contexts);
 
-            if (staleIds.length > 0) {
-              markReadBulk(staleIds).catch(() => {});
-              setNotifications((prev) =>
-                prev.map((n) =>
-                  staleIds.includes(n.id) ? { ...n, read: true } : n
-                )
-              );
-            }
-          })
-          .catch(() => {});
+        // Any unread connection_request notification whose pending
+        // context is missing has already been responded to — clear
+        // it so it stops coming back on refresh.
+        const staleIds = data
+          .filter(
+            (n) =>
+              !n.read &&
+              n.type === "connection_request" &&
+              n.payload.senderId &&
+              n.payload.intentId &&
+              !contexts[`${n.payload.senderId}:${n.payload.intentId}`]
+          )
+          .map((n) => n.id);
+
+        if (staleIds.length > 0) {
+          markReadBulk(staleIds).catch(() => {});
+          setNotifications((prev) =>
+            prev.map((n) => (staleIds.includes(n.id) ? { ...n, read: true } : n))
+          );
+        }
+      } catch {
+        /* ignore enrichment errors */
       }
-    });
+    };
+
+    load();
+
+    // Refetch when the user returns to the tab so a stale view can't
+    // mask newly-arrived connection requests. Intentionally NOT polling
+    // here — the page has a lot of optimistic local state (filter-out
+    // on accept/decline, etc.) and we don't want mid-session churn.
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
   }, [profile?.id]);
 
   const handleMarkRead = (notif: Notification) => {

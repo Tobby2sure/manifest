@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Plus, LogOut, Settings, Bell, User, CheckCheck, MessageSquare, CheckCircle, XCircle, Building2 } from 'lucide-react';
+import { Plus, LogOut, Settings, Bell, User, CheckCheck, MessageSquare, CheckCircle, XCircle, Building2, Users } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { getNotifications } from '@/app/actions/notifications';
 import { getMyPrimaryOrg } from '@/app/org/[slug]/actions';
@@ -41,14 +41,35 @@ export function Navbar() {
 
   useEffect(() => {
     if (!user?.userId) return;
-    getNotifications(user.userId)
-      .then(data => setNotifications(data.slice(0, 5)))
-      .catch(() => {});
+    const userId = user.userId;
+    const loadNotifs = () =>
+      getNotifications(userId)
+        .then((data) => setNotifications(data.slice(0, 5)))
+        .catch(() => {});
+
+    loadNotifs();
+
+    // Poll every 30s while the tab is visible so the bell badge stays
+    // live without needing a page refresh. Real-time via Supabase would
+    // need RLS-compatible auth on the anon client, which we don't have
+    // (app uses Dynamic, not Supabase Auth).
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") loadNotifs();
+    }, 30_000);
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") loadNotifs();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
 
     // Fetch primary org for the dropdown "My Organization" link
     getMyPrimaryOrg()
       .then(setMyOrg)
       .catch(() => setMyOrg(null));
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [user?.userId]);
 
   useEffect(() => {
@@ -219,6 +240,9 @@ export function Navbar() {
                       <Building2 className="h-4 w-4" />My Organization
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuItem onClick={() => window.location.href = '/connections'} className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
+                    <Users className="h-4 w-4" />My Connections
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => window.location.href = '/settings'} className="flex items-center gap-2 cursor-pointer text-zinc-300 hover:text-white">
                     <Settings className="h-4 w-4" />Settings
                   </DropdownMenuItem>
