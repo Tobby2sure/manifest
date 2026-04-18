@@ -146,7 +146,16 @@ export default function OnboardingPage() {
     setError("");
 
     try {
-      const walletAddress = primaryWallet?.address ?? undefined;
+      // Social-login users (Google, X) don't populate primaryWallet
+      // even when Dynamic issues an embedded wallet for them. The
+      // embedded address lives on user.verifiedCredentials with
+      // format: "blockchain". Check both sources so we don't drop
+      // the wallet on the floor for social signups.
+      const blockchainCred = user?.verifiedCredentials?.find(
+        (c) => c.format === "blockchain"
+      ) as { address?: string } | undefined;
+      const walletAddress =
+        primaryWallet?.address ?? blockchainCred?.address ?? undefined;
       // For orgs, use org name as display_name since we skip "Your Details"
       const effectiveDisplayName = isOrg ? orgName : displayName;
       await upsertProfile({
@@ -529,6 +538,9 @@ export default function OnboardingPage() {
                     setSubmitting(true);
                     try {
                       const effectiveDisplayName = isOrg ? orgName : displayName;
+                      const blockchainCred = user?.verifiedCredentials?.find(
+                        (c) => c.format === "blockchain"
+                      ) as { address?: string } | undefined;
                       await upsertProfile({
                         id: user.userId!,
                         display_name: effectiveDisplayName,
@@ -537,7 +549,10 @@ export default function OnboardingPage() {
                         email: signInEmail || email || undefined,
                         account_type: accountType,
                         twitter_verified: false,
-                        wallet_address: primaryWallet?.address ?? undefined,
+                        wallet_address:
+                          primaryWallet?.address ??
+                          blockchainCred?.address ??
+                          undefined,
                       });
 
                       // For org users, create the org + admin membership if not already done

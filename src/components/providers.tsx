@@ -10,6 +10,8 @@ import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PostHogProviderWrapper } from "@/components/posthog-provider";
 import { ProfileGuard } from "@/components/profile-guard";
+import { useUser } from "@/lib/hooks/use-user";
+import { backfillWalletAddress } from "@/app/actions/profiles";
 import { useState, useEffect } from "react";
 
 /**
@@ -22,7 +24,8 @@ import { useState, useEffect } from "react";
  * information is trusted from the client.
  */
 function SessionSync() {
-  const { user, sdkHasLoaded } = useDynamicContext();
+  const { user, sdkHasLoaded, primaryWallet } = useDynamicContext();
+  const { profile, refetch } = useUser();
 
   useEffect(() => {
     if (!sdkHasLoaded || !user?.userId) return;
@@ -35,6 +38,24 @@ function SessionSync() {
       headers: { Authorization: `Bearer ${token}` },
     }).catch(() => {});
   }, [sdkHasLoaded, user?.userId]);
+
+  // If Dynamic has a wallet for this user (embedded or external) but the
+  // profile row doesn't, backfill it. Covers Google/social-login users
+  // whose embedded wallet arrives after the initial onboarding write.
+  useEffect(() => {
+    if (!sdkHasLoaded || !user?.userId || !profile) return;
+    if (profile.wallet_address) return;
+
+    const blockchainCred = user.verifiedCredentials?.find(
+      (c) => c.format === "blockchain"
+    ) as { address?: string } | undefined;
+    const address = primaryWallet?.address ?? blockchainCred?.address;
+    if (!address) return;
+
+    backfillWalletAddress(address)
+      .then(() => refetch())
+      .catch(() => {});
+  }, [sdkHasLoaded, user, profile, primaryWallet, refetch]);
 
   return null;
 }
