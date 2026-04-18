@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
 import { verifyDynamicJwt } from "@/lib/dynamic-jwt";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // Lazy lookup: don't crash Next's build-time module evaluation if the
 // env isn't set yet (e.g. on a fresh preview), but any actual request
@@ -15,8 +16,24 @@ function getSessionSecret(): string {
   return s;
 }
 
-function sign(userId: string): string {
-  return createHmac("sha256", getSessionSecret()).update(userId).digest("hex");
+function sign(userId: string, version: number): string {
+  return createHmac("sha256", getSessionSecret())
+    .update(`${userId}:${version}`)
+    .digest("hex");
+}
+
+async function currentTokenVersion(userId: string): Promise<number> {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("profiles")
+    .select("token_version")
+    .eq("id", userId)
+    .maybeSingle();
+  return (data as { token_version?: number } | null)?.token_version ?? 0;
+}
+
+function cookieValue(userId: string, version: number): string {
+  return `${userId}:${version}:${sign(userId, version)}`;
 }
 
 /**
@@ -26,8 +43,8 @@ function sign(userId: string): string {
  * against Dynamic's JWKS before minting our session cookie, and use the
  * *verified* `sub` claim — never a user-supplied userId — as the identity.
  *
- * This replaces the previous implementation, which accepted any userId
- * from the request body and minted a cookie for it (total impersonation).
+ * The cookie carries the user's current token_version so a later
+ * "sign out of other sessions" can invalidate it by bumping the DB value.
  */
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get("authorization") ?? "";
@@ -49,10 +66,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Invalid token: ${msg}` }, { status: 401 });
   }
 
-  const signature = sign(userId);
-  const response = NextResponse.json({ ok: true });
+  const version = await currentTokenVersion(userId);
 
-  response.cookies.set("manifest_session", `${userId}:${signature}`, {
+  const response = NextResponse.json({ ok: true });
+  response.cookies.set("manifest_session", cookieValue(userId, version), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -64,7 +81,8 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * DELETE /api/auth/session — clears the session cookie.
+ * DELETE /api/auth/session — clears the session cookie on this browser.
+ * (To revoke all *other* devices, see revokeOtherSessions in actions.)
  */
 export async function DELETE() {
   const response = NextResponse.json({ ok: true });
