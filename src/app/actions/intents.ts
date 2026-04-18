@@ -6,6 +6,7 @@ import { deliverIntentWebhooks } from "@/lib/webhooks";
 import { mintProofOfIntent } from "@/lib/nft";
 import { trackServerEvent } from "@/lib/posthog";
 import { getSessionUserId } from "@/lib/auth";
+import { checkIntentCreationRateLimit } from "@/lib/rate-limit";
 import type {
   Intent,
   IntentWithAuthor,
@@ -94,6 +95,22 @@ export async function createIntent(input: {
 }): Promise<Intent> {
   const supabase = createAdminClient();
   const authorId = await getSessionUserId();
+
+  // Cap daily intent creation per user. Each successful post triggers an
+  // on-chain mint, so unlimited posting would be an attacker-controlled
+  // gas-spend vector on the deployer wallet.
+  // The limiter is best-effort in prod: surface "try again later" on
+  // genuine rate-limit hits, but don't block legitimate posts if Upstash
+  // itself errors (network, quota, etc.).
+  try {
+    await checkIntentCreationRateLimit(authorId);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    if (msg.toLowerCase().includes("limit of")) {
+      throw e; // user genuinely hit the cap
+    }
+    console.error("[createIntent] rate limiter error (allowing through):", e);
+  }
 
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + input.durationDays);
