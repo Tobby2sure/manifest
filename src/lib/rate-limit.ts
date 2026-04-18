@@ -1,45 +1,81 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
-let connectionLimit: Ratelimit | null = null;
+let redis: Redis | null = null;
 
-function getRateLimiter(): Ratelimit | null {
-  if (connectionLimit) return connectionLimit;
+function getRedis(): Redis | null {
+  if (redis) return redis;
 
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-
   if (!url || !token) return null;
 
-  connectionLimit = new Ratelimit({
-    redis: new Redis({ url, token }),
-    limiter: Ratelimit.slidingWindow(10, "1 d"),
-    prefix: "ratelimit:connections",
-  });
+  redis = new Redis({ url, token });
+  return redis;
+}
 
-  return connectionLimit;
+// Cache limiters per prefix so we don't rebuild the sliding-window state
+// on every request.
+const limiters = new Map<string, Ratelimit>();
+
+function getLimiter(prefix: string, perDay: number): Ratelimit | null {
+  const cached = limiters.get(prefix);
+  if (cached) return cached;
+
+  const r = getRedis();
+  if (!r) return null;
+
+  const limiter = new Ratelimit({
+    redis: r,
+    limiter: Ratelimit.slidingWindow(perDay, "1 d"),
+    prefix,
+  });
+  limiters.set(prefix, limiter);
+  return limiter;
 }
 
 /**
- * Check if a user has exceeded the connection request rate limit.
- * Returns null if rate limiting is not configured (dev mode).
- * Throws an error if the limit is exceeded.
+ * Check a per-user rate limit by prefix. In production, refuses to run
+ * without Upstash configured (fail closed). In dev, silently allows.
+ * Throws on exceeded with a user-safe message.
  */
-export async function checkConnectionRateLimit(senderId: string): Promise<void> {
-  const limiter = getRateLimiter();
+async function enforce(
+  prefix: string,
+  perDay: number,
+  userId: string,
+  label: string
+): Promise<void> {
+  const limiter = getLimiter(prefix, perDay);
   if (!limiter) {
     if (process.env.NODE_ENV === "production") {
-      throw new Error("Rate limiting is not configured. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.");
+      throw new Error(
+        "Rate limiting is not configured. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN."
+      );
     }
     return;
   }
 
-  const { success, remaining, reset } = await limiter.limit(senderId);
-
+  const { success, reset } = await limiter.limit(userId);
   if (!success) {
     const resetMinutes = Math.ceil((reset - Date.now()) / 60000);
     throw new Error(
-      `You've reached the daily limit of 10 connection requests. Try again in ${resetMinutes} minutes.`
+      `You've reached the daily limit of ${perDay} ${label}. Try again in ${resetMinutes} minutes.`
     );
   }
+}
+
+/** 10/day sliding window on outgoing connection requests. */
+export async function checkConnectionRateLimit(senderId: string): Promise<void> {
+  await enforce("ratelimit:connections", 10, senderId, "connection requests");
+}
+
+/**
+ * 20/day sliding window on intent creation.
+ *
+ * Each created intent triggers an on-chain NFT mint (src/lib/nft.ts), so an
+ * unlimited poster could force the deployer wallet to spend arbitrary gas.
+ * The cap bounds the worst case while leaving plenty of room for real use.
+ */
+export async function checkIntentCreationRateLimit(authorId: string): Promise<void> {
+  await enforce("ratelimit:intents", 20, authorId, "intent posts");
 }

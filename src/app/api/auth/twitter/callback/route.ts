@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getOptionalSessionUserId } from "@/lib/auth";
 
 function getAppUrl(): string {
   const url = process.env.NEXT_PUBLIC_APP_URL;
@@ -44,6 +45,16 @@ export async function GET(request: NextRequest) {
 
   if (!userId) {
     return NextResponse.redirect(`${appUrl}/onboarding/verify-x?error=no_user`);
+  }
+
+  // Bind the signed state to the current session. A valid signature proves
+  // the server issued this state, but without this check a stolen or replayed
+  // state value could be used to link a Twitter account to a different
+  // manifest user. Require the caller to be logged in as the same userId
+  // that was signed into the state.
+  const sessionUserId = await getOptionalSessionUserId();
+  if (sessionUserId !== userId) {
+    return NextResponse.redirect(`${appUrl}/onboarding/verify-x?error=invalid_state`);
   }
 
   try {

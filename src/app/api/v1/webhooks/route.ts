@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAuthUserId } from "@/lib/api-auth";
+import { assertPublicHttpsUrl } from "@/lib/url-safety";
 import { randomBytes } from "crypto";
 
 export const dynamic = "force-dynamic";
@@ -49,12 +50,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const parsed = new URL(body.url);
-    if (parsed.protocol !== "https:") {
-      return NextResponse.json({ error: "Webhook URL must use HTTPS" }, { status: 400 });
-    }
-  } catch {
-    return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
+    await assertPublicHttpsUrl(body.url);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Invalid URL";
+    return NextResponse.json({ error: msg }, { status: 400 });
   }
 
   const secret = randomBytes(32).toString("hex");
