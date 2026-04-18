@@ -1,21 +1,52 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
+import { verifyDynamicJwt } from "@/lib/dynamic-jwt";
 
-const SECRET = process.env.CRON_SECRET || "manifest-session-secret";
+// Lazy lookup: don't crash Next's build-time module evaluation if the
+// env isn't set yet (e.g. on a fresh preview), but any actual request
+// that tries to sign a cookie will throw loudly on a missing secret.
+function getSessionSecret(): string {
+  const s = process.env.SESSION_SECRET;
+  if (!s) {
+    throw new Error(
+      "SESSION_SECRET is required. Generate one with `openssl rand -hex 32` and set it in the environment."
+    );
+  }
+  return s;
+}
 
 function sign(userId: string): string {
-  return createHmac("sha256", SECRET).update(userId).digest("hex");
+  return createHmac("sha256", getSessionSecret()).update(userId).digest("hex");
 }
 
 /**
- * POST /api/auth/session — sets an httpOnly cookie with a signed userId.
- * Called by the client after Dynamic auth succeeds.
+ * POST /api/auth/session
+ *
+ * Caller must pass `Authorization: Bearer <dynamicJwt>`. We verify the JWT
+ * against Dynamic's JWKS before minting our session cookie, and use the
+ * *verified* `sub` claim — never a user-supplied userId — as the identity.
+ *
+ * This replaces the previous implementation, which accepted any userId
+ * from the request body and minted a cookie for it (total impersonation).
  */
 export async function POST(request: NextRequest) {
-  const { userId } = await request.json();
+  const authHeader = request.headers.get("authorization") ?? "";
+  const match = /^Bearer\s+(.+)$/i.exec(authHeader);
+  if (!match) {
+    return NextResponse.json(
+      { error: "Missing Authorization: Bearer <token>" },
+      { status: 401 }
+    );
+  }
 
-  if (!userId || typeof userId !== "string") {
-    return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+  const token = match[1].trim();
+  let userId: string;
+  try {
+    const payload = await verifyDynamicJwt(token);
+    userId = payload.sub;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "verification failed";
+    return NextResponse.json({ error: `Invalid token: ${msg}` }, { status: 401 });
   }
 
   const signature = sign(userId);
@@ -34,7 +65,6 @@ export async function POST(request: NextRequest) {
 
 /**
  * DELETE /api/auth/session — clears the session cookie.
- * Called on logout.
  */
 export async function DELETE() {
   const response = NextResponse.json({ ok: true });

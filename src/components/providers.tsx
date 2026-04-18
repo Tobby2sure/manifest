@@ -1,6 +1,11 @@
 "use client";
 
-import { DynamicContextProvider, DynamicWidget, useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import {
+  DynamicContextProvider,
+  DynamicWidget,
+  useDynamicContext,
+  getAuthToken,
+} from "@dynamic-labs/sdk-react-core";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PostHogProviderWrapper } from "@/components/posthog-provider";
@@ -11,6 +16,10 @@ import { useState, useEffect } from "react";
  * Ensures the manifest_session httpOnly cookie exists whenever the user
  * is authenticated. Needed because onAuthSuccess only fires on login,
  * not when returning with an existing Dynamic session.
+ *
+ * Passes the Dynamic JWT to the server — the server verifies it against
+ * Dynamic's JWKS before minting the session cookie, so no identity
+ * information is trusted from the client.
  */
 function SessionSync() {
   const { user, sdkHasLoaded } = useDynamicContext();
@@ -18,11 +27,12 @@ function SessionSync() {
   useEffect(() => {
     if (!sdkHasLoaded || !user?.userId) return;
 
-    // Set the session cookie — idempotent, harmless if already set
+    const token = getAuthToken();
+    if (!token) return; // token not yet materialized; SDK will re-render
+
     fetch("/api/auth/session", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: user.userId }),
+      headers: { Authorization: `Bearer ${token}` },
     }).catch(() => {});
   }, [sdkHasLoaded, user?.userId]);
 
@@ -41,26 +51,24 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       settings={{
         environmentId: DYNAMIC_ENV_ID,
         walletConnectors: [EthereumWalletConnectors],
-        // Login via email only — Twitter is a separate verification step
         initialAuthenticationMode: "connect-and-sign",
-        // Embedded wallets: enable in Dynamic Labs dashboard → Embedded Wallets → Enable
         events: {
-          onAuthSuccess: async ({ user }) => {
+          onAuthSuccess: async () => {
             try {
-              // Set our own httpOnly session cookie so server actions can authenticate
-              await fetch("/api/auth/session", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: user.userId }),
-              });
+              const token = getAuthToken();
+              if (!token) return;
 
-              // Check if profile exists. Only redirect on a confirmed exists:false
-              // response — never on errors (to avoid false /onboarding redirects).
-              const res = await fetch(`/api/check-profile?userId=${user.userId}`);
-              if (!res.ok) {
-                // Let page-level logic + ProfileGuard handle routing
-                return;
-              }
+              // Server verifies the JWT and extracts the userId itself.
+              const sessionRes = await fetch("/api/auth/session", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              if (!sessionRes.ok) return;
+
+              // Profile existence is now keyed off the session cookie, not
+              // a client-supplied userId (prevents enumeration).
+              const res = await fetch("/api/check-profile");
+              if (!res.ok) return;
               const data = await res.json();
               if (data.exists === false) {
                 window.location.href = '/onboarding';
@@ -70,9 +78,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                   window.location.href = '/feed';
                 }
               }
-              // If data.exists is neither true nor false, let page-level logic handle it.
             } catch (e) {
-              console.error("Failed to check profile:", e);
+              console.error("Failed to establish session:", e);
             }
           },
           onLogout: async () => {
