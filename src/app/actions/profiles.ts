@@ -287,6 +287,30 @@ export async function updateProfile(
   return data as Profile;
 }
 
+/**
+ * Write wallet_address to the current user's profile, but only if the
+ * column is currently NULL. Used by the SessionSync effect to capture
+ * embedded wallets that Dynamic issues after the initial signup (e.g.
+ * Google-auth users whose blockchain credential materializes on a
+ * later session).
+ *
+ * Returns silently if the address is already set — never overwrites a
+ * wallet the user already picked. Conditional update in SQL avoids a
+ * read-then-write race.
+ */
+export async function backfillWalletAddress(
+  address: string
+): Promise<void> {
+  if (!/^0x[0-9a-fA-F]{40}$/.test(address)) return;
+  const userId = await getSessionUserId();
+  const supabase = createAdminClient();
+  await supabase
+    .from("profiles")
+    .update({ wallet_address: address })
+    .eq("id", userId)
+    .is("wallet_address", null);
+}
+
 export async function isTwitterVerified(userId: string): Promise<boolean> {
   const supabase = createAdminClient();
 

@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { handleLogOut } = useDynamicContext();
+  const { handleLogOut, setShowAuthFlow } = useDynamicContext();
   const { user, profile, isLoading } = useUser();
 
   const [displayName, setDisplayName] = useState('');
@@ -280,9 +280,9 @@ export default function SettingsPage() {
         </section>
 
         {/* Wallet */}
-        {walletAddress && (
-          <section className="rounded-xl border border-white/8 bg-card p-5 mb-6">
-            <h2 className="text-base font-medium text-white/90 mb-4">My Wallet</h2>
+        <section className="rounded-xl border border-white/8 bg-card p-5 mb-6">
+          <h2 className="text-base font-medium text-white/90 mb-4">My Wallet</h2>
+          {walletAddress ? (
             <div className="flex items-center gap-2 rounded-xl border border-white/6 bg-white/3 p-4">
               <span className="text-sm text-zinc-300 font-mono truncate flex-1">
                 {walletAddress}
@@ -302,8 +302,21 @@ export default function SettingsPage() {
                 <ExternalLink className="size-4" />
               </a>
             </div>
-          </section>
-        )}
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-zinc-400">
+                A wallet address is required to earn a Proof-of-Intent NFT on every intent you post.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setShowAuthFlow(true)}
+                className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300"
+              >
+                Connect a wallet
+              </Button>
+            </div>
+          )}
+        </section>
 
         {/* Security */}
         <section className="rounded-xl border border-white/8 bg-card p-5">
