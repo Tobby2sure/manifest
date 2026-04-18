@@ -6,6 +6,20 @@ import { trackServerEvent } from "@/lib/posthog";
 import { getSessionUserId } from "@/lib/auth";
 import type { Profile, AccountType } from "@/lib/types/database";
 
+async function assertDisplayNameAvailable(
+  supabase: ReturnType<typeof createAdminClient>,
+  displayName: string,
+  selfId: string
+): Promise<void> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("id")
+    .ilike("display_name", displayName)
+    .neq("id", selfId)
+    .maybeSingle();
+  if (data) throw new Error("That display name is already taken");
+}
+
 export async function getProfile(userId: string): Promise<Profile | null> {
   const supabase = createAdminClient();
 
@@ -117,6 +131,8 @@ export async function upsertProfile(input: {
 
   const supabase = createAdminClient();
 
+  await assertDisplayNameAvailable(supabase, input.display_name, input.id);
+
   const { data, error } = await supabase
     .from("profiles")
     .upsert(
@@ -205,7 +221,30 @@ export async function updateProfile(
   }
 ): Promise<Profile> {
   const userId = await getSessionUserId();
+
+  if (updates.display_name !== undefined) {
+    if (updates.display_name.trim().length < 1 || updates.display_name.length > 100) {
+      throw new Error("Display name must be 1-100 characters");
+    }
+  }
+  if (updates.bio && updates.bio.length > 500) {
+    throw new Error("Bio must be 500 characters or fewer");
+  }
+  if (updates.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updates.email)) {
+    throw new Error("Invalid email format");
+  }
+  if (updates.telegram_handle) {
+    updates.telegram_handle = updates.telegram_handle.replace(/^@/, "");
+    if (!/^[a-zA-Z0-9_]{1,32}$/.test(updates.telegram_handle)) {
+      throw new Error("Invalid Telegram handle");
+    }
+  }
+
   const supabase = createAdminClient();
+
+  if (updates.display_name !== undefined) {
+    await assertDisplayNameAvailable(supabase, updates.display_name, userId);
+  }
 
   const { data, error } = await supabase
     .from("profiles")
