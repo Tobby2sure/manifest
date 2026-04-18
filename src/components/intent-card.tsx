@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+import { formatShort } from "@/lib/format-time";
 import {
   CheckCircle,
   Clock,
@@ -35,12 +35,6 @@ import { OrgBadge } from "@/components/org-badge";
 import { ReportDialog } from "@/components/report-dialog";
 import { toggleInterest } from "@/app/actions/interests";
 import { toast } from "sonner";
-
-const PRIORITY_STYLES: Record<string, string> = {
-  Urgent: "bg-red-500/20 text-red-400",
-  Open: "bg-emerald-500/20 text-emerald-400",
-  Active: "bg-amber-500/20 text-amber-400",
-};
 
 const LIFECYCLE_STYLES: Record<string, { label: string; color: string }> = {
   active: { label: "Active", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
@@ -119,13 +113,9 @@ export function IntentCard({
   const expiresAt = new Date(intent.expires_at);
   const now = new Date();
   const isExpired = expiresAt <= now;
-  const timeRemaining = isExpired
-    ? "Expired"
-    : formatDistanceToNow(expiresAt, { addSuffix: false });
+  const timeRemaining = isExpired ? "Expired" : formatShort(expiresAt);
 
-  const postedAgo = formatDistanceToNow(new Date(intent.created_at), {
-    addSuffix: true,
-  });
+  const postedAgo = formatShort(new Date(intent.created_at), { withSuffix: true });
 
   const author = intent.author;
   const initials = author.display_name
@@ -246,36 +236,27 @@ export function IntentCard({
         </div>
       </div>
 
-      {/* Priority + Lifecycle badges */}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
-        <span className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium ${PRIORITY_STYLES[intent.priority]}`}>
-          {intent.priority === "Urgent" ? (
-            <span className="relative mr-1.5">
-              <span className="absolute inset-0 size-2 rounded-full bg-red-400 animate-ping" />
-              <span className="relative size-2 rounded-full bg-red-400 inline-block" />
+      {/* Lifecycle + Founding badges */}
+      {(intent.lifecycle_status !== "active" || intent.is_founding || isExpired) && (
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          {intent.lifecycle_status !== "active" && lifecycle && (
+            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${lifecycle.color}`}>
+              {lifecycle.label}
             </span>
-          ) : (
-            <span className={`size-1.5 rounded-full mr-1.5 ${intent.priority === "Active" ? "bg-amber-400" : "bg-emerald-400"}`} />
           )}
-          {intent.priority}
-        </span>
-        {intent.lifecycle_status !== "active" && lifecycle && (
-          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${lifecycle.color}`}>
-            {lifecycle.label}
-          </span>
-        )}
-        {intent.is_founding && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-400">
-            <Shield className="size-3" />
-            Founding Intent
-          </span>
-        )}
-        {isExpired && (
-          <span className="inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium bg-zinc-500/20 text-text-muted">
-            Expired
-          </span>
-        )}
-      </div>
+          {intent.is_founding && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-400">
+              <Shield className="size-3" />
+              Founding Intent
+            </span>
+          )}
+          {isExpired && (
+            <span className="inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium bg-zinc-500/20 text-text-muted">
+              Expired
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Content */}
       <p className="text-sm text-text-heading/75 leading-[1.7] mb-3.5">

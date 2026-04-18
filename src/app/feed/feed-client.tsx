@@ -21,7 +21,6 @@ import type {
   IntentType,
   Ecosystem,
   Sector,
-  IntentPriority,
   IntentSort,
 } from "@/lib/types/database";
 import { getIntents } from "@/app/actions/intents";
@@ -29,6 +28,7 @@ import { getUserSavedIds } from "@/app/actions/saved";
 import { getUserInterestedIds } from "@/app/actions/interests";
 import { getViewCounts, recordViews } from "@/app/actions/views";
 import { getBlockedUserIds } from "@/app/actions/moderation";
+import { getMyConnectionsByIntent } from "@/app/actions/connections";
 import {
   Plus,
   SlidersHorizontal,
@@ -55,8 +55,6 @@ const SORT_OPTIONS: { value: IntentSort; label: string }[] = [
   { value: "ending_soon", label: "Ending Soon" },
 ];
 
-const PRIORITY_OPTIONS: IntentPriority[] = ["Urgent", "Active", "Open"];
-
 const ease = [0.22, 1, 0.36, 1] as const;
 
 interface FeedClientProps {
@@ -66,7 +64,6 @@ interface FeedClientProps {
     type?: IntentType;
     ecosystem?: Ecosystem;
     sector?: Sector;
-    priority?: IntentPriority;
     search?: string;
     sort?: IntentSort;
     page?: number;
@@ -83,7 +80,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
 
   const [postDialogOpen, setPostDialogOpen] = useState(false);
   const [connectIntent, setConnectIntent] = useState<IntentWithAuthor | null>(null);
-  const [viewContactIntent, setViewContactIntent] = useState<IntentWithAuthor | null>(null);
+  const [viewContactConnectionId, setViewContactConnectionId] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
 
   // Search state
@@ -113,6 +110,9 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
   const [interestedIds, setInterestedIds] = useState<Set<string>>(new Set());
   const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
   const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
+  const [myConnectionsByIntent, setMyConnectionsByIntent] = useState<
+    Record<string, { id: string; status: string }>
+  >({});
 
   // Reset intents when initialIntents change (URL navigation)
   useEffect(() => {
@@ -154,10 +154,19 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
     }
   }, [profile?.id, allIntents]);
 
+  // Load the user's connection requests for the visible intents so each
+  // IntentCard knows whether to show Connect / Pending / View Contact.
+  useEffect(() => {
+    if (!profile?.id || allIntents.length === 0) return;
+    const intentIds = allIntents.map((i) => i.id);
+    getMyConnectionsByIntent(intentIds)
+      .then(setMyConnectionsByIntent)
+      .catch(() => {});
+  }, [profile?.id, allIntents]);
+
   const activeType = initialFilters.type ?? null;
   const activeEcosystem = initialFilters.ecosystem ?? null;
   const activeSector = initialFilters.sector ?? null;
-  const activePriority = initialFilters.priority ?? null;
   const activeSort = initialFilters.sort ?? "newest";
 
   const updateFilter = useCallback(
@@ -222,7 +231,7 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
   }, [loadMore]);
 
   const canPost = isAuthenticated && (profile?.twitter_verified || twitterVerified);
-  const hasActiveFilters = activeType || activeEcosystem || activeSector || activePriority || searchValue;
+  const hasActiveFilters = activeType || activeEcosystem || activeSector || searchValue;
 
   // Filter out intents from blocked users
   const visibleIntents = blockedIds.size > 0
@@ -419,39 +428,6 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
               />
             </div>
 
-            {/* Priority */}
-            <div>
-              <h3 className="text-[11px] font-semibold text-text-heading/40 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <span className="h-px flex-1 bg-gradient-to-r from-white/6 to-transparent" />
-                Priority
-                <span className="h-px flex-1 bg-gradient-to-l from-white/6 to-transparent" />
-              </h3>
-              <div className="space-y-0.5">
-                {PRIORITY_OPTIONS.map((p) => (
-                  <label
-                    key={p}
-                    className={`flex items-center gap-2.5 cursor-pointer group rounded-lg px-2.5 py-1.5 transition-all duration-200 ${
-                      activePriority === p ? 'bg-white/4' : 'hover:bg-white/3'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={activePriority === p}
-                      onChange={() =>
-                        updateFilter("priority", activePriority === p ? null : p)
-                      }
-                      className="premium-checkbox"
-                    />
-                    <span className={`text-sm transition-colors duration-200 ${
-                      activePriority === p ? 'text-text-heading' : 'text-text-body group-hover:text-[#CBD5E1]'
-                    }`}>
-                      {p}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
             {/* Clear filters */}
             {hasActiveFilters && (
               <button
@@ -530,6 +506,13 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                       <IntentCard
                         intent={intent}
                         currentUserId={profile?.id ?? null}
+                        requestStatus={
+                          (myConnectionsByIntent[intent.id]?.status as
+                            | "pending"
+                            | "accepted"
+                            | "declined"
+                            | undefined) ?? null
+                        }
                         onRequestConnection={
                           !isAuthenticated
                             ? () => setShowAuthFlow(true)
@@ -537,7 +520,10 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
                             ? () => router.push('/onboarding/verify-x')
                             : (i) => setConnectIntent(i)
                         }
-                        onViewContact={(i) => setViewContactIntent(i)}
+                        onViewContact={() => {
+                          const conn = myConnectionsByIntent[intent.id];
+                          if (conn) setViewContactConnectionId(conn.id);
+                        }}
                         isSaved={savedIds.has(intent.id)}
                         isInterested={interestedIds.has(intent.id)}
                         viewCount={viewCounts[intent.id] ?? 0}
@@ -635,11 +621,11 @@ export function FeedClient({ intents: initialIntents, total, initialFilters }: F
             intent={connectIntent}
           />
           <ViewContactDialog
-            open={!!viewContactIntent}
+            open={!!viewContactConnectionId}
             onOpenChange={(open) => {
-              if (!open) setViewContactIntent(null);
+              if (!open) setViewContactConnectionId(null);
             }}
-            connectionId={null}
+            connectionId={viewContactConnectionId}
           />
         </>
       )}

@@ -6,7 +6,6 @@ import type {
   IntentType,
   Ecosystem,
   Sector,
-  IntentPriority,
 } from "@/lib/types/database";
 
 export const dynamic = "force-dynamic";
@@ -67,7 +66,6 @@ export async function POST(req: NextRequest) {
     content?: string;
     ecosystem?: Ecosystem | null;
     sector?: Sector | null;
-    priority?: IntentPriority;
     duration_days?: number;
     org_id?: string;
   };
@@ -124,7 +122,6 @@ export async function POST(req: NextRequest) {
       content: body.content,
       ecosystem: body.ecosystem ?? null,
       sector: body.sector ?? null,
-      priority: body.priority ?? "Open",
       expires_at: expiresAt.toISOString(),
       lifecycle_status: "active",
     })

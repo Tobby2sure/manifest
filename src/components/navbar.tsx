@@ -69,7 +69,7 @@ export function Navbar() {
 
   return (
     <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'border-b border-white/8 bg-surface-page/90 backdrop-blur-xl' : 'bg-transparent'}`}>
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
           <ManifestMark

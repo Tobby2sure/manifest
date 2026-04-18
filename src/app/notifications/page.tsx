@@ -33,8 +33,9 @@ import {
 } from "@/app/actions/connections";
 import { INTENT_TYPE_CONFIG } from "@/lib/types/database";
 import type { Notification, NotificationType } from "@/lib/types/database";
-import { formatDistanceToNow } from "date-fns";
 import { NotificationListSkeleton } from "@/components/skeletons";
+import { ViewContactDialog } from "@/components/view-contact-dialog";
+import { formatShort } from "@/lib/format-time";
 import { toast } from "sonner";
 
 const NOTIF_ICONS: Record<NotificationType, typeof MessageSquare> = {
@@ -122,6 +123,7 @@ export default function NotificationsPage() {
   const [connectionContexts, setConnectionContexts] = useState<
     Record<string, ConnectionRequestContext>
   >({});
+  const [acceptedContactId, setAcceptedContactId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -216,6 +218,9 @@ export default function NotificationsPage() {
         if (action === "accept") {
           await acceptConnectionRequest(requestId);
           toast.success("Connection accepted");
+          // Open the contact dialog so the accepter immediately sees the
+          // sender's telegram / email
+          setAcceptedContactId(requestId);
         } else {
           await declineConnectionRequest(requestId);
           toast.success("Request declined");
@@ -294,6 +299,10 @@ export default function NotificationsPage() {
                   ? connectionContexts[`${notif.payload.senderId}:${notif.payload.intentId}`]
                   : undefined;
 
+              // Skip the generic text header when we have a rich connection
+              // request card — the card speaks for itself.
+              const hideGenericHeader = isConnectionRequest && !!connectionCtx;
+
               return (
                 <div
                   key={notif.id}
@@ -303,35 +312,45 @@ export default function NotificationsPage() {
                       : "border-white/8 bg-card"
                   }`}
                 >
-                  <button
-                    onClick={() => handleMarkRead(notif)}
-                    className="w-full flex items-start gap-3 p-4 text-left"
-                  >
-                    <div
-                      className={`shrink-0 size-9 rounded-full flex items-center justify-center ${bgColor}`}
-                    >
-                      <Icon className={`size-4 ${iconColor}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className={`text-sm leading-relaxed ${
-                          notif.read ? "text-zinc-400" : "text-white/90"
-                        }`}
-                      >
-                        {getNotificationMessage(notif)}
-                      </p>
-                      <p className="text-xs text-zinc-500 mt-1">
-                        {formatDistanceToNow(new Date(notif.created_at), {
-                          addSuffix: true,
-                        })}
-                      </p>
-                    </div>
-                    {!notif.read && (
-                      <div className="shrink-0 mt-1.5">
+                  {hideGenericHeader ? (
+                    // Compact timestamp row for rich connection requests
+                    <div className="flex items-center justify-between px-4 pt-3 pb-0">
+                      <span className="text-[11px] uppercase tracking-wide text-zinc-500">
+                        Connection request · {formatShort(new Date(notif.created_at), { withSuffix: true })}
+                      </span>
+                      {!notif.read && (
                         <div className="size-2 rounded-full bg-emerald-400" />
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleMarkRead(notif)}
+                      className="w-full flex items-start gap-3 p-4 text-left"
+                    >
+                      <div
+                        className={`shrink-0 size-9 rounded-full flex items-center justify-center ${bgColor}`}
+                      >
+                        <Icon className={`size-4 ${iconColor}`} />
                       </div>
-                    )}
-                  </button>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={`text-sm leading-relaxed ${
+                            notif.read ? "text-zinc-400" : "text-white/90"
+                          }`}
+                        >
+                          {getNotificationMessage(notif)}
+                        </p>
+                        <p className="text-xs text-zinc-500 mt-1">
+                          {formatShort(new Date(notif.created_at), { withSuffix: true })}
+                        </p>
+                      </div>
+                      {!notif.read && (
+                        <div className="shrink-0 mt-1.5">
+                          <div className="size-2 rounded-full bg-emerald-400" />
+                        </div>
+                      )}
+                    </button>
+                  )}
 
                   {isAffiliateRequest && (
                     <div className="flex gap-2 px-4 pb-4 pt-0">
@@ -421,23 +440,26 @@ export default function NotificationsPage() {
 
                       {/* Intent context */}
                       {connectionCtx.intent && (
-                        <div className="flex items-center gap-2 text-xs text-zinc-500">
-                          <span className="text-zinc-500">For your</span>
-                          <span
-                            className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium ${
-                              INTENT_TYPE_CONFIG[
+                        <div className="rounded-lg border border-white/6 bg-white/3 px-3 py-2.5">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] uppercase tracking-wide text-zinc-500">
+                              For your
+                            </span>
+                            <span
+                              className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ${
+                                INTENT_TYPE_CONFIG[
+                                  connectionCtx.intent.type as keyof typeof INTENT_TYPE_CONFIG
+                                ]?.color ?? "bg-zinc-500/20 text-zinc-400"
+                              }`}
+                            >
+                              {INTENT_TYPE_CONFIG[
                                 connectionCtx.intent.type as keyof typeof INTENT_TYPE_CONFIG
-                              ]?.color ?? "bg-zinc-500/20 text-zinc-400"
-                            }`}
-                          >
-                            {INTENT_TYPE_CONFIG[
-                              connectionCtx.intent.type as keyof typeof INTENT_TYPE_CONFIG
-                            ]?.label ?? connectionCtx.intent.type}
-                          </span>
-                          <span className="text-zinc-400 truncate">
-                            {connectionCtx.intent.content.slice(0, 60)}
-                            {connectionCtx.intent.content.length > 60 ? "…" : ""}
-                          </span>
+                              ]?.label ?? connectionCtx.intent.type}
+                            </span>
+                          </div>
+                          <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed">
+                            {connectionCtx.intent.content}
+                          </p>
                         </div>
                       )}
 
@@ -493,6 +515,15 @@ export default function NotificationsPage() {
           </div>
         )}
       </div>
+
+      {/* Contact details dialog — opens immediately after accepting a request */}
+      <ViewContactDialog
+        open={!!acceptedContactId}
+        onOpenChange={(open) => {
+          if (!open) setAcceptedContactId(null);
+        }}
+        connectionId={acceptedContactId}
+      />
     </main>
   );
 }
