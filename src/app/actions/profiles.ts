@@ -1,7 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { mintOnboardingNFT } from "@/lib/mint";
+import { mintOnboardingNFT } from "@/lib/nft";
 import { trackServerEvent } from "@/lib/posthog";
 import { getSessionUserId } from "@/lib/auth";
 import type { Profile, AccountType } from "@/lib/types/database";

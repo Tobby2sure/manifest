@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { mintProofOfIntent } from "@/lib/nft";
-import { mintOnboardingNFT } from "@/lib/mint";
+import { mintProofOfIntent, mintOnboardingNFT } from "@/lib/nft";
 
 const MAX_ATTEMPTS = 3;
 const BATCH_SIZE = 20;
