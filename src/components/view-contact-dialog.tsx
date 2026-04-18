@@ -61,39 +61,52 @@ export function ViewContactDialog({
           </div>
         ) : contact ? (
           <div className="space-y-3 mt-2">
-            {contact.telegram_handle && (
-              <div className="flex items-center justify-between rounded-lg bg-white/3 border border-white/6 p-3">
-                <div className="flex items-center gap-2">
-                  <MessageCircle className="size-4 text-blue-400" />
-                  <div>
-                    <p className="text-xs text-zinc-400">Telegram</p>
-                    <p className="text-sm text-white/90">
-                      @{contact.telegram_handle}
-                    </p>
+            {contact.telegram_handle && (() => {
+              // Normalize at render time: older rows may have a leading @
+              // stored. Display exactly one @ regardless, and link to t.me/<handle>.
+              const handle = contact.telegram_handle.replace(/^@/, "");
+              return (
+                <div className="flex items-center justify-between rounded-lg bg-white/3 border border-white/6 p-3">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="size-4 text-blue-400" />
+                    <div>
+                      <p className="text-xs text-zinc-400">Telegram</p>
+                      <a
+                        href={`https://t.me/${handle}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-white/90 hover:text-blue-400 transition-colors"
+                      >
+                        @{handle}
+                      </a>
+                    </div>
                   </div>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    onClick={() => copyToClipboard(handle, "telegram")}
+                  >
+                    {copiedField === "telegram" ? (
+                      <Check className="size-3.5 text-emerald-400" />
+                    ) : (
+                      <Copy className="size-3.5" />
+                    )}
+                  </Button>
                 </div>
-                <Button
-                  size="icon-sm"
-                  variant="ghost"
-                  onClick={() =>
-                    copyToClipboard(contact.telegram_handle!, "telegram")
-                  }
-                >
-                  {copiedField === "telegram" ? (
-                    <Check className="size-3.5 text-emerald-400" />
-                  ) : (
-                    <Copy className="size-3.5" />
-                  )}
-                </Button>
-              </div>
-            )}
+              );
+            })()}
             {contact.email && (
               <div className="flex items-center justify-between rounded-lg bg-white/3 border border-white/6 p-3">
                 <div className="flex items-center gap-2">
                   <Mail className="size-4 text-emerald-400" />
                   <div>
                     <p className="text-xs text-zinc-400">Email</p>
-                    <p className="text-sm text-white/90">{contact.email}</p>
+                    <a
+                      href={`mailto:${contact.email}`}
+                      className="text-sm text-white/90 hover:text-emerald-400 transition-colors break-all"
+                    >
+                      {contact.email}
+                    </a>
                   </div>
                 </div>
                 <Button
