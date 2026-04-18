@@ -142,6 +142,27 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Handle-level fallback: catches legacy rows that have a handle but
+    // no twitter_id. Case-insensitive. Only checks verified profiles.
+    if (twitterHandle) {
+      const { data: existingByHandle } = await supabase
+        .from("profiles")
+        .select("id")
+        .ilike("twitter_handle", twitterHandle)
+        .eq("twitter_verified", true)
+        .neq("id", userId)
+        .maybeSingle();
+
+      if (existingByHandle) {
+        const response = NextResponse.redirect(
+          `${appUrl}/onboarding/verify-x?error=twitter_already_linked`
+        );
+        response.cookies.delete("twitter_code_verifier");
+        response.cookies.delete("twitter_state");
+        return response;
+      }
+    }
+
     // Only auto-populate avatar_url if the user hasn't set one already.
     const { data: currentProfile } = await supabase
       .from("profiles")

@@ -34,6 +34,20 @@ export async function markRead(notificationId: string): Promise<void> {
   }
 }
 
+export async function markReadBulk(notificationIds: string[]): Promise<void> {
+  if (notificationIds.length === 0) return;
+  const supabase = createAdminClient();
+
+  const { error } = await supabase
+    .from("notifications")
+    .update({ read: true })
+    .in("id", notificationIds);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 export async function markAllRead(userId: string): Promise<void> {
   const supabase = createAdminClient();
 

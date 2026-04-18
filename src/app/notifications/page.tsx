@@ -21,6 +21,7 @@ import { useUser } from "@/lib/hooks/use-user";
 import {
   getNotifications,
   markRead,
+  markReadBulk,
   markAllRead,
 } from "@/app/actions/notifications";
 import { acceptAffiliateRequest, declineAffiliateRequest } from "@/app/actions/affiliates";
@@ -145,7 +146,32 @@ export default function NotificationsPage() {
 
       if (pairs.length > 0) {
         getConnectionRequestContexts(pairs)
-          .then(setConnectionContexts)
+          .then((contexts) => {
+            setConnectionContexts(contexts);
+
+            // Any unread connection_request notification whose pending
+            // context is missing has already been responded to — clear
+            // it so it stops coming back on refresh.
+            const staleIds = data
+              .filter(
+                (n) =>
+                  !n.read &&
+                  n.type === "connection_request" &&
+                  n.payload.senderId &&
+                  n.payload.intentId &&
+                  !contexts[`${n.payload.senderId}:${n.payload.intentId}`]
+              )
+              .map((n) => n.id);
+
+            if (staleIds.length > 0) {
+              markReadBulk(staleIds).catch(() => {});
+              setNotifications((prev) =>
+                prev.map((n) =>
+                  staleIds.includes(n.id) ? { ...n, read: true } : n
+                )
+              );
+            }
+          })
           .catch(() => {});
       }
     });
@@ -176,6 +202,7 @@ export default function NotificationsPage() {
       try {
         await acceptAffiliateRequest(requestId);
         toast.success("Affiliate request accepted");
+        await markRead(notif.id);
         setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Failed to accept");
@@ -190,6 +217,7 @@ export default function NotificationsPage() {
       try {
         await declineAffiliateRequest(requestId);
         toast.success("Request declined");
+        await markRead(notif.id);
         setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Failed to decline");
@@ -212,6 +240,7 @@ export default function NotificationsPage() {
         const requestId = await findPendingRequestFromNotification({ senderId, intentId });
         if (!requestId) {
           toast.error("This request has already been responded to");
+          await markRead(notif.id);
           setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
           return;
         }
@@ -225,6 +254,7 @@ export default function NotificationsPage() {
           await declineConnectionRequest(requestId);
           toast.success("Request declined");
         }
+        await markRead(notif.id);
         setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Failed");
@@ -486,26 +516,16 @@ export default function NotificationsPage() {
                     </div>
                   )}
 
-                  {/* Fallback: request context missing (e.g. already responded to) —
-                      still show Accept/Decline buttons so the user isn't stuck */}
-                  {isConnectionRequest && !connectionCtx && (
+                  {/* Sender-side: show View Contact on accepted requests */}
+                  {notif.type === "request_accepted" && typeof notif.payload.connectionId === "string" && (
                     <div className="flex gap-2 px-4 pb-4 pt-0">
                       <Button
                         size="sm"
-                        onClick={() => handleConnectionResponse(notif, "accept")}
-                        disabled={isPending}
+                        onClick={() => setAcceptedContactId(notif.payload.connectionId as string)}
                         className="bg-emerald-600 hover:bg-emerald-500 text-white border-0"
                       >
-                        Accept
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleConnectionResponse(notif, "decline")}
-                        disabled={isPending}
-                        className="border-white/10 text-zinc-300 hover:bg-white/5"
-                      >
-                        Decline
+                        <Eye className="size-3.5 mr-1.5" />
+                        View Contact
                       </Button>
                     </div>
                   )}
