@@ -307,18 +307,32 @@ export function IntentCard({
               {viewCount} {viewCount === 1 ? "view" : "views"}
             </span>
           )}
-          {isOwn && intent.mint_status === "pending" && (
-            <span className="flex items-center gap-1 text-amber-400/70">
-              <Loader2 className="size-3 animate-spin" />
-              Minting...
-            </span>
-          )}
-          {isOwn && intent.mint_status === "success" && intent.nft_tx_hash && (
+          {isOwn && intent.mint_status === "pending" && (() => {
+            // Bound the "Minting..." state — after 60s the intent is
+            // almost certainly waiting for the retry cron, not for
+            // the initial mint to confirm. Show the queued state so
+            // the author isn't staring at a forever-spinner.
+            const minted = new Date(intent.created_at).getTime();
+            const stale = Date.now() - minted > 60_000;
+            return stale ? (
+              <span className="flex items-center gap-1 text-amber-400/70">
+                <Clock className="size-3" />
+                Mint queued
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-amber-400/70">
+                <Loader2 className="size-3 animate-spin" />
+                Minting...
+              </span>
+            );
+          })()}
+          {intent.mint_status === "success" && intent.nft_tx_hash && (
             <a
-              href={`https://basescan.org/tx/${intent.nft_tx_hash}`}
+              href={`${process.env.NEXT_PUBLIC_USE_TESTNET === "true" ? "https://sepolia.basescan.org" : "https://basescan.org"}/tx/${intent.nft_tx_hash}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-emerald-400/70 hover:text-emerald-400 transition-colors"
+              title="Proof of Intent NFT"
             >
               <CheckCircle className="size-3" />
               Minted
