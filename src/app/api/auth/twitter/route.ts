@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
+import { getOptionalSessionUserId } from "@/lib/auth";
 
 function getConfig() {
   return {
@@ -43,20 +44,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Read userId from our signed manifest_session cookie
-  let userId: string | null = null;
-  const sessionCookie = request.cookies.get("manifest_session")?.value;
-  if (sessionCookie) {
-    const lastColon = sessionCookie.lastIndexOf(":");
-    if (lastColon !== -1) {
-      const id = sessionCookie.slice(0, lastColon);
-      const sig = sessionCookie.slice(lastColon + 1);
-      const secret = process.env.CRON_SECRET || "manifest-session-secret";
-      const expected = createHmac("sha256", secret).update(id).digest("hex");
-      if (sig === expected) userId = id;
-    }
-  }
-
+  const userId = await getOptionalSessionUserId();
   if (!userId) {
     return NextResponse.redirect(new URL("/onboarding/verify-x?error=not_authenticated", request.url));
   }
